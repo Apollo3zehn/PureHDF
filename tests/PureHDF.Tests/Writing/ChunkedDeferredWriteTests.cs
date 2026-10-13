@@ -142,6 +142,97 @@ public class ChunkedDeferredWriteTests
             writer.Write(dataset, data[..ChunkRows], fileSelection: new HyperslabSelection(0, ChunkRows)));
     }
 
+    [Fact]
+    public void AFilteredDatasetIsFinishedWithItsLastChunk()
+    {
+        // Arrange
+        var (dataset, data) = Column(rows: 4 * ChunkRows, chunkCache: null);
+        var file = new H5File { ["column"] = dataset };
+        var stream = new MemoryStream();
+
+        using (var writer = file.BeginWrite(stream, new H5WriteOptions(Filters: [DeflateFilter.Id])))
+        {
+            // Act
+            writer.Write(dataset, data[..(3 * ChunkRows)], fileSelection: new HyperslabSelection(0, 3 * ChunkRows));
+            var beforeLastChunk = stream.ToArray();
+
+            writer.Write(dataset, data[(3 * ChunkRows)..], fileSelection: new HyperslabSelection(3 * ChunkRows, ChunkRows));
+            var afterLastChunk = stream.ToArray();
+
+            // Assert - the chunk index is written then, rather than at Dispose, and nothing of the
+            // dataset's write state is kept
+            Assert.Equal(-1, beforeLastChunk.AsSpan().IndexOf("FADB"u8));
+            Assert.True(afterLastChunk.AsSpan().IndexOf("FADB"u8) >= 0);
+            Assert.Null(writer.Context.Objects[dataset].Deferred!.H5D);
+        }
+
+        stream.Position = 0;
+        using var actual = H5File.Open(stream);
+
+        Assert.Equal(data, actual.Dataset("column").Read<double[]>());
+    }
+
+    [Fact]
+    public void AFilteredSingleChunkDatasetIsFinishedWithItsChunk()
+    {
+        // Arrange
+        var data = Enumerable.Range(0, ChunkRows).Select(i => (double)i).ToArray();
+        var dataset = new H5Dataset<double[]>(fileDims: [ChunkRows], chunks: [ChunkRows]);
+        var file = new H5File { ["column"] = dataset };
+        var stream = new MemoryStream();
+
+        using (var writer = file.BeginWrite(stream, new H5WriteOptions(Filters: [DeflateFilter.Id])))
+        {
+            // Act
+            writer.Write(dataset, data);
+
+            // Assert
+            Assert.Null(writer.Context.Objects[dataset].Deferred!.H5D);
+            Assert.Empty(writer.Context.DatasetInfoToObjectHeaderMap);
+        }
+
+        stream.Position = 0;
+        using var actual = H5File.Open(stream);
+
+        Assert.Equal(data, actual.Dataset("column").Read<double[]>());
+    }
+
+    [Fact]
+    public void AFilteredDatasetGivenWithTheTreeIsFinishedByBeginWrite()
+    {
+        // Arrange
+        var data = Enumerable.Range(0, 4 * ChunkRows).Select(i => (double)i).ToArray();
+        var dataset = new H5Dataset(data, chunks: [ChunkRows]);
+        var file = new H5File { ["column"] = dataset };
+        var stream = new MemoryStream();
+
+        // Act
+        using (var writer = file.BeginWrite(stream, new H5WriteOptions(Filters: [DeflateFilter.Id])))
+        {
+            // Assert
+            Assert.Null(writer.Context.Objects[dataset].Deferred!.H5D);
+        }
+
+        stream.Position = 0;
+        using var actual = H5File.Open(stream);
+
+        Assert.Equal(data, actual.Dataset("column").Read<double[]>());
+    }
+
+    [Fact]
+    public void WritingAFinishedDatasetAgainFails()
+    {
+        // Arrange
+        var (dataset, data) = Column(rows: 2 * ChunkRows, chunkCache: null);
+        var file = new H5File { ["column"] = dataset };
+
+        using var writer = file.BeginWrite(new MemoryStream(), new H5WriteOptions(Filters: [DeflateFilter.Id]));
+        writer.Write(dataset, data);
+
+        // Act / Assert
+        Assert.Throws<InvalidOperationException>(() => writer.Write(dataset, data));
+    }
+
     private static (H5Dataset<double[]> Dataset, double[] Data) Column(int rows, IWritingChunkCache? chunkCache)
     {
         var data = Enumerable.Range(0, rows).Select(i => (double)i).ToArray();

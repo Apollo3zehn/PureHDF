@@ -25,6 +25,11 @@ public partial class H5NativeWriter : IDisposable
         if (Context.Objects.GetValueOrDefault(dataset).Deferred is not { } info)
             throw new Exception("The provided dataset does not belong to this file.");
 
+        if (info is FinishedDataset)
+            throw new InvalidOperationException(
+                "All of this dataset's data has been written. Each element of a filtered dataset can be " +
+                "written once: a chunk is compressed and written as soon as all of its elements have arrived.");
+
         // As in WriteDatasetData: variable-length elements written here are the dataset's payload,
         // so their heap collections are allocated as payload too.
         var enclosing = Context.GlobalHeapManager.AllocationKind;
@@ -52,6 +57,8 @@ public partial class H5NativeWriter : IDisposable
         {
             Context.GlobalHeapManager.AllocationKind = enclosing;
         }
+
+        FinishIfComplete(dataset, info.H5D);
 
         // Between top-level encodes is the only safe point to write heap collections; see there.
         Context.GlobalHeapManager.WriteClosedCollections();

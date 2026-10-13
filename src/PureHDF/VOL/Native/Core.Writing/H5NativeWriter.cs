@@ -761,7 +761,7 @@ partial class H5NativeWriter
             // Payload has nowhere final to go while the structure is staged, so it is written once the
             // structure is placed.
             else if (Context.Staging is { } staging)
-                PostponeData(staging, h5d, encode, memoryData, fileSelection, memorySelection, dims, plannedObjectSizes);
+                PostponeData(staging, dataset, h5d, encode, memoryData, fileSelection, memorySelection, dims, plannedObjectSizes);
 
             else
                 WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, dims, AllocationKind.RawData, plannedObjectSizes);
@@ -802,6 +802,12 @@ partial class H5NativeWriter
             // layout's own (relocated) address before it writes it anyway.
             RecordProvisionalAddress(dataLayout.Properties, chunkedAddress, encoded.Length);
 
+            // Data given with the tree may have completed the dataset, whose index can then be written
+            // now rather than at Dispose - where it would be one gap per dataset behind everything written
+            // since. Not while the structure is staged: the chunk addresses are still provisional.
+            if (Context.Staging is null)
+                FinishIfComplete(dataset, h5d);
+
             return chunkedAddress;
         }
 
@@ -827,6 +833,27 @@ partial class H5NativeWriter
         h5d.Initialize();
 
         return h5d;
+    }
+
+    /// <summary>
+    /// Finishes a filtered chunked dataset whose last chunk has been written: writes its index, completes
+    /// its header, and drops everything kept to write it.
+    /// </summary>
+    /// <remarks>
+    /// Otherwise all of that waits for Dispose, for every dataset at once - about 1.3 kB per dataset, so
+    /// 390 MB over 300,000 datasets written one after another, each long finished. Done between writes
+    /// rather than when the chunk is written, since a dataset given with the tree completes its chunks
+    /// before its header exists.
+    /// </remarks>
+    internal void FinishIfComplete(H5Object dataset, H5D_Base? h5d)
+    {
+        if (h5d is not H5D_Chunk { IsComplete: true } chunk)
+            return;
+
+        chunk.Dispose();
+
+        Context.DatasetInfoToObjectHeaderMap.Remove(chunk.Dataset);
+        CollectionsMarshal.GetValueRefOrNullRef(Context.Objects, dataset).Deferred = FinishedDataset.Instance;
     }
 
     /// <summary>
@@ -878,6 +905,7 @@ partial class H5NativeWriter
     // data to postpone: a lambda capturing that method's locals would allocate for every dataset.
     private void PostponeData<TElement>(
         StructureStaging staging,
+        H5Object dataset,
         H5D_Base h5d,
         EncodeDelegate<TElement> encode,
         Memory<TElement> memoryData,
@@ -894,6 +922,10 @@ partial class H5NativeWriter
 
             if (h5d is H5D_Chunk chunk)
                 chunk.FlushChunkCache();
+
+            // The header exists by now, staged and written, so the dataset can be finished like one
+            // written through the writer.
+            FinishIfComplete(dataset, h5d);
         });
     }
 

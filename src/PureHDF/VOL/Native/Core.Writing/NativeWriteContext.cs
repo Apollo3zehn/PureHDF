@@ -112,6 +112,22 @@ internal sealed class DeferredContiguous(
         ExternalFileList: default);
 }
 
+/// <summary>
+/// A dataset whose data has all been written and whose structure is final: a filtered chunked dataset
+/// once its last chunk is written. Nothing of how it was written is kept.
+/// </summary>
+internal sealed class FinishedDataset() : DeferredDataset(encode: null!)
+{
+    public static FinishedDataset Instance { get; } = new();
+
+    public override DatasetInfo GetInfo()
+        => throw new InvalidOperationException("All of this dataset's data has been written.");
+
+    public override void Relocate(FreeSpaceManager freeSpaceManager)
+    {
+    }
+}
+
 /// <summary>Anything else (compact, null dataspace): rare enough to keep in full.</summary>
 internal sealed class DeferredInfo(DatasetInfo info, object encode) : DeferredDataset(encode)
 {

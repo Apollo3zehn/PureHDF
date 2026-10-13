@@ -99,6 +99,17 @@ internal abstract class H5D_Chunk : H5D_Base
 
     public ulong TotalMaxChunkCount { get; private set; }
 
+    /// <summary>
+    /// Whether every chunk of a filtered dataset has been compressed and written, so that nothing about
+    /// its data can change any more and its index can be written.
+    /// </summary>
+    /// <remarks>
+    /// Only a filtered dataset tracks its chunks: an unfiltered chunk is written straight to its place,
+    /// and may be written again.
+    /// </remarks>
+    public bool IsComplete => Dataset.FilterPipeline is not null &&
+        (ulong)(_finishedChunks?.Count ?? 0) == TotalChunkCount;
+
     #endregion
 
     #region Methods
