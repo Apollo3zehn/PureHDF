@@ -219,6 +219,69 @@ public class ChunkedDeferredWriteTests
         Assert.Equal(data, actual.Dataset("column").Read<double[]>());
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void AChunkedDatasetsLayoutIsCreatedByItsFirstWrite(bool filtered)
+    {
+        // Arrange
+        var (dataset, data) = Column(rows: 4 * ChunkRows, chunkCache: null);
+        var file = new H5File { ["column"] = dataset };
+        var stream = new MemoryStream();
+
+        using (var writer = file.BeginWrite(stream, new H5WriteOptions(Filters: filtered ? [DeflateFilter.Id] : null)))
+        {
+            // Assert - nothing kept to write the dataset until it is written
+            Assert.Null(writer.Context.Objects[dataset].Deferred!.H5D);
+
+            // Act
+            writer.Write(dataset, data[..ChunkRows], fileSelection: new HyperslabSelection(0, ChunkRows));
+
+            // Assert
+            Assert.NotNull(writer.Context.Objects[dataset].Deferred!.H5D);
+
+            writer.Write(dataset, data[ChunkRows..], fileSelection: new HyperslabSelection(ChunkRows, 3 * ChunkRows));
+        }
+
+        stream.Position = 0;
+        using var actual = H5File.Open(stream);
+
+        Assert.Equal(data, actual.Dataset("column").Read<double[]>());
+    }
+
+    [Theory]
+    [InlineData(4 * ChunkRows, true)]
+    [InlineData(ChunkRows, true)]
+    [InlineData(4 * ChunkRows, false)]
+    [InlineData(ChunkRows, false)]
+    public void AChunkedDatasetThatIsNeverWrittenReadsAsZeroes(int rows, bool filtered)
+    {
+        // Arrange
+        var (dataset, _) = Column(rows: rows, chunkCache: null);
+        var file = new H5File { ["column"] = dataset };
+        var filePath = Path.GetTempFileName();
+
+        try
+        {
+            // Act
+            using (file.BeginWrite(filePath, new H5WriteOptions(Filters: filtered ? [DeflateFilter.Id] : null)))
+            {
+            }
+
+            // Assert
+            TestUtils.DumpH5File(filePath);
+
+            using var actual = H5File.OpenRead(filePath);
+            Assert.Equal(new double[rows], actual.Dataset("column").Read<double[]>());
+        }
+
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
     [Fact]
     public void WritingAFinishedDatasetAgainFails()
     {

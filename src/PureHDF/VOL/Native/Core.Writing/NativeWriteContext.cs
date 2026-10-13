@@ -52,7 +52,7 @@ internal abstract class DeferredDataset(object encode)
     /// <summary>The element encoder, an <c>EncodeDelegate</c> of the dataset's element type.</summary>
     public object Encode { get; } = encode;
 
-    /// <summary>A layout that has to be kept from encoding to Dispose, otherwise null.</summary>
+    /// <summary>The layout kept to write the dataset's data, otherwise null.</summary>
     public virtual H5D_Base? H5D => null;
 
     public abstract DatasetInfo GetInfo();
@@ -72,8 +72,9 @@ internal abstract class DeferredDataset(object encode)
 }
 
 /// <summary>
-/// A chunked dataset, whose layout carries state from encoding to
-/// <see cref="H5NativeWriter.Dispose()" />: its chunk cache, and the index it allocates then.
+/// A chunked dataset given its data with the tree, whose layout carries state from encoding until the
+/// dataset is finished (<see cref="H5NativeWriter.FinishIfComplete" />) or the writer is disposed: its
+/// chunk cache, and the index it allocates then.
 /// </summary>
 internal sealed class DeferredLayout(H5D_Base h5d, object encode) : DeferredDataset(encode)
 {
@@ -110,6 +111,26 @@ internal sealed class DeferredContiguous(
         FillValue: H5NativeWriter.DefaultFillValueMessage,
         FilterPipeline: default,
         ExternalFileList: default);
+}
+
+/// <summary>
+/// A chunked dataset declared without data, whose layout is only created when it is first written.
+/// </summary>
+/// <remarks>
+/// A chunked layout holds the chunk geometry, the chunks being filled and the index, and holding one
+/// per dataset from BeginWrite on would be most of what a writer of many chunked datasets holds before
+/// any is written. Until then, this keeps the dataset's messages, which the layout is created from.
+/// </remarks>
+internal sealed class DeferredChunked(DatasetInfo info, object encode) : DeferredDataset(encode)
+{
+    private H5D_Base? _h5d;
+
+    public override H5D_Base? H5D => _h5d;
+
+    public override DatasetInfo GetInfo() => info;
+
+    public H5D_Base GetOrCreateLayout(H5NativeWriter writer, H5DatasetCreation datasetCreation)
+        => _h5d ??= writer.CreateLayout(info, datasetCreation);
 }
 
 /// <summary>

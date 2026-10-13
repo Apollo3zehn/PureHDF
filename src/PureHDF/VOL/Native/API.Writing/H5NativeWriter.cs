@@ -33,6 +33,7 @@ public partial class H5NativeWriter : IDisposable
         // As in WriteDatasetData: variable-length elements written here are the dataset's payload,
         // so their heap collections are allocated as payload too.
         var enclosing = Context.GlobalHeapManager.AllocationKind;
+        H5D_Base h5d;
         Context.GlobalHeapManager.AllocationKind = AllocationKind.RawData;
 
         try
@@ -45,8 +46,14 @@ public partial class H5NativeWriter : IDisposable
                 return;
             }
 
+            h5d = info switch
+            {
+                DeferredChunked chunked => chunked.GetOrCreateLayout(this, dataset.DatasetCreation),
+                _ => info.H5D ?? CreateLayout(info.GetInfo(), dataset.DatasetCreation)
+            };
+
             WriteDatasetDispatchCache<T>.Dispatch(
-                info.H5D ?? CreateLayout(info.GetInfo(), dataset.DatasetCreation),
+                h5d,
                 info.Encode,
                 data,
                 memorySelection,
@@ -58,7 +65,7 @@ public partial class H5NativeWriter : IDisposable
             Context.GlobalHeapManager.AllocationKind = enclosing;
         }
 
-        FinishIfComplete(dataset, info.H5D);
+        FinishIfComplete(dataset, h5d);
 
         // Between top-level encodes is the only safe point to write heap collections; see there.
         Context.GlobalHeapManager.WriteClosedCollections();
@@ -84,10 +91,14 @@ public partial class H5NativeWriter : IDisposable
                 // it got through.
                 PlaceStructure();
 
-                // chunk indexes
-                foreach (var entry in Context.Objects.Values)
+                // chunk indexes - also of a chunked dataset never written, whose index still has to say so
+                foreach (var (h5Object, entry) in Context.Objects)
                 {
-                    entry.Deferred?.H5D?.Dispose();
+                    var h5d = entry.Deferred is DeferredChunked chunked
+                        ? chunked.GetOrCreateLayout(this, ((H5Dataset)h5Object).DatasetCreation)
+                        : entry.Deferred?.H5D;
+
+                    h5d?.Dispose();
                 }
 
                 // global heap collections

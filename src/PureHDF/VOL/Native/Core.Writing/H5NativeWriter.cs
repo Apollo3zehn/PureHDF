@@ -736,9 +736,17 @@ partial class H5NativeWriter
         );
 
         /* buffer provider */
-        var h5d = CreateLayout(datasetInfo, dataset.DatasetCreation);
+        //
+        // Not yet for a chunked dataset whose data comes later: its layout holds what writing it needs -
+        // the chunk geometry, the chunks still being filled, the index - about 1 kB, which a writer would
+        // otherwise hold for each such dataset from BeginWrite to its first write. See DeferredChunked.
+        var isChunked = dataLayout.LayoutClass == LayoutClass.Chunked;
 
-        if (!memoryData.Equals(default))
+        var h5d = isChunked && memoryData.Equals(default)
+            ? null
+            : CreateLayout(datasetInfo, dataset.DatasetCreation);
+
+        if (h5d is not null && !memoryData.Equals(default))
         {
             var fileSelection = dataset.FileSelection;
             var memorySelection = dataset.MemorySelection;
@@ -769,6 +777,8 @@ partial class H5NativeWriter
 
         DeferredDataset deferred = h5d switch
         {
+            null => new DeferredChunked(datasetInfo, encode),
+
             H5D_Chunk => new DeferredLayout(h5d, encode),
 
             H5D_Contiguous when dataspace.Type != DataspaceType.Null => new DeferredContiguous(
@@ -793,7 +803,7 @@ partial class H5NativeWriter
         //
         // Only a chunked dataset rewrites its own object header later (H5D_Chunk4.Dispose, once its
         // index is known), so only it keeps a copy of the header to patch.
-        if (h5d is H5D_Chunk4)
+        if (isChunked)
         {
             var (chunkedAddress, encoded) = objectHeader.EncodeAndKeep(Context);
             Context.DatasetInfoToObjectHeaderMap[datasetInfo] = ((long)chunkedAddress, encoded);
