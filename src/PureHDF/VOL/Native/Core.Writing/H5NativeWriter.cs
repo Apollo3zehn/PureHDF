@@ -38,10 +38,10 @@ partial class H5NativeWriter
 
     internal H5NativeWriter(H5File file, Stream stream, H5WriteOptions options, bool leaveOpen)
     {
-        // TODO writing never reads from the stream (checksums are computed from the encoded bytes), so the
-        // readable requirement could be lifted.
-        if (!stream.CanRead || !stream.CanWrite || !stream.CanSeek)
-            throw new Exception("The stream must be readble, writable and seekable.");
+        // Not required to be readable: checksums are computed from the encoded bytes, so nothing written
+        // is read back, and a destination that cannot serve reads (an upload) can be written to.
+        if (!stream.CanWrite || !stream.CanSeek)
+            throw new Exception("The stream must be writable and seekable.");
 
         // The Stream constructor takes cursor mode by construction, which is what the write path
         // needs: it writes at the wrapped stream's own cursor, and positionless mode would decouple

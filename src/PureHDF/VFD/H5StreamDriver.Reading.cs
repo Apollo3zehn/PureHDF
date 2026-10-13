@@ -57,13 +57,13 @@ internal partial class H5StreamDriver : H5DriverBase
     // H5StreamDriver.Writing keeps the invariant explicit.
     private readonly ReadAheadWindow? _readAhead;
 
-    /// <param name="stream">The stream to read from.</param>
+    /// <param name="stream">
+    /// The stream to read from or write to. Readability is checked by whoever reads: the writer accepts a
+    /// stream that cannot be read.
+    /// </param>
     /// <param name="leaveOpen">Whether <see cref="Dispose(bool)" /> leaves the stream open.</param>
     public H5StreamDriver(Stream stream, bool leaveOpen)
     {
-        if (!stream.CanRead)
-            throw new Exception("The stream must be readable.");
-
         if (!stream.CanSeek)
             throw new Exception("The stream must be seekable.");
 

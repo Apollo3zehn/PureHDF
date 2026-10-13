@@ -116,7 +116,7 @@ public class WriteWithoutReadingTests
 
     private static byte[] WriteForbiddingReads(H5File file, H5WriteOptions options, Action<H5NativeWriter> writeData)
     {
-        using var stream = new ReadForbiddingStream();
+        using var stream = new WriteOnlyStream();
 
         using (var writer = file.BeginWrite(stream, options))
         {
@@ -151,10 +151,12 @@ public class WriteWithoutReadingTests
     }
 
     /// <summary>
-    ///     Reports itself readable, as the writer requires, but fails any read.
+    ///     Reports itself not readable, and fails any read in case the writer reads regardless.
     /// </summary>
-    private sealed class ReadForbiddingStream : MemoryStream
+    private sealed class WriteOnlyStream : MemoryStream
     {
+        public override bool CanRead => false;
+
         public override int Read(byte[] buffer, int offset, int count)
             => throw new InvalidOperationException("The writer read from the stream it writes to.");
 
