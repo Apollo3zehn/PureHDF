@@ -18,7 +18,7 @@ namespace PureHDF;
 /// <param name="FieldStringLengthMapper">Maps a <see cref="FieldInfo"/> of type string to the desired string length.</param>
 /// <param name="PropertyNameMapper">Maps a <see cref="PropertyInfo"/> to the name of the HDF5 member.</param>
 /// <param name="PropertyStringLengthMapper">Maps a <see cref="PropertyInfo"/> of type string to the desired string length.</param>
-/// <param name="Filters">A list of filters and their options to be applied to datasets that have no explicit filters assigned.</param>
+/// <param name="Filters">A list of filters and their options to be applied to datasets that have no explicit filters assigned. Except datasets given with the tree that hold at most 64 bytes, variable-length values included, which are written compact instead when <see cref="MaximumCompactDatasetSize" /> allows it: a filter needs a chunked layout, and compressing a few bytes costs more than it saves. Assign filters to such a dataset itself to have them applied regardless.</param>
 /// <param name="AttributeStringLength">
 ///     How a string attribute is sized. The default, <see cref="H5AttributeStringLength.Measured" />, makes
 ///     it as wide as its own value.

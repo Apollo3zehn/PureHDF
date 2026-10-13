@@ -132,9 +132,7 @@ internal partial record class DataLayoutMessage4
             //
             // Within that, the caller's maximum, against which the variable-length values the data
             // names count too: they are placed with the header.
-            var fitsCompact =
-                dataEncodeSize <= H5WriteOptions.MAXIMUM_COMPACT_DATASET_SIZE &&
-                dataEncodeSize + variableLengthSize <= context.WriteOptions.MaximumCompactDatasetSize;
+            var fitsCompact = FitsCompact(context, dataEncodeSize, variableLengthSize);
 
             /* try to create compact dataset */
             if (preferCompact && fitsCompact && !isDeferred)
@@ -181,6 +179,14 @@ internal partial record class DataLayoutMessage4
 
         return dataLayout;
     }
+
+    /// <summary>
+    /// Whether data of <paramref name="dataEncodeSize" /> bytes, naming <paramref name="variableLengthSize" />
+    /// bytes of variable-length values, can be written compact.
+    /// </summary>
+    public static bool FitsCompact(NativeWriteContext context, long dataEncodeSize, long variableLengthSize)
+        => dataEncodeSize <= H5WriteOptions.MAXIMUM_COMPACT_DATASET_SIZE &&
+            dataEncodeSize + variableLengthSize <= context.WriteOptions.MaximumCompactDatasetSize;
 
     private static ulong GetFixedArrayDataBlockEncodeSize(byte pageBits, ulong chunkCount, ulong chunkByteSize)
     {
