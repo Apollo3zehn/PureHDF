@@ -452,6 +452,10 @@ partial class H5NativeWriter
     /// </summary>
     internal void WriteAbandoned()
     {
+        // Runs after every write, mostly with nothing to do.
+        if (!Context.FreeSpaceManager.HasAbandoned)
+            return;
+
         var abandoned = Context.FreeSpaceManager.TakeAbandoned();
 
         if (abandoned.Count == 0)

@@ -345,6 +345,9 @@ internal class FreeSpaceManager
     /// written. A tail placed provisionally is kept until the payload has moved, since its final address
     /// is not known before.
     /// </remarks>
+    /// <summary>Whether there are ranges for <see cref="TakeAbandoned" /> to take.</summary>
+    public bool HasAbandoned => _abandoned.Count > 0;
+
     public List<(long Address, long Length)> TakeAbandoned()
     {
         var taken = new List<(long Address, long Length)>();

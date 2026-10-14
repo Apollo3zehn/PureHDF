@@ -334,6 +334,10 @@ internal class GlobalHeapManager
     /// </remarks>
     public void WriteClosedCollections()
     {
+        // Runs after every write, mostly with nothing to do.
+        if (_pendingCollections.Count == 0)
+            return;
+
         var open = _openCollections.Values;
         var closed = _pendingCollections.Where(state => !open.Contains(state)).ToList();
 
