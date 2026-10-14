@@ -105,6 +105,45 @@ public class WriteOnceTests
         Assert.True(stream.MostHoles <= 2, $"{stream.MostHoles} gaps were open at once.");
     }
 
+    // A filtered dataset's chunk index can be written as soon as its last chunk is. Given with the tree,
+    // that is before its header exists, and an index left until the end would leave a gap per dataset.
+    [Fact]
+    public void TheIndexOfAFilteredDatasetGivenWithTheTreeIsWrittenWithIt()
+    {
+        // Act
+        var few = MostHolesWritingFilteredDatasets(count: 10);
+        var many = MostHolesWritingFilteredDatasets(count: 1_000);
+
+        // Assert - the superblock, written last, the metadata block still being filled, and the index
+        // of the dataset whose chunks are being written
+        Assert.Equal(few, many);
+        Assert.True(many <= 3, $"{many} gaps were open at once.");
+    }
+
+    private static int MostHolesWritingFilteredDatasets(int count)
+    {
+        var file = new H5File();
+
+        for (var i = 0; i < count; i++)
+            file[$"dataset_{i:D4}"] = new H5Dataset(RandomDoubles(i, 1_000), chunks: [250]);
+
+        var options = new H5WriteOptions(Filters: [DeflateFilter.Id])
+        {
+            MetadataPlacement = H5MetadataPlacement.Aggregated
+        };
+
+        using var stream = new CoverageRecordingStream();
+
+        using (file.BeginWrite(stream, options))
+        {
+        }
+
+        using var actual = H5File.Open(new MemoryStream(stream.ToArray()));
+        Assert.Equal(RandomDoubles(count - 1, 1_000), actual.Dataset($"dataset_{count - 1:D4}").Read<double[]>());
+
+        return stream.MostHoles;
+    }
+
     private static (CoverageRecordingStream Stream, List<(long Address, long Length)> OpenTails) Write(
         Scenario scenario, H5MetadataPlacement placement)
     {
