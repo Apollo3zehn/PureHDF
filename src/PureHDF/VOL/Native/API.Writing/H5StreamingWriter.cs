@@ -1,5 +1,4 @@
 using PureHDF.Selections;
-using PureHDF.VOL.Native;
 
 namespace PureHDF;
 
