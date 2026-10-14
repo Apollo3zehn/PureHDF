@@ -265,6 +265,35 @@ public class WriteOnceTests
         Assert.True(nested > 3 * direct, $"Nested: {nested} bytes, direct: {direct} bytes.");
     }
 
+    // A late header that does not fit what is left of the metadata block replaces the block, on a write.
+    // The tail left behind has to be filled then rather than at the end, or it holds its part until then.
+    [Fact]
+    public void TheTailsOfBlocksReplacedByLateHeadersAreFilledAsTheyAreReplaced()
+    {
+        // Arrange
+        const int count = 2_000;
+
+        var options = new H5WriteOptions { MetadataBlockSize = 64 * 1024 };
+        var stream = new CoverageRecordingStream();
+        var datasets = new H5Dataset<double[]>[count];
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream, options))
+        {
+            for (var i = 0; i < count; i++)
+            {
+                datasets[i] = new H5Dataset<double[]>(fileDims: [1_000]);
+                writer.Append($"documents/{i}", datasets[i]);
+            }
+
+            for (var i = 0; i < count; i++)
+                writer.Write(datasets[i], RandomDoubles(i, 1_000));
+        }
+
+        // Assert - the superblock, written last, the open metadata block and a batch of completed headers
+        Assert.True(stream.MostHoles <= 3, $"{stream.MostHoles} gaps were open at once.");
+    }
+
     private static long MostHoleBytesStreamingDatasetsWrittenLate(bool nested, int count)
     {
         var options = new H5WriteOptions { MetadataBlockSize = 64 * 1024 };

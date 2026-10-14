@@ -35,31 +35,32 @@ public partial class H5NativeWriter : IDisposable
         // As in WriteDatasetData: variable-length elements written here are the dataset's payload,
         // so their heap collections are allocated as payload too.
         var enclosing = Context.GlobalHeapManager.AllocationKind;
-        H5D_Base h5d;
+        H5D_Base? h5d = null;
         Context.GlobalHeapManager.AllocationKind = AllocationKind.RawData;
 
         try
         {
-            if (info is DeferredContiguous target &&
+            var isWrittenWhole =
+                info is DeferredContiguous target &&
                 memorySelection is null or AllSelection &&
                 fileSelection is null or AllSelection &&
-                WriteDatasetDispatchCache<T>.WholeContiguous(this, target, data))
+                WriteDatasetDispatchCache<T>.WholeContiguous(this, target, data);
+
+            if (!isWrittenWhole)
             {
-                return;
+                h5d = info switch
+                {
+                    DeferredChunked chunked => chunked.GetOrCreateLayout(this, dataset.DatasetCreation),
+                    _ => info.H5D ?? CreateLayout(info.GetInfo(), dataset.DatasetCreation)
+                };
+
+                WriteDatasetDispatchCache<T>.Dispatch(
+                    h5d,
+                    info.Encode,
+                    data,
+                    memorySelection,
+                    fileSelection);
             }
-
-            h5d = info switch
-            {
-                DeferredChunked chunked => chunked.GetOrCreateLayout(this, dataset.DatasetCreation),
-                _ => info.H5D ?? CreateLayout(info.GetInfo(), dataset.DatasetCreation)
-            };
-
-            WriteDatasetDispatchCache<T>.Dispatch(
-                h5d,
-                info.Encode,
-                data,
-                memorySelection,
-                fileSelection);
         }
 
         finally
@@ -69,6 +70,7 @@ public partial class H5NativeWriter : IDisposable
 
         FinishIfComplete(dataset, h5d);
 
+        // Also after a whole contiguous write: allocating a held-back header can replace a metadata block.
         EndTopLevelEncode();
     }
 
