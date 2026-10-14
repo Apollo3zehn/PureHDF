@@ -819,6 +819,183 @@ partial class H5NativeWriter
         var dataspace = DataspaceMessage.Create(
             fileDims: fileDims);
 
+        var (chunkDimensions, filterPipeline, variableLengthSize, objectSizes) =
+            ChooseStorage(dataset, datatype, dataspace, encode, memoryData, isScalar);
+
+        // Deferred means given no data, not given null: a scalar whose value is null is one element that is
+        // null, and is written now like any other.
+        var isDeferred = dataspace.Type != DataspaceType.Null && memoryData.Equals(default);
+
+        // A deferred dataset's payload is allocated on its first write when asked for, see PendingPayload
+        // and H5WriteOptions.AllocatePayloadOnFirstWrite. Not while the structure is staged, whose payload is
+        // placed provisionally and moved as a whole.
+        var allocatesPayload = !isDeferred || Context.Staging is not null || !Context.WriteOptions.AllocatePayloadOnFirstWrite;
+
+        var dataLayout = DataLayoutMessage4.Create(
+            Context,
+            typeSize: datatype.Size,
+            isFiltered: filterPipeline is not null,
+            /* compact data and filtered single chunk index data must not be written deferred because of object header checksum */
+            isDeferred: isDeferred,
+            dataDimensions: dataspace.Type == DataspaceType.Null ? default : dataspace.Dimensions,
+            chunkDimensions: chunkDimensions,
+            allocatesPayload: allocatesPayload,
+            out var unallocatedPayloadSize,
+            variableLengthSize: variableLengthSize);
+
+        // fill value
+        var fillValueMessage = DefaultFillValueMessage;
+
+        // header messages
+        var headerMessages = new List<HeaderMessage>()
+        {
+            ToHeaderMessage(datatype),
+            ToHeaderMessage(dataspace),
+            ToHeaderMessage(dataLayout),
+            ToHeaderMessage(fillValueMessage)
+        };
+
+        if (filterPipeline is not null)
+            headerMessages.Add(ToHeaderMessage(filterPipeline));
+
+        if (dataset.InternalAttributes is not null)
+            AppendAttributesToHeaderMessages(dataset.InternalAttributes, headerMessages, Context);
+
+        AppendReferenceCountToHeaderMessages(dataset, headerMessages);
+
+        // object header
+        var objectHeader = CreateObjectHeader(headerMessages);
+
+        // encode data
+
+        /* dataset info */
+        var datasetInfo = new DatasetInfo(
+            Space: dataspace,
+            Type: datatype,
+            Layout: dataLayout,
+            FillValue: fillValueMessage,
+            FilterPipeline: filterPipeline,
+            ExternalFileList: default
+        );
+
+        /* buffer provider */
+        //
+        // Not yet for a chunked dataset whose data comes later: its layout holds what writing it needs -
+        // the chunk geometry, the chunks still being filled, the index - about 1 kB, which a writer would
+        // otherwise hold for each such dataset from BeginWrite to its first write. See DeferredChunked.
+        var isChunked = dataLayout.LayoutClass == LayoutClass.Chunked;
+
+        var h5d = isChunked && memoryData.Equals(default)
+            ? null
+            : CreateLayout(datasetInfo, dataset.DatasetCreation);
+
+        if (h5d is not null && !memoryData.Equals(default))
+            WriteGivenData(dataset, h5d, dataLayout, encode, memoryData, memoryDims, objectSizes);
+
+        DeferredDataset deferred = h5d switch
+        {
+            null => new DeferredChunked(datasetInfo, encode),
+
+            H5D_Chunk => new DeferredLayout(h5d, encode),
+
+            H5D_Contiguous when dataspace.Type != DataspaceType.Null => new DeferredContiguous(
+                fileDims: dataspace.Dimensions,
+                type: datatype,
+                address: dataLayout.Properties.Address,
+                size: ((ContiguousStoragePropertyDescription)dataLayout.Properties).Size,
+                encode),
+
+            _ => new DeferredInfo(datasetInfo, encode)
+        };
+
+        CollectionsMarshal.GetValueRefOrAddDefault(Context.Objects, dataset, out _).Deferred = deferred;
+
+        /* Note: Ensures that the chunk cache is flushed and all 
+         * chunk sizes / addresses are known, before encoding the object header.
+         */
+        if (h5d is H5D_Chunk chunk)
+            chunk.FlushChunkCache();
+
+        // A shared dataset's header is written at the end, with its link count; the payload address and
+        // the chunk index are patched into the kept copy until then.
+        if (IsHeldShared(dataset))
+        {
+            var shared = KeepSharedHeader(objectHeader, dataset);
+            AttachHeader(deferred, shared, dataLayout, unallocatedPayloadSize);
+
+            if (isChunked)
+                Context.DatasetInfoToObjectHeaderMap[datasetInfo] = shared;
+
+            if (isChunked)
+                FinishIfComplete(dataset, h5d);
+
+            return shared.Address;
+        }
+
+        // encode object header
+        //
+        // Only a chunked dataset patches its own object header later (H5D_Chunk4.Dispose, once its
+        // index is known), so only it keeps a copy of the header to patch. Of those, a deferred single
+        // chunk and a deferred implicitly indexed dataset are the ones whose header changes: the payload
+        // address, and for a filtered single chunk its size, are in the header and known only once the
+        // data is written. Their header is written then, once, rather than now and again.
+        if (isChunked)
+        {
+            // So is a filtered one's index, allocated once its chunks are written - see AllocateIndex.
+            var writesHeaderLater = unallocatedPayloadSize > 0 || h5d is null && dataLayout.Properties is ChunkedStoragePropertyDescription4
+            {
+                IndexingInformation: SingleChunkIndexingInformation
+            } || h5d is null && filterPipeline is not null && Context.Staging is null;
+
+            var kept = KeepHeader(objectHeader, allocate: !(allowsLateHeader && writesHeaderLater), write: !writesHeaderLater);
+
+            Context.DatasetInfoToObjectHeaderMap[datasetInfo] = kept;
+            AttachHeader(deferred, kept, dataLayout, unallocatedPayloadSize);
+
+            // The kept copy is not corrected along with the staged header: Dispose rewrites it from the
+            // layout's own (relocated) address before it writes it anyway.
+            RecordProvisionalAddress(dataLayout.Properties, kept.Address, kept.Header.Length);
+
+            // Data given with the tree may have completed the dataset, whose index can then be written
+            // now rather than at Dispose - where it would be one gap per dataset behind everything written
+            // since. Not while the structure is staged: the chunk addresses are still provisional.
+            if (Context.Staging is null)
+                FinishIfComplete(dataset, h5d);
+
+            return kept.Address;
+        }
+
+        if (unallocatedPayloadSize > 0)
+        {
+            var kept = KeepHeader(objectHeader, allocate: !allowsLateHeader, write: false);
+            AttachHeader(deferred, kept, dataLayout, unallocatedPayloadSize);
+
+            return kept.Address;
+        }
+
+        var address = objectHeader.Encode(Context, out var headerLength);
+
+        RecordProvisionalAddress(dataLayout.Properties, address, headerLength);
+
+        return address;
+    }
+
+    /// <summary>
+    /// Chooses how a dataset is stored: compact, or chunked and with which filters.
+    /// </summary>
+    /// <returns>
+    /// The chunk dimensions, null unless chunked; the filter pipeline, null unless filtered; and the
+    /// variable-length values measured to decide whether the data fits compact, with their stored size.
+    /// </returns>
+    private (uint[]? ChunkDimensions, FilterPipelineMessage? FilterPipeline, long VariableLengthSize, List<int>? ObjectSizes)
+        ChooseStorage<TElement>(
+            H5Dataset dataset,
+            DatatypeMessage datatype,
+            DataspaceMessage dataspace,
+            EncodeDelegate<TElement> encode,
+            Memory<TElement> memoryData,
+            bool isScalar)
+    {
         // compact
         //
         // Decided before the filters, because a filter set for every dataset leaves out the smallest
@@ -902,196 +1079,53 @@ partial class H5NativeWriter
             }
         }
 
-        // Deferred means given no data, not given null: a scalar whose value is null is one element that is
-        // null, and is written now like any other.
-        var isDeferred = dataspace.Type != DataspaceType.Null && memoryData.Equals(default);
+        return (chunkDimensions, filterPipeline, variableLengthSize, objectSizes);
+    }
 
-        // A deferred dataset's payload is allocated on its first write when asked for, see PendingPayload
-        // and H5WriteOptions.AllocatePayloadOnFirstWrite. Not while the structure is staged, whose payload is
-        // placed provisionally and moved as a whole.
-        var allocatesPayload = !isDeferred || Context.Staging is not null || !Context.WriteOptions.AllocatePayloadOnFirstWrite;
+    // Writes the data a dataset was given with, as it is encoded.
+    private void WriteGivenData<TElement>(
+        H5Dataset dataset,
+        H5D_Base h5d,
+        DataLayoutMessage4 dataLayout,
+        EncodeDelegate<TElement> encode,
+        Memory<TElement> memoryData,
+        ulong[]? memoryDims,
+        List<int>? objectSizes)
+    {
+        var fileSelection = dataset.FileSelection;
+        var memorySelection = dataset.MemorySelection;
 
-        var dataLayout = DataLayoutMessage4.Create(
-            Context,
-            typeSize: datatype.Size,
-            isFiltered: filterPipeline is not null,
-            /* compact data and filtered single chunk index data must not be written deferred because of object header checksum */
-            isDeferred: isDeferred,
-            dataDimensions: dataspace.Type == DataspaceType.Null ? default : dataspace.Dimensions,
-            chunkDimensions: chunkDimensions,
-            allocatesPayload: allocatesPayload,
-            out var unallocatedPayloadSize,
-            variableLengthSize: variableLengthSize);
+        var dims = memoryDims ?? throw new Exception("This should never happen.");
 
-        // fill value
-        var fillValueMessage = DefaultFillValueMessage;
+        // ChooseStorage measured the values in memory order. A write of all of them, unselected, adds them
+        // to the heap in that same order, so the measurement can plan its heap rather than be repeated.
+        var plannedObjectSizes =
+            (fileSelection is null or AllSelection) && (memorySelection is null or AllSelection)
+                ? objectSizes
+                : null;
 
-        // header messages
-        var headerMessages = new List<HeaderMessage>()
-        {
-            ToHeaderMessage(datatype),
-            ToHeaderMessage(dataspace),
-            ToHeaderMessage(dataLayout),
-            ToHeaderMessage(fillValueMessage)
-        };
+        // A compact dataset's data is part of its header, so it is structure, and so are the
+        // variable-length values it points at. Placed as payload, they would also be named by a
+        // staged header with an address that is still provisional.
+        if (dataLayout.Properties is CompactStoragePropertyDescription)
+            WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, dims, AllocationKind.Metadata);
 
-        if (filterPipeline is not null)
-            headerMessages.Add(ToHeaderMessage(filterPipeline));
+        // Payload has nowhere final to go while the structure is staged, so it is written once the
+        // structure is placed.
+        else if (Context.Staging is { } staging)
+            PostponeData(staging, dataset, h5d, encode, memoryData, fileSelection, memorySelection, dims, plannedObjectSizes);
 
-        if (dataset.InternalAttributes is not null)
-            AppendAttributesToHeaderMessages(dataset.InternalAttributes, headerMessages, Context);
+        else
+            WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, dims, AllocationKind.RawData, plannedObjectSizes);
+    }
 
-        AppendReferenceCountToHeaderMessages(dataset, headerMessages);
-
-        // object header
-        var objectHeader = CreateObjectHeader(headerMessages);
-
-        // encode data
-
-        /* dataset info */
-        var datasetInfo = new DatasetInfo(
-            Space: dataspace,
-            Type: datatype,
-            Layout: dataLayout,
-            FillValue: fillValueMessage,
-            FilterPipeline: filterPipeline,
-            ExternalFileList: default
-        );
-
-        /* buffer provider */
-        //
-        // Not yet for a chunked dataset whose data comes later: its layout holds what writing it needs -
-        // the chunk geometry, the chunks still being filled, the index - about 1 kB, which a writer would
-        // otherwise hold for each such dataset from BeginWrite to its first write. See DeferredChunked.
-        var isChunked = dataLayout.LayoutClass == LayoutClass.Chunked;
-
-        var h5d = isChunked && memoryData.Equals(default)
-            ? null
-            : CreateLayout(datasetInfo, dataset.DatasetCreation);
-
-        if (h5d is not null && !memoryData.Equals(default))
-        {
-            var fileSelection = dataset.FileSelection;
-            var memorySelection = dataset.MemorySelection;
-
-            var dims = memoryDims ?? throw new Exception("This should never happen.");
-
-            // The values were measured in memory order above. A write of all of them, unselected, adds them
-            // to the heap in that same order, so the measurement can plan its heap rather than be repeated.
-            var plannedObjectSizes =
-                (fileSelection is null or AllSelection) && (memorySelection is null or AllSelection)
-                    ? objectSizes
-                    : null;
-
-            // A compact dataset's data is part of its header, so it is structure, and so are the
-            // variable-length values it points at. Placed as payload, they would also be named by a
-            // staged header with an address that is still provisional.
-            if (dataLayout.Properties is CompactStoragePropertyDescription)
-                WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, dims, AllocationKind.Metadata);
-
-            // Payload has nowhere final to go while the structure is staged, so it is written once the
-            // structure is placed.
-            else if (Context.Staging is { } staging)
-                PostponeData(staging, dataset, h5d, encode, memoryData, fileSelection, memorySelection, dims, plannedObjectSizes);
-
-            else
-                WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, dims, AllocationKind.RawData, plannedObjectSizes);
-        }
-
-        DeferredDataset deferred = h5d switch
-        {
-            null => new DeferredChunked(datasetInfo, encode),
-
-            H5D_Chunk => new DeferredLayout(h5d, encode),
-
-            H5D_Contiguous when dataspace.Type != DataspaceType.Null => new DeferredContiguous(
-                fileDims: dataspace.Dimensions,
-                type: datatype,
-                address: dataLayout.Properties.Address,
-                size: ((ContiguousStoragePropertyDescription)dataLayout.Properties).Size,
-                encode),
-
-            _ => new DeferredInfo(datasetInfo, encode)
-        };
-
-        CollectionsMarshal.GetValueRefOrAddDefault(Context.Objects, dataset, out _).Deferred = deferred;
-
-        /* Note: Ensures that the chunk cache is flushed and all 
-         * chunk sizes / addresses are known, before encoding the object header.
-         */
-        if (h5d is H5D_Chunk chunk)
-            chunk.FlushChunkCache();
-
-        // A shared dataset's header is written at the end, with its link count; the payload address and
-        // the chunk index are patched into the kept copy until then.
-        if (IsHeldShared(dataset))
-        {
-            var shared = KeepSharedHeader(objectHeader, dataset);
-            deferred.Header = shared;
-
-            if (isChunked)
-                Context.DatasetInfoToObjectHeaderMap[datasetInfo] = shared;
-
-            if (unallocatedPayloadSize > 0)
-                deferred.Pending = CreatePendingPayload(dataLayout.Properties, shared, unallocatedPayloadSize);
-
-            if (isChunked)
-                FinishIfComplete(dataset, h5d);
-
-            return shared.Address;
-        }
-
-        // encode object header
-        //
-        // Only a chunked dataset patches its own object header later (H5D_Chunk4.Dispose, once its
-        // index is known), so only it keeps a copy of the header to patch. Of those, a deferred single
-        // chunk and a deferred implicitly indexed dataset are the ones whose header changes: the payload
-        // address, and for a filtered single chunk its size, are in the header and known only once the
-        // data is written. Their header is written then, once, rather than now and again.
-        if (isChunked)
-        {
-            // So is a filtered one's index, allocated once its chunks are written - see AllocateIndex.
-            var writesHeaderLater = unallocatedPayloadSize > 0 || h5d is null && dataLayout.Properties is ChunkedStoragePropertyDescription4
-            {
-                IndexingInformation: SingleChunkIndexingInformation
-            } || h5d is null && filterPipeline is not null && Context.Staging is null;
-
-            var kept = KeepHeader(objectHeader, allocate: !(allowsLateHeader && writesHeaderLater), write: !writesHeaderLater);
-
-            Context.DatasetInfoToObjectHeaderMap[datasetInfo] = kept;
-            deferred.Header = kept;
-
-            if (unallocatedPayloadSize > 0)
-                deferred.Pending = CreatePendingPayload(dataLayout.Properties, kept, unallocatedPayloadSize);
-
-            // The kept copy is not corrected along with the staged header: Dispose rewrites it from the
-            // layout's own (relocated) address before it writes it anyway.
-            RecordProvisionalAddress(dataLayout.Properties, kept.Address, kept.Header.Length);
-
-            // Data given with the tree may have completed the dataset, whose index can then be written
-            // now rather than at Dispose - where it would be one gap per dataset behind everything written
-            // since. Not while the structure is staged: the chunk addresses are still provisional.
-            if (Context.Staging is null)
-                FinishIfComplete(dataset, h5d);
-
-            return kept.Address;
-        }
+    // Hands a dataset its kept header, and the payload still to allocate when it is first written.
+    private void AttachHeader(DeferredDataset deferred, KeptHeader header, DataLayoutMessage4 dataLayout, long unallocatedPayloadSize)
+    {
+        deferred.Header = header;
 
         if (unallocatedPayloadSize > 0)
-        {
-            var kept = KeepHeader(objectHeader, allocate: !allowsLateHeader, write: false);
-
-            deferred.Header = kept;
-            deferred.Pending = CreatePendingPayload(dataLayout.Properties, kept, unallocatedPayloadSize);
-
-            return kept.Address;
-        }
-
-        var address = objectHeader.Encode(Context, out var headerLength);
-
-        RecordProvisionalAddress(dataLayout.Properties, address, headerLength);
-
-        return address;
+            deferred.Pending = CreatePendingPayload(dataLayout.Properties, header, unallocatedPayloadSize);
     }
 
     internal H5D_Base CreateLayout(DatasetInfo datasetInfo, H5DatasetCreation datasetCreation)
