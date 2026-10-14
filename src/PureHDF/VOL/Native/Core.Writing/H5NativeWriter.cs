@@ -21,29 +21,10 @@ partial class H5NativeWriter
 
     private ulong _rootGroupAddress;
 
-    // Streaming only: the objects written by earlier appends, and their header addresses. Weak, so it
-    // keeps nothing alive the caller has let go of. See EndAppend.
-    private ConditionalWeakTable<H5Object, WrittenObject>? _written;
-
     // The links counted so far to each object that declared a count, or is shared. Weak, so it does not
     // keep a dataset's data alive; the counters themselves are listed to be checked at the end.
     private readonly ConditionalWeakTable<H5Object, LinkCounter> _linkCounters = new();
     private readonly List<LinkCounter> _countedLinks = [];
-
-    // Streaming only: the headers of shared objects, written at the end. See H5Object.IsShared.
-    private readonly List<SharedHeader> _sharedHeaders = [];
-
-    // Streaming only: what the current append changed that AbortAppend has to undo.
-    private readonly List<LinkCounter> _linksCountedByAppend = [];
-    private int _sharedHeadersBeforeAppend;
-
-    // Streaming only: layouts of datasets given with data whose map entries EndAppend dropped, still to be
-    // disposed - the index of a chunked dataset is written then.
-    private readonly List<H5D_Base> _detachedLayouts = [];
-
-    // Streaming only: the objects encoded by the current append. The map holds the deferred datasets of
-    // every earlier append too, so walking it at every append would grow with the file.
-    private readonly List<H5Object> _appended = [];
 
     // The most data a dataset given with the tree may hold and still be left out of the filters set for
     // every dataset (H5WriteOptions.Filters). Measured: up to 64 bytes, compact beat deflate on file size,
@@ -186,21 +167,15 @@ partial class H5NativeWriter
     }
 
     /// <summary>
-    /// Prepares a writer that is given its tree one subtree at a time. See <see cref="H5StreamingWriter" />.
+    /// Writes what can be written between top-level encodes: closed heap collections and the tails of
+    /// replaced blocks.
     /// </summary>
-    internal void BeginStreaming()
+    internal void EndTopLevelEncode()
     {
-        _written = new();
-        Context.FreeSpaceManager.ReserveSharedRegion(Context.WriteOptions.SharedObjectRegionSize);
-        Context.Driver.SeekRelativeToBaseAddress(Superblock23.ENCODE_SIZE);
+        // Between top-level encodes is the only safe point to write heap collections; see there.
+        Context.GlobalHeapManager.WriteClosedCollections();
+        WriteAbandoned();
     }
-
-    /// <summary>
-    /// Whether <paramref name="h5Object" />'s header is held until the end and written into the shared
-    /// region. See <see cref="H5Object.IsShared" />.
-    /// </summary>
-    private bool IsHeldShared(H5Object h5Object)
-        => _written is not null && h5Object.IsShared && h5Object.HardLinkCount is null;
 
     private LinkCounter GetLinkCounter(H5Object h5Object)
     {
@@ -212,224 +187,6 @@ partial class H5NativeWriter
         }
 
         return counter;
-    }
-
-    /// <summary>
-    /// Encodes the header of a shared object into the shared region, and keeps it to be written at the
-    /// end with its final link count.
-    /// </summary>
-    private KeptHeader KeepSharedHeader(ObjectHeader2 objectHeader, H5Object owner)
-    {
-        var address = Context.FreeSpaceManager.AllocateShared(objectHeader.GetEncodeSize());
-        var encoded = objectHeader.EncodeAt(Context, (ulong)address);
-
-        var countMessage = objectHeader.HeaderMessages
-            .Select(message => message.Data)
-            .OfType<ObjectReferenceCountMessage>()
-            .Single();
-
-        var countOffset = countMessage.CountPosition - ((long)Context.Driver.BaseAddress + address);
-
-        _sharedHeaders.Add(new SharedHeader(address, encoded, (int)countOffset, GetLinkCounter(owner)));
-
-        return new KeptHeader(encoded, encodedAt: (ulong)address) { Address = (ulong)address, IsWritten = true, IsShared = true };
-    }
-
-    /// <summary>
-    /// Writes the shared regions: the headers of the shared objects with their final link counts, and
-    /// zeros between and after them.
-    /// </summary>
-    internal void WriteSharedRegions()
-    {
-        var regions = Context.FreeSpaceManager.SharedRegions;
-
-        if (regions.Count == 0)
-            return;
-
-        var driver = Context.Driver;
-        var position = driver.Position;
-        var headers = 0;
-
-        _sharedHeaders.Sort((x, y) => x.Address.CompareTo(y.Address));
-
-        foreach (var (regionAddress, regionLength) in regions)
-        {
-            var buffer = new byte[regionLength];
-
-            for (; headers < _sharedHeaders.Count && _sharedHeaders[headers].Address < regionAddress + regionLength; headers++)
-            {
-                var (address, header, countOffset, counter) = _sharedHeaders[headers];
-
-                // An object only referenced, never linked, counts as linked once - as it does when the
-                // count message is left out.
-                BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(countOffset), (uint)Math.Max(1, counter.Links));
-                ChecksummedStructure.UpdateChecksum(header);
-
-                header.CopyTo(buffer.AsSpan((int)(address - regionAddress)));
-            }
-
-            driver.SeekRelativeToBaseAddress(regionAddress);
-            driver.Write(buffer);
-        }
-
-        driver.Seek(position, SeekOrigin.Begin);
-        _sharedHeaders.Clear();
-    }
-
-    internal ulong RootGroupAddress
-    {
-        set => _rootGroupAddress = value;
-    }
-
-    /// <summary>
-    /// Encodes an appended subtree and returns its address, or zero for one whose header waits - see
-    /// <see cref="GetPendingHeader" />.
-    /// </summary>
-    /// <remarks>
-    /// A deferred dataset is named by nothing written yet: only its group's header will name it. So its
-    /// header is not allocated until it is first written or something has to name it, and in the meantime
-    /// it is no gap in the file. Appended directly, that is its open group closing; inside an appended
-    /// group, the group waits for it - see <see cref="PendingGroup" />.
-    /// </remarks>
-    internal ulong EncodeAppended(H5Object subtree)
-    {
-        _linksCountedByAppend.Clear();
-        _sharedHeadersBeforeAppend = _sharedHeaders.Count;
-
-        if (subtree is H5Group group)
-            CountReferences(group, Context.ObjectReferenceCountMap);
-
-        CountLink(subtree);
-
-        return GetOrEncodeObject(subtree, allowsLateHeader: true);
-    }
-
-    /// <summary>
-    /// The header of <paramref name="h5Object" /> if it has no address yet: a deferred dataset's allocated
-    /// late, or a group's waiting for one. Null once it has an address.
-    /// </summary>
-    internal IPendingHeader? GetPendingHeader(H5Object h5Object)
-        => Context.Objects.GetValueOrDefault(h5Object) switch
-        {
-            { Address: 0, Deferred.Header: { Address: 0 } header } => header,
-            { Address: 0, Group: { Address: 0 } group } => group,
-            _ => null
-        };
-
-    /// <summary>
-    /// Writes a waiting group now: allocates what its children wait for, and its header.
-    /// </summary>
-    internal ulong ResolvePendingGroup(PendingGroup group)
-    {
-        // Each child given an address resolves its slot, and the last one writes the group.
-        for (var slot = 0; slot < group.Slots.Count && group.Address == 0; slot++)
-            group.Slots[slot].Target?.Resolve(this);
-
-        return group.Address;
-    }
-
-    /// <summary>
-    /// Fills in a waiting group's link to a child that now has an address, and writes the group once it was
-    /// the last.
-    /// </summary>
-    private void ResolveSlot(LinkWaiter waiter, ulong address)
-    {
-        var group = waiter.Group;
-        var (messageIndex, name, _) = group.Slots[waiter.Slot];
-
-        group.HeaderMessages[messageIndex] = CreateLinkMessage(name, LinkType.Hard, new HardLinkInfo(HeaderAddress: address));
-        group.Slots[waiter.Slot] = (messageIndex, name, null);
-
-        if (--group.Unresolved > 0)
-            return;
-
-        group.Address = EncodeObjectHeader(group.HeaderMessages, owner: null);
-        group.HeaderMessages.Clear();
-
-        if (group.Waiter is { } next)
-        {
-            group.Waiter = null;
-            ResolveSlot(next, group.Address);
-        }
-    }
-
-    /// <summary>
-    /// Finishes an append: records what it wrote, and drops everything kept about it that writing its
-    /// deferred datasets does not need.
-    /// </summary>
-    internal void EndAppend()
-    {
-        var written = _written!;
-
-        foreach (var h5Object in _appended)
-        {
-            var entry = Context.Objects[h5Object];
-
-            written.AddOrUpdate(h5Object, new WrittenObject(entry.Address, entry.Group));
-
-            // A dataset given with data is written, and its entry would keep the data alive: only those
-            // declared without data are kept, to be written through the writer.
-            if (entry.Deferred is null or FinishedDataset)
-            {
-                Context.Objects.Remove(h5Object);
-            }
-
-            else if (h5Object is H5Dataset { Data: not null })
-            {
-                if (entry.Deferred.H5D is { } h5d)
-                    _detachedLayouts.Add(h5d);
-
-                Context.Objects.Remove(h5Object);
-            }
-        }
-
-        _appended.Clear();
-        Context.ObjectReferenceCountMap.Clear();
-        Context.RawValueToDatasetMap.Clear();
-
-        EndTopLevelEncode();
-    }
-
-    /// <summary>
-    /// Undoes what a failed append changed in what the writer keeps, so that it can go on: forgets the
-    /// objects it encoded and the links it counted.
-    /// </summary>
-    /// <remarks>
-    /// What it wrote stays in the file, named by nothing.
-    /// </remarks>
-    internal void AbortAppend()
-    {
-        foreach (var h5Object in _appended)
-            Context.Objects.Remove(h5Object);
-
-        foreach (var counter in _linksCountedByAppend)
-            counter.Links--;
-
-        _sharedHeaders.RemoveRange(_sharedHeadersBeforeAppend, _sharedHeaders.Count - _sharedHeadersBeforeAppend);
-
-        _appended.Clear();
-        _linksCountedByAppend.Clear();
-        Context.ObjectReferenceCountMap.Clear();
-        Context.RawValueToDatasetMap.Clear();
-
-        EndTopLevelEncode();
-    }
-
-    /// <summary>
-    /// Whether <paramref name="h5Object" /> was written by an earlier append.
-    /// </summary>
-    internal bool IsWritten(H5Object h5Object)
-        => _written is not null && _written.TryGetValue(h5Object, out _);
-
-    /// <summary>
-    /// Writes what can be written between top-level encodes: closed heap collections and the tails of
-    /// replaced blocks.
-    /// </summary>
-    internal void EndTopLevelEncode()
-    {
-        // Between top-level encodes is the only safe point to write heap collections; see there.
-        Context.GlobalHeapManager.WriteClosedCollections();
-        WriteAbandoned();
     }
 
     /// <summary>
@@ -448,11 +205,10 @@ partial class H5NativeWriter
 
             counter.Links++;
 
-            if (_written is not null)
-                _linksCountedByAppend.Add(counter);
+            _streaming?.LinksCountedByAppend.Add(counter);
         }
 
-        else if (_written is not null && _written.TryGetValue(h5Object, out _))
+        else if (IsWritten(h5Object))
         {
             throw new InvalidOperationException(
                 "The object has already been written by an earlier append, and its header holds its hard link " +
@@ -658,9 +414,9 @@ partial class H5NativeWriter
     internal ulong GetOrEncodeObject(H5Object h5Object, bool allowsLateHeader = false)
     {
         // Written by an earlier append, and no longer in the map.
-        if (_written is not null &&
+        if (_streaming is not null &&
             !Context.Objects.ContainsKey(h5Object) &&
-            _written.TryGetValue(h5Object, out var written))
+            _streaming.Written.TryGetValue(h5Object, out var written))
         {
             return written.Group is { } waiting
                 ? ResolvePendingGroup(waiting)
@@ -682,8 +438,7 @@ partial class H5NativeWriter
             throw new Exception("The current object is already being encoded which suggests a circular reference.");
         }
 
-        if (_written is not null)
-            _appended.Add(h5Object);
+        _streaming?.Appended.Add(h5Object);
 
         var address = h5Object switch
         {
@@ -725,7 +480,7 @@ partial class H5NativeWriter
                 CountLink(target);
 
                 // Streaming: a deferred dataset's header can wait until it is written, see PendingGroup.
-                var linkAddress = GetOrEncodeObject(target, allowsLateHeader: _written is not null);
+                var linkAddress = GetOrEncodeObject(target, allowsLateHeader: IsStreaming);
 
                 // As each child is done rather than once the whole tree is: payload given with the tree
                 // is written while it is encoded, so a tail left until the end sits behind all of it,
@@ -1914,5 +1669,4 @@ partial class H5NativeWriter
         public int Links { get; set; }
     }
 
-    private readonly record struct SharedHeader(long Address, byte[] Header, int CountOffset, LinkCounter Counter);
 }

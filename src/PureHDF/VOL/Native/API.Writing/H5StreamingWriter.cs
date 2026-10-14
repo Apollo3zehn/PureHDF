@@ -188,8 +188,7 @@ public sealed class H5StreamingWriter : IDisposable
 
         _disposed = true;
 
-        NativeWriter.RootGroupAddress = CloseGroup(_root, NativeWriter.File.InternalAttributes);
-        NativeWriter.Dispose();
+        NativeWriter.FinishStreaming(CloseGroup(_root, NativeWriter.File.InternalAttributes));
 
         // Checked once the file is complete: a file with a count too high reads fine, while one without its
         // superblock does not read at all.

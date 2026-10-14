@@ -108,7 +108,7 @@ public partial class H5NativeWriter : IDisposable
                     h5d?.Dispose();
                 }
 
-                foreach (var h5d in _detachedLayouts)
+                foreach (var h5d in _streaming?.DetachedLayouts ?? [])
                     h5d.Dispose();
 
                 // headers of shared objects, now that their links are counted and their layouts final
