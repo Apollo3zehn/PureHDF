@@ -4,14 +4,9 @@ namespace PureHDF.VOL.Native;
 
 internal partial record class ObjectHeader2
 {
-    // Encoded into a buffer and checksummed from it, then written to the file in one piece. Writing
-    // straight to the file and reading the header back for its checksum would cost an async read per
-    // object header, and flush a buffered stream's write buffer each time.
-    //
-    // Completes synchronously; its callers in H5NativeWriter block on the ValueTask it returns.
-    public ValueTask<ulong> Encode(NativeWriteContext context)
-        => new(Encode(context, out _));
-
+    // Encoded into a buffer and checksummed from it, then written to the file in one piece. Reading the
+    // header back from the file for its checksum would cost a read per object header, and flush a
+    // buffered stream's write buffer each time.
     /// <param name="context">The write context.</param>
     /// <param name="encodeSize">The size of the encoded header.</param>
     public ulong Encode(NativeWriteContext context, out int encodeSize)

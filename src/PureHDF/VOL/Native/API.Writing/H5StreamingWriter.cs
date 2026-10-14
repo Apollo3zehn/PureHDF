@@ -46,6 +46,10 @@ public sealed class H5StreamingWriter : IDisposable
     /// Every group on the path that does not exist yet is created, without attributes, and stays open.
     /// The last segment of the path is the name of the new link. Datasets declared without data are
     /// written later with <see cref="Write{T}" />.
+    /// <para>
+    /// An append that throws links nothing, and the writer can go on. What it had written already stays in
+    /// the file, named by nothing.
+    /// </para>
     /// </remarks>
     /// <param name="path">The path of the new link, relative to the root group, its segments separated by '/'.</param>
     /// <param name="subtree">The group or dataset to write.</param>
@@ -56,10 +60,6 @@ public sealed class H5StreamingWriter : IDisposable
     /// <see cref="H5Object.HardLinkCount" /> that allows another link.
     /// </exception>
     /// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
-    /// <remarks>
-    /// An append that throws links nothing, and the writer can go on. What it had written already stays in
-    /// the file, named by nothing.
-    /// </remarks>
     public void Append(string path, H5Object subtree)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -69,7 +69,7 @@ public sealed class H5StreamingWriter : IDisposable
 
         // The groups on the path that do not exist yet are created only once the subtree is written, so
         // that a failed append leaves none behind.
-        var (parent, existing) = FindOpenGroups(segments, segments.Length - 1);
+        var (parent, existing) = FindParentGroups(segments);
         var name = segments[^1];
 
         if (existing == segments.Length - 1 && parent.Links.ContainsKey(name))
@@ -145,7 +145,7 @@ public sealed class H5StreamingWriter : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
 
         var segments = SplitPath(path);
-        var (parent, existing) = FindOpenGroups(segments, segments.Length - 1);
+        var (parent, existing) = FindParentGroups(segments);
         var name = segments[^1];
 
         if (existing < segments.Length - 1 ||
@@ -160,25 +160,25 @@ public sealed class H5StreamingWriter : IDisposable
     }
 
     /// <summary>
-    /// Follows the first <paramref name="count" /> segments of a path through the open groups, as far as
-    /// they exist.
+    /// Follows a path's parent segments - all but the last - through the open groups, as far as they exist.
     /// </summary>
     /// <returns>The last open group reached, and how many segments lead to it.</returns>
     /// <exception cref="InvalidOperationException">A segment names a dataset or a closed group.</exception>
-    private (OpenGroup Group, int Depth) FindOpenGroups(string[] segments, int count)
+    private (OpenGroup Group, int Depth) FindParentGroups(string[] segments)
     {
         var group = _root;
+        var depth = 0;
 
-        for (var depth = 0; depth < count; depth++)
+        for (; depth < segments.Length - 1; depth++)
         {
             if (!group.Links.TryGetValue(segments[depth], out var link))
-                return (group, depth);
+                break;
 
             group = link.Pending as OpenGroup ?? throw new InvalidOperationException(
                 $"'{string.Join('/', segments[..(depth + 1)])}' is not an open group: it is a dataset, or a group that has been closed.");
         }
 
-        return (group, count);
+        return (group, depth);
     }
 
     /// <summary>

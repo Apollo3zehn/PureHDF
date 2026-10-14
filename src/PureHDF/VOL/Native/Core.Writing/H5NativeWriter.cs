@@ -648,13 +648,7 @@ partial class H5NativeWriter
         if (owner is not null && IsHeldShared(owner))
             return KeepSharedHeader(objectHeader, owner).Address;
 
-        // encode object header
-        // ObjectHeader2.Encode() returns a ValueTask but completes synchronously. This method and its
-        // public entry point (H5File.Write(), which has no async counterpart) are synchronous, so the
-        // call is bridged here.
-        var address = objectHeader.Encode(Context).GetAwaiter().GetResult();
-
-        return address;
+        return objectHeader.Encode(Context, out _);
     }
 
     internal ulong EncodeDataset(

@@ -27,11 +27,6 @@ internal sealed class StructureStagingStream(Stream inner, bool leaveOpen) : Str
     private long _stagedStart = long.MaxValue;
     private long _stagedEnd;
 
-    /// <summary>
-    /// The first byte past the staged bytes.
-    /// </summary>
-    public long StagedEnd => _stagedEnd;
-
     public override bool CanRead => true;
 
     public override bool CanSeek => true;
