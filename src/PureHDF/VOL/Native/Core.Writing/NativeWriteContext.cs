@@ -28,11 +28,15 @@ internal readonly record struct DatatypeCacheKey(
 /// <remarks>
 /// One entry per object, in one map, rather than a map of addresses and another of datasets keyed by
 /// the same objects. A mutable struct so an entry can be completed in place: it is added when its
-/// object starts encoding (<see cref="Address" /> still zero, which is how a circular reference is
-/// detected) and gets its address when encoding finishes.
+/// object starts encoding and gets its address when encoding finishes.
 /// </remarks>
 internal struct EncodedObject
 {
+    /// <summary>
+    /// The object's header address. Zero means one of two things: the object is still being encoded,
+    /// which is how a circular reference is detected; or, when streaming, its header has no address yet -
+    /// <see cref="Deferred" /> holds it back, or <see cref="Group" /> waits - see <see cref="IPendingHeader" />.
+    /// </summary>
     public ulong Address;
 
     /// <summary>Set for a dataset whose data can still be written, otherwise null.</summary>

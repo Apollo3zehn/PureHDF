@@ -66,20 +66,10 @@ public sealed class H5StreamingWriter : IDisposable
         ArgumentNullException.ThrowIfNull(subtree);
 
         var segments = SplitPath(path);
-        var parent = _root;
-        var existing = 0;
 
-        // The groups on the path are created only once the subtree is written, so that a failed append
-        // leaves none behind.
-        for (; existing < segments.Length - 1; existing++)
-        {
-            if (!parent.Links.TryGetValue(segments[existing], out var link))
-                break;
-
-            parent = link.Pending as OpenGroup ?? throw new InvalidOperationException(
-                $"'{string.Join('/', segments[..(existing + 1)])}' is not an open group: it is a dataset, or a group that has been closed.");
-        }
-
+        // The groups on the path that do not exist yet are created only once the subtree is written, so
+        // that a failed append leaves none behind.
+        var (parent, existing) = FindOpenGroups(segments, segments.Length - 1);
         var name = segments[^1];
 
         if (existing == segments.Length - 1 && parent.Links.ContainsKey(name))
@@ -156,22 +146,40 @@ public sealed class H5StreamingWriter : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
 
         var segments = SplitPath(path);
-        var parent = _root;
+        var (parent, existing) = FindOpenGroups(segments, segments.Length - 1);
+        var name = segments[^1];
 
-        for (var i = 0; i < segments.Length; i++)
+        if (existing < segments.Length - 1 ||
+            !parent.Links.TryGetValue(name, out var link) ||
+            link.Pending is not OpenGroup group)
         {
-            if (!parent.Links.TryGetValue(segments[i], out var link) || link.Pending is not OpenGroup group)
-                throw new InvalidOperationException($"'{string.Join('/', segments[..(i + 1)])}' is not an open group.");
-
-            if (i == segments.Length - 1)
-            {
-                parent.Links[segments[i]] = new OpenLink(CloseGroup(group, attributes: null), Pending: null);
-                NativeWriter.EndTopLevelEncode();
-                return;
-            }
-
-            parent = group;
+            throw new InvalidOperationException($"'{path}' is not an open group.");
         }
+
+        parent.Links[name] = new OpenLink(CloseGroup(group, attributes: null), Pending: null);
+        NativeWriter.EndTopLevelEncode();
+    }
+
+    /// <summary>
+    /// Follows the first <paramref name="count" /> segments of a path through the open groups, as far as
+    /// they exist.
+    /// </summary>
+    /// <returns>The last open group reached, and how many segments lead to it.</returns>
+    /// <exception cref="InvalidOperationException">A segment names a dataset or a closed group.</exception>
+    private (OpenGroup Group, int Depth) FindOpenGroups(string[] segments, int count)
+    {
+        var group = _root;
+
+        for (var depth = 0; depth < count; depth++)
+        {
+            if (!group.Links.TryGetValue(segments[depth], out var link))
+                return (group, depth);
+
+            group = link.Pending as OpenGroup ?? throw new InvalidOperationException(
+                $"'{string.Join('/', segments[..(depth + 1)])}' is not an open group: it is a dataset, or a group that has been closed.");
+        }
+
+        return (group, count);
     }
 
     /// <summary>

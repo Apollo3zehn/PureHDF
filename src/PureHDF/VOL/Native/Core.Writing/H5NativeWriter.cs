@@ -430,8 +430,10 @@ partial class H5NativeWriter
             if (entry.Address != default)
                 return entry.Address;
 
-            // A deferred dataset's header allocated late, or a group waiting for one, now that something
-            // names it.
+            // No address yet. Either its header waits - a deferred dataset's held back, or a group's waiting
+            // for one - and gets its address now that something names it; or the object is still being
+            // encoded, and this link back to it is a cycle. A held-back header exists only once encoding is
+            // done, so the two cannot be confused.
             if (((IPendingHeader?)entry.Deferred?.Header ?? entry.Group) is { } pending)
                 return entry.Address = pending.Resolve(this);
 
@@ -1209,12 +1211,17 @@ partial class H5NativeWriter
     /// Allocates a deferred dataset's payload at the end of the file, now that it is first written, and
     /// writes the header that names it. Does nothing for a dataset whose payload is allocated already.
     /// </summary>
-    /// <param name="deferred">The dataset.</param>
-    /// <param name="isWritten">
-    /// False for a dataset never written, at Dispose: one that may go without payload keeps its header as it
-    /// is, naming none.
-    /// </param>
-    internal void AllocatePendingPayload(DeferredDataset deferred, bool isWritten = true)
+    internal void AllocatePendingPayload(DeferredDataset deferred)
+        => CompletePendingHeader(deferred, allocatesPayload: true);
+
+    /// <summary>
+    /// Completes a deferred dataset never written, at Dispose: allocates the payload its header names, unless
+    /// it may go without - see <see cref="PendingPayload.MayStayUnallocated" /> - and writes the header.
+    /// </summary>
+    internal void FinishNeverWritten(DeferredDataset deferred)
+        => CompletePendingHeader(deferred, allocatesPayload: deferred.Pending is not { MayStayUnallocated: true });
+
+    private void CompletePendingHeader(DeferredDataset deferred, bool allocatesPayload)
     {
         if (deferred.Pending is not { } pending)
             return;
@@ -1224,7 +1231,7 @@ partial class H5NativeWriter
         var header = deferred.Header!;
         AllocateHeader(header);
 
-        if (isWritten || !pending.MayStayUnallocated)
+        if (allocatesPayload)
         {
             var address = (ulong)Context.FreeSpaceManager.Allocate(pending.Size, AllocationKind.RawData);
             deferred.SetPayloadAddress(address);
