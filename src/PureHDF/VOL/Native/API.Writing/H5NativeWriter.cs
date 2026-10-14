@@ -30,6 +30,8 @@ public partial class H5NativeWriter : IDisposable
                 "All of this dataset's data has been written. Each element of a filtered dataset can be " +
                 "written once: a chunk is compressed and written as soon as all of its elements have arrived.");
 
+        AllocatePendingPayload(info);
+
         // As in WriteDatasetData: variable-length elements written here are the dataset's payload,
         // so their heap collections are allocated as payload too.
         var enclosing = Context.GlobalHeapManager.AllocationKind;
@@ -95,6 +97,10 @@ public partial class H5NativeWriter : IDisposable
                 // chunk indexes - also of a chunked dataset never written, whose index still has to say so
                 foreach (var (h5Object, entry) in Context.Objects)
                 {
+                    // A dataset never written still gets the payload its header names.
+                    if (entry.Deferred is { } deferred)
+                        AllocatePendingPayload(deferred);
+
                     var h5d = entry.Deferred is DeferredChunked chunked
                         ? chunked.GetOrCreateLayout(this, ((H5Dataset)h5Object).DatasetCreation)
                         : entry.Deferred?.H5D;

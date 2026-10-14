@@ -1,4 +1,5 @@
 ﻿using PureHDF.Selections;
+using System.Buffers.Binary;
 using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -709,14 +710,25 @@ partial class H5NativeWriter
             }
         }
 
+        // Deferred means given no data, not given null: a scalar whose value is null is one element that is
+        // null, and is written now like any other.
+        var isDeferred = dataspace.Type != DataspaceType.Null && memoryData.Equals(default);
+
+        // A deferred dataset's payload is allocated on its first write when asked for, see PendingPayload
+        // and H5WriteOptions.AllocatePayloadOnFirstWrite. Not while the structure is staged, whose payload is
+        // placed provisionally and moved as a whole.
+        var allocatesPayload = !isDeferred || Context.Staging is not null || !Context.WriteOptions.AllocatePayloadOnFirstWrite;
+
         var dataLayout = DataLayoutMessage4.Create(
             Context,
             typeSize: datatype.Size,
             isFiltered: filterPipeline is not null,
             /* compact data and filtered single chunk index data must not be written deferred because of object header checksum */
-            isDeferred: dataspace.Type == DataspaceType.Null ? false : data is null,
+            isDeferred: isDeferred,
             dataDimensions: dataspace.Type == DataspaceType.Null ? default : dataspace.Dimensions,
             chunkDimensions: chunkDimensions,
+            allocatesPayload: allocatesPayload,
+            out var unallocatedPayloadSize,
             variableLengthSize: variableLengthSize);
 
         // fill value
@@ -834,19 +846,22 @@ partial class H5NativeWriter
         // encode object header
         //
         // Only a chunked dataset patches its own object header later (H5D_Chunk4.Dispose, once its
-        // index is known), so only it keeps a copy of the header to patch. Of those, a single chunk
-        // written later is the one whose header changes: the chunk's address, and for a filtered one
-        // its size, are in the header and known only once it is written. Its header is written then,
-        // once, rather than now and again.
+        // index is known), so only it keeps a copy of the header to patch. Of those, a deferred single
+        // chunk and a deferred implicitly indexed dataset are the ones whose header changes: the payload
+        // address, and for a filtered single chunk its size, are in the header and known only once the
+        // data is written. Their header is written then, once, rather than now and again.
         if (isChunked)
         {
-            var writesHeaderLater = h5d is null && dataLayout.Properties is ChunkedStoragePropertyDescription4
+            var writesHeaderLater = unallocatedPayloadSize > 0 || h5d is null && dataLayout.Properties is ChunkedStoragePropertyDescription4
             {
                 IndexingInformation: SingleChunkIndexingInformation
             };
 
             var (chunkedAddress, encoded) = objectHeader.EncodeAndKeep(Context, write: !writesHeaderLater);
             Context.DatasetInfoToObjectHeaderMap[datasetInfo] = ((long)chunkedAddress, encoded, IsWritten: !writesHeaderLater);
+
+            if (unallocatedPayloadSize > 0)
+                deferred.Pending = CreatePendingPayload(dataLayout.Properties, chunkedAddress, encoded, unallocatedPayloadSize);
 
             // The kept copy is not corrected along with the staged header: Dispose rewrites it from the
             // layout's own (relocated) address before it writes it anyway.
@@ -859,6 +874,14 @@ partial class H5NativeWriter
                 FinishIfComplete(dataset, h5d);
 
             return chunkedAddress;
+        }
+
+        if (unallocatedPayloadSize > 0)
+        {
+            var (pendingAddress, pendingHeader) = objectHeader.EncodeAndKeep(Context, write: false);
+            deferred.Pending = CreatePendingPayload(dataLayout.Properties, pendingAddress, pendingHeader, unallocatedPayloadSize);
+
+            return pendingAddress;
         }
 
         var address = objectHeader.Encode(Context, out var headerLength);
@@ -883,6 +906,45 @@ partial class H5NativeWriter
         h5d.Initialize();
 
         return h5d;
+    }
+
+    private PendingPayload CreatePendingPayload(
+        StoragePropertyDescription properties, ulong headerAddress, byte[] header, long size)
+    {
+        var headerPosition = (long)Context.Driver.BaseAddress + (long)headerAddress;
+
+        return new PendingPayload(
+            HeaderAddress: (long)headerAddress,
+            Header: header,
+            AddressOffset: (int)(properties.AddressPosition - headerPosition),
+            Size: size);
+    }
+
+    /// <summary>
+    /// Allocates a deferred dataset's payload at the end of the file, now that it is first written, and
+    /// writes the header that names it. Does nothing for a dataset whose payload is allocated already.
+    /// </summary>
+    internal void AllocatePendingPayload(DeferredDataset deferred)
+    {
+        if (deferred.Pending is not { } pending)
+            return;
+
+        deferred.Pending = null;
+
+        var address = (ulong)Context.FreeSpaceManager.Allocate(pending.Size, AllocationKind.RawData);
+        deferred.SetPayloadAddress(address);
+
+        BinaryPrimitives.WriteUInt64LittleEndian(pending.Header.AsSpan(pending.AddressOffset), address);
+        ChecksummedStructure.UpdateChecksum(pending.Header);
+
+        Context.Driver.SeekRelativeToBaseAddress(pending.HeaderAddress);
+        Context.Driver.Write(pending.Header);
+
+        // Marked written, so that H5D_Chunk4.Dispose, which writes a held-back header, skips it.
+        var info = deferred.GetInfo();
+
+        if (Context.DatasetInfoToObjectHeaderMap.TryGetValue(info, out var kept))
+            Context.DatasetInfoToObjectHeaderMap[info] = kept with { IsWritten = true };
     }
 
     /// <summary>

@@ -120,6 +120,74 @@ public class WriteOnceTests
         Assert.True(many <= 3, $"{many} gaps were open at once.");
     }
 
+    // With AllocatePayloadOnFirstWrite, a deferred dataset's payload is allocated on its first write, at the
+    // end of the file in the order the datasets are written. Allocated when declared, every dataset written
+    // out of declaration order would leave the ones still to be written as payload-sized gaps behind it, and
+    // an upload would hold nearly the whole file.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DeferredDatasetsWrittenInAnyOrderLeaveNoPayloadBehind(bool chunked)
+    {
+        var holeBytes = MostHoleBytesWritingOutOfOrder(chunked, allocatePayloadOnFirstWrite: true);
+
+        // Headers still to be written and the open metadata block, not 80 kB of payload each
+        Assert.True(holeBytes <= 256 * 1024, $"{holeBytes} bytes were unwritten behind the furthest write.");
+    }
+
+    // By default the payload is allocated when the dataset is declared, so that no header has to be held
+    // until its dataset is written: on a destination that can be written anywhere, the gaps cost nothing.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ByDefaultDeferredPayloadIsAllocatedWhenDeclared(bool chunked)
+    {
+        var holeBytes = MostHoleBytesWritingOutOfOrder(chunked, allocatePayloadOnFirstWrite: false);
+
+        Assert.True(holeBytes > 1024 * 1024, $"only {holeBytes} bytes were unwritten behind the furthest write.");
+    }
+
+    private static long MostHoleBytesWritingOutOfOrder(bool chunked, bool allocatePayloadOnFirstWrite)
+    {
+        // Arrange
+        const int count = 100;
+        const int length = 10_000;
+
+        var file = new H5File();
+        var datasets = new H5Dataset<double[]>[count];
+
+        for (var i = 0; i < count; i++)
+        {
+            datasets[i] = new H5Dataset<double[]>(fileDims: [length], chunks: chunked ? [length / 4] : null);
+            file[$"dataset_{i:D3}"] = datasets[i];
+        }
+
+        var order = Enumerable.Range(0, count).ToArray();
+        new Random(0).Shuffle(order);
+
+        var options = new H5WriteOptions
+        {
+            MetadataPlacement = H5MetadataPlacement.Aggregated,
+            MetadataBlockSize = 64 * 1024,
+            AllocatePayloadOnFirstWrite = allocatePayloadOnFirstWrite
+        };
+
+        using var stream = new CoverageRecordingStream();
+
+        using (var writer = file.BeginWrite(stream, options))
+        {
+            foreach (var i in order)
+                writer.Write(datasets[i], RandomDoubles(i, length));
+        }
+
+        using var actual = H5File.Open(new MemoryStream(stream.ToArray()));
+
+        for (var i = 0; i < count; i++)
+            Assert.Equal(RandomDoubles(i, length), actual.Dataset($"dataset_{i:D3}").Read<double[]>());
+
+        return stream.MostHoleBytes;
+    }
+
     private static int MostHolesWritingFilteredDatasets(int count)
     {
         var file = new H5File();
@@ -330,6 +398,11 @@ public class WriteOnceTests
         /// <summary>The most gaps behind the furthest write at any one time.</summary>
         public int MostHoles { get; private set; }
 
+        /// <summary>The most bytes in those gaps at any one time.</summary>
+        public long MostHoleBytes { get; private set; }
+
+        private long _touchedBytes;
+
         private void Record(long position, int count)
         {
             var end = position + count;
@@ -357,13 +430,16 @@ public class WriteOnceTests
             {
                 start = Math.Min(start, _touched[index].Start);
                 end = Math.Max(end, _touched[index].End);
+                _touchedBytes -= _touched[index].End - _touched[index].Start;
                 _touched.RemoveAt(index);
             }
 
             _touched.Insert(index, (start, end));
+            _touchedBytes += end - start;
 
             var holes = _touched.Count - 1 + (_touched[0].Start > 0 ? 1 : 0);
             MostHoles = Math.Max(MostHoles, holes);
+            MostHoleBytes = Math.Max(MostHoleBytes, _touched[^1].End - _touchedBytes);
         }
 
         public List<(long Offset, long Length)> Ranges(Func<byte, bool> predicate)

@@ -55,6 +55,16 @@ internal abstract class DeferredDataset(object encode)
     /// <summary>The layout kept to write the dataset's data, otherwise null.</summary>
     public virtual H5D_Base? H5D => null;
 
+    /// <summary>
+    /// The payload still to be allocated and the header still to be written, until the first write.
+    /// See <see cref="H5NativeWriter.AllocatePendingPayload" />.
+    /// </summary>
+    public PendingPayload? Pending { get; set; }
+
+    /// <summary>Records where the payload was allocated.</summary>
+    public virtual void SetPayloadAddress(ulong address)
+        => ((DataLayoutMessage4)GetInfo().Layout).Properties.Address = address;
+
     public abstract DatasetInfo GetInfo();
 
     /// <summary>
@@ -99,6 +109,9 @@ internal sealed class DeferredContiguous(
     public override void Relocate(FreeSpaceManager freeSpaceManager)
         => Address = freeSpaceManager.Relocate(Address);
 
+    public override void SetPayloadAddress(ulong address)
+        => Address = address;
+
     public override DatasetInfo GetInfo() => new(
         Space: DataspaceMessage.Create(FileDims),
         Type: Type,
@@ -132,6 +145,22 @@ internal sealed class DeferredChunked(DatasetInfo info, object encode) : Deferre
     public H5D_Base GetOrCreateLayout(H5NativeWriter writer, H5DatasetCreation datasetCreation)
         => _h5d ??= writer.CreateLayout(info, datasetCreation);
 }
+
+/// <summary>
+/// A deferred dataset's payload, allocated on its first write rather than when it is declared, and the
+/// header that names it, encoded but held back until then.
+/// </summary>
+/// <remarks>
+/// Allocated when declared, the payload of every dataset not written yet is a gap behind the ones that
+/// are, unless they are written in the order they were declared - and a destination uploading the file in
+/// parts holds a part for every such gap. Allocated when first written, it lands at the end of the file in
+/// the order the data arrives.
+/// </remarks>
+/// <param name="HeaderAddress">Where the header is allocated.</param>
+/// <param name="Header">The encoded header, with an undefined payload address.</param>
+/// <param name="AddressOffset">Where in the header the payload address goes.</param>
+/// <param name="Size">How much payload to allocate.</param>
+internal sealed record PendingPayload(long HeaderAddress, byte[] Header, int AddressOffset, long Size);
 
 /// <summary>
 /// A dataset whose data has all been written and whose structure is final: a filtered chunked dataset

@@ -2,6 +2,9 @@
 
 internal partial record class DataLayoutMessage4
 {
+    // allocatesPayload: whether to allocate a contiguous or implicitly indexed dataset's payload now. When
+    // not, its address is left undefined and unallocatedPayloadSize says how much to allocate later. The
+    // other layouts allocate their chunks as they are written anyway.
     public static DataLayoutMessage4 Create(
         NativeWriteContext context,
         uint typeSize,
@@ -9,10 +12,14 @@ internal partial record class DataLayoutMessage4
         bool isDeferred,
         ulong[]? dataDimensions,
         uint[]? chunkDimensions,
+        bool allocatesPayload,
+        out long unallocatedPayloadSize,
         long variableLengthSize = 0)
     {
         var preferCompact = context.WriteOptions.PreferCompactDatasetLayout;
         var dataLayout = default(DataLayoutMessage4);
+
+        unallocatedPayloadSize = 0;
 
         if (dataDimensions is not null && chunkDimensions is not null)
         {
@@ -87,9 +94,13 @@ internal partial record class DataLayoutMessage4
             }
 
             /* some indexes can only be allocated later */
-            var address = indexInfo.EncodeSize == 0
-                ? Superblock.UndefinedAddress
-                : (ulong)context.FreeSpaceManager.Allocate(indexInfo.EncodeSize, indexInfo.Kind);
+            var address = Superblock.UndefinedAddress;
+
+            if (!allocatesPayload && indexInfo.IndexingInformation is ImplicitIndexingInformation)
+                unallocatedPayloadSize = indexInfo.EncodeSize;
+
+            else if (indexInfo.EncodeSize != 0)
+                address = (ulong)context.FreeSpaceManager.Allocate(indexInfo.EncodeSize, indexInfo.Kind);
 
             var properties = new ChunkedStoragePropertyDescription4(
                 Rank: (byte)(chunkDimensions.Length + 1),
@@ -158,7 +169,13 @@ internal partial record class DataLayoutMessage4
             /* create contiguous dataset */
             if (dataLayout == default)
             {
-                var address = context.FreeSpaceManager.Allocate(dataEncodeSize, AllocationKind.RawData);
+                var address = Superblock.LongUndefinedAddress;
+
+                if (allocatesPayload)
+                    address = context.FreeSpaceManager.Allocate(dataEncodeSize, AllocationKind.RawData);
+
+                else
+                    unallocatedPayloadSize = dataEncodeSize;
 
                 var properties = new ContiguousStoragePropertyDescription(
                     Size: (ulong)dataEncodeSize

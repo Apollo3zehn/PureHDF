@@ -146,6 +146,25 @@ public record H5WriteOptions(
     /// </remarks>
     public int MaximumCompactDatasetSize { get; init; } = 256;
 
+    /// <summary>
+    /// Whether a dataset declared without data has its payload allocated when it is first written, rather
+    /// than when it is declared. The default is <see langword="false" />.
+    /// </summary>
+    /// <remarks>
+    /// Allocated when declared, the payload of every dataset not written yet is a gap behind the ones that
+    /// are. A file fills such a gap when the data arrives. A destination that uploads in parts, and can ship
+    /// a part only once all of it is written, holds every part with a gap in it - nearly the whole file
+    /// when datasets are written in another order than they were declared in. Allocated on the first
+    /// write, payload lands at the end of the file in the order datasets are written, and leaves no gaps.
+    /// <para>
+    /// The price is the object header of each such dataset, which names the payload address and so is held
+    /// in memory until the dataset is first written. Ignored when the structure is front-loaded without a
+    /// <see cref="MetadataReservation" />, which writes the structure in one run with every payload
+    /// address in it.
+    /// </para>
+    /// </remarks>
+    public bool AllocatePayloadOnFirstWrite { get; init; }
+
     // An object header message declares its size in two bytes, and a compact layout message spends four
     // of them on its version, layout class and data size.
     internal const int MAXIMUM_COMPACT_DATASET_SIZE = ushort.MaxValue - 4;
