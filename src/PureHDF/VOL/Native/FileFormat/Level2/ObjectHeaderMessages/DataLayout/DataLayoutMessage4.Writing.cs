@@ -62,11 +62,11 @@ internal partial record class DataLayoutMessage4
                             ),
 
                             /* The header and its data block, together: the block's size follows from the
-                             * chunk count, so it need not wait until the chunks are written. Allocated at
-                             * Dispose, it would be structure that turns up after the structure has been
-                             * placed. See H5D_Chunk4_FixedArray.Dispose.
+                             * chunk count, so both are allocated in one piece - here, or by
+                             * H5D_Chunk4_FixedArray.AllocateIndex once a deferred dataset's chunks are
+                             * written. See H5D_Chunk4_FixedArray.Dispose.
                              */
-                            FixedArrayHeader.ENCODE_SIZE + (long)GetFixedArrayDataBlockEncodeSize(
+                            FixedArrayHeader.GetFilteredIndexEncodeSize(
                                 pageBits,
                                 chunkCount,
                                 chunkByteSize: chunkDimensions.Aggregate(1UL, (product, dimension) => product * dimension) * typeSize),
@@ -211,15 +211,6 @@ internal partial record class DataLayoutMessage4
     public static bool FitsCompact(NativeWriteContext context, long dataEncodeSize, long variableLengthSize)
         => dataEncodeSize <= H5WriteOptions.MAXIMUM_COMPACT_DATASET_SIZE &&
             dataEncodeSize + variableLengthSize <= context.WriteOptions.MaximumCompactDatasetSize;
-
-    internal static ulong GetFixedArrayDataBlockEncodeSize(byte pageBits, ulong chunkCount, ulong chunkByteSize)
-    {
-        /* H5FA__cache_hdr_serialize (H5FAcache.c) */
-        var entrySize = FilteredDataBlockElement.GetEncodeSize(MathUtils.ComputeChunkSizeLength(chunkByteSize));
-        var (_, pageCount, pageBitmapSize) = H5D_Chunk4_FixedArray.GetInfo(pageBits, chunkCount);
-
-        return FixedArrayDataBlock<FilteredDataBlockElement>.GetEncodeSize(chunkCount, pageCount, pageBitmapSize, entrySize);
-    }
 
     public override ushort GetEncodeSize()
     {

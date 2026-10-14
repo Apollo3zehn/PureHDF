@@ -104,8 +104,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
 
         var pageBits = ((FixedArrayIndexingInformation)Chunked4.IndexingInformation).PageBits;
 
-        var size = FixedArrayHeader.ENCODE_SIZE + (long)DataLayoutMessage4.GetFixedArrayDataBlockEncodeSize(
-            pageBits, (ulong)WriteChunkInfos.Length, ChunkByteSize);
+        var size = FixedArrayHeader.GetFilteredIndexEncodeSize(pageBits, (ulong)WriteChunkInfos.Length, ChunkByteSize);
 
         Chunked4.Address = (ulong)WriteContext!.FreeSpaceManager.Allocate(size, AllocationKind.Metadata);
         Chunked4.IsDirty = true;
@@ -139,7 +138,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 /* H5FA__cache_hdr_serialize (H5FAcache.c) */
                 var entriesCount = (ulong)WriteChunkInfos.Length;
                 var entrySize = FilteredDataBlockElement.GetEncodeSize(ChunkSizeLength);
-                var (_, pageCount, pageBitmapSize) = GetInfo(pageBits, entriesCount);
+                var (_, pageCount, _) = FixedArrayHeader.GetPageInfo(pageBits, entriesCount);
 
                 var dataBlock = new FixedArrayDataBlock<FilteredDataBlockElement>(
                     ClientID: ClientID.FilteredDatasetChunks,
@@ -156,7 +155,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
 
                 // Allocated in one piece with the header (see DataLayoutMessage4.Create, and AllocateIndex), so
                 // the data block sits right behind it.
-                var dataBlockEncodeSize = dataBlock.GetEncodeSize(pageCount, pageBitmapSize, entrySize);
+                var dataBlockEncodeSize = FixedArrayHeader.GetFilteredDataBlockEncodeSize(pageBits, entriesCount, ChunkByteSize);
                 var dataBlockAddress = (long)Chunked4.Address + FixedArrayHeader.ENCODE_SIZE;
 
                 var header = new FixedArrayHeader(
@@ -201,25 +200,6 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
         }
     }
 
-    internal static (ulong, ulong, ulong) GetInfo(byte pageBits, ulong entriesCount)
-    {
-        // H5FAdblock.c (H5FA__dblock_alloc)
-        var elementsPerPage = 1UL << pageBits;
-        var pageCount = 0UL;
-        var pageBitmapSize = 0UL;
-
-        if (entriesCount > elementsPerPage)
-        {
-            /* Compute number of pages */
-            pageCount = (entriesCount + elementsPerPage - 1) / elementsPerPage;
-
-            /* Compute size of 'page init' flag array, in bytes */
-            pageBitmapSize = (pageCount + 7) / 8;
-        }
-
-        return (elementsPerPage, pageCount, pageBitmapSize);
-    }
-
     private async ValueTask<T?> GetElement<T>(ulong index, Func<H5DriverBase, ValueTask<T>> decode) where T : DataBlockElement
     {
         // Cached per file and per address, not per H5D_Base: NativeDataset builds a fresh H5D_Base for
@@ -248,7 +228,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                     static async (context, state) =>
                     {
                         // H5FA.c (H5FA_get)
-                        var (elementsPerPage, pageCount, pageBitmapSize) = GetInfo(
+                        var (elementsPerPage, pageCount, pageBitmapSize) = FixedArrayHeader.GetPageInfo(
                             state.Header.PageBits,
                             state.Header.EntriesCount
                         );

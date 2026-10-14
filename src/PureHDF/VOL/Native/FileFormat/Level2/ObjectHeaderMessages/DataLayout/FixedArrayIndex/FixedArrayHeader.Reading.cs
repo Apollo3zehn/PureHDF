@@ -71,4 +71,23 @@ internal partial record class FixedArrayHeader(
             Version = version
         };
     }
+
+    internal static (ulong ElementsPerPage, ulong PageCount, ulong PageBitmapSize) GetPageInfo(byte pageBits, ulong entriesCount)
+    {
+        // H5FAdblock.c (H5FA__dblock_alloc)
+        var elementsPerPage = 1UL << pageBits;
+        var pageCount = 0UL;
+        var pageBitmapSize = 0UL;
+
+        if (entriesCount > elementsPerPage)
+        {
+            /* Compute number of pages */
+            pageCount = (entriesCount + elementsPerPage - 1) / elementsPerPage;
+
+            /* Compute size of 'page init' flag array, in bytes */
+            pageBitmapSize = (pageCount + 7) / 8;
+        }
+
+        return (elementsPerPage, pageCount, pageBitmapSize);
+    }
 }
