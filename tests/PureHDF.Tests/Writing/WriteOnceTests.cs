@@ -180,7 +180,7 @@ public class WriteOnceTests
                 writer.Write(datasets[i], RandomDoubles(i, length));
         }
 
-        using var actual = H5File.Open(new MemoryStream(stream.ToArray()));
+        using var actual = stream.Reopen();
 
         for (var i = 0; i < count; i++)
             Assert.Equal(RandomDoubles(i, length), actual.Dataset($"dataset_{i:D3}").Read<double[]>());
@@ -251,7 +251,7 @@ public class WriteOnceTests
 
         Assert.True(unexpected.Count == 0, $"Unwritten (offset, length): {Describe(unexpected)}");
 
-        using var file = H5File.Open(new MemoryStream(stream.ToArray()));
+        using var file = stream.Reopen();
 
         Assert.Equal(RandomDoubles(2 * 299, 500), file.Dataset("batch_5/direct_299").Read<double[]>());
         Assert.Equal(RandomDoubles(2 * 299 + 1, 500), file.Dataset("batch_5/document_299/nested").Read<double[]>());
@@ -350,7 +350,7 @@ public class WriteOnceTests
                 writer.Write(datasets[i], RandomDoubles(i, 1_000));
         }
 
-        using var file = H5File.Open(new MemoryStream(stream.ToArray()));
+        using var file = stream.Reopen();
         var path = nested ? $"documents/{count - 1}/data" : $"documents/{count - 1}";
         Assert.Equal(RandomDoubles(count - 1, 1_000), file.Dataset(path).Read<double[]>());
 
@@ -375,7 +375,7 @@ public class WriteOnceTests
         {
         }
 
-        using var actual = H5File.Open(new MemoryStream(stream.ToArray()));
+        using var actual = stream.Reopen();
         Assert.Equal(RandomDoubles(count - 1, 1_000), actual.Dataset($"dataset_{count - 1:D4}").Read<double[]>());
 
         return stream.MostHoles;
@@ -397,7 +397,7 @@ public class WriteOnceTests
         }
 
         // The file is valid, and reads back.
-        using var file = H5File.Open(new MemoryStream(stream.ToArray()));
+        using var file = stream.Reopen();
         scenario.Verify(file);
 
         return (stream, openTails);

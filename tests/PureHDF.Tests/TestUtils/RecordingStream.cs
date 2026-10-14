@@ -9,11 +9,24 @@ internal sealed class RecordingStream : MemoryStream
     private byte[] _counts = new byte[64 * 1024];
     private long _nextPosition = -1;
 
+    // Everything written so far, as disjoint ranges; the gaps between them are the holes.
+    private readonly List<(long Start, long End)> _touched = [];
+    private long _touchedBytes;
+
     /// <summary>Write calls.</summary>
     public long Writes { get; private set; }
 
     /// <summary>Writes that do not continue where the one before ended.</summary>
     public long Jumps { get; private set; }
+
+    /// <summary>Writes that start behind the end of the one before.</summary>
+    public long BackwardJumps { get; private set; }
+
+    /// <summary>The most gaps behind the furthest write at any one time.</summary>
+    public int MostHoles { get; private set; }
+
+    /// <summary>The most bytes in those gaps at any one time.</summary>
+    public long MostHoleBytes { get; private set; }
 
     public override bool CanRead => false;
 
@@ -31,16 +44,9 @@ internal sealed class RecordingStream : MemoryStream
         base.WriteByte(value);
     }
 
-    // Everything written so far, as disjoint ranges; the gaps between them are the holes.
-    private readonly List<(long Start, long End)> _touched = [];
-
-    /// <summary>The most gaps behind the furthest write at any one time.</summary>
-    public int MostHoles { get; private set; }
-
-    /// <summary>The most bytes in those gaps at any one time.</summary>
-    public long MostHoleBytes { get; private set; }
-
-    private long _touchedBytes;
+    /// <summary>Opens what has been written as a file.</summary>
+    public NativeFile Reopen()
+        => H5File.Open(new MemoryStream(ToArray()));
 
     private void Record(long position, int count)
     {
@@ -50,6 +56,9 @@ internal sealed class RecordingStream : MemoryStream
 
         if (position != _nextPosition)
             Jumps++;
+
+        if (position < _nextPosition)
+            BackwardJumps++;
 
         _nextPosition = end;
 

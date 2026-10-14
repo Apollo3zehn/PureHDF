@@ -144,20 +144,11 @@ public class SinglePassFrontLoadingTests
             AttributeStringLength = H5AttributeStringLength.VariableLength,
             MetadataPlacement = H5MetadataPlacement.FrontLoaded
         });
-        var writes = stream.Writes.ToList();
 
         // Assert - nothing is written behind the end of an earlier write, which is what lets a streaming
         // upload ship each part as soon as it is full
-        Assert.NotEmpty(writes);
-
-        for (var i = 1; i < writes.Count; i++)
-        {
-            var (previousPosition, previousLength) = writes[i - 1];
-
-            Assert.True(
-                writes[i].Position >= previousPosition + previousLength,
-                $"Write {i} at {writes[i].Position} lands behind write {i - 1}, which ended at {previousPosition + previousLength}.");
-        }
+        Assert.True(stream.Writes > 0);
+        Assert.Equal(0, stream.BackwardJumps);
     }
 
     [Theory]
@@ -203,25 +194,5 @@ public class SinglePassFrontLoadingTests
 
         foreach (var name in expectedFile.Children().Select(child => child.Name))
             Assert.True(actualFile.LinkExists(name), $"'{name}' is missing.");
-    }
-
-    /// <summary>
-    ///     Records where each write lands.
-    /// </summary>
-    private sealed class RecordingStream : MemoryStream
-    {
-        public List<(long Position, long Length)> Writes { get; } = [];
-
-        public override void Write(byte[] buffer, int offset, int count)
-        {
-            Writes.Add((Position, count));
-            base.Write(buffer, offset, count);
-        }
-
-        public override void Write(ReadOnlySpan<byte> buffer)
-        {
-            Writes.Add((Position, buffer.Length));
-            base.Write(buffer);
-        }
     }
 }

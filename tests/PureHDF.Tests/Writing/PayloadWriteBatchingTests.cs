@@ -26,11 +26,11 @@ public class PayloadWriteBatchingTests
         var dataset = new H5Dataset<string[]>(fileDims: [ElementCount]);
 
         // Act
-        var (writes, file) = Write(new H5File { ["strings"] = dataset }, writer => writer.Write(dataset, data));
+        var stream = Write(new H5File { ["strings"] = dataset }, writer => writer.Write(dataset, data));
 
         // Assert
-        Assert.Equal(data, file.Dataset("strings").Read<string[]>());
-        Assert.True(writes <= MaximumWrites, $"{writes} writes.");
+        Assert.Equal(data, stream.Reopen().Dataset("strings").Read<string[]>());
+        Assert.True(stream.Writes <= MaximumWrites, $"{stream.Writes} writes.");
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public class PayloadWriteBatchingTests
         var dataset = new H5Dataset<string[]>(fileDims: [ElementCount]);
 
         // Act
-        var (writes, file) = Write(new H5File { ["strings"] = dataset }, writer =>
+        var stream = Write(new H5File { ["strings"] = dataset }, writer =>
         {
             for (var start = 0; start < ElementCount; start += batch)
             {
@@ -53,8 +53,8 @@ public class PayloadWriteBatchingTests
         });
 
         // Assert
-        Assert.Equal(data, file.Dataset("strings").Read<string[]>());
-        Assert.True(writes <= MaximumWrites, $"{writes} writes.");
+        Assert.Equal(data, stream.Reopen().Dataset("strings").Read<string[]>());
+        Assert.True(stream.Writes <= MaximumWrites, $"{stream.Writes} writes.");
     }
 
     [Fact]
@@ -65,11 +65,11 @@ public class PayloadWriteBatchingTests
         var dataset = new H5Dataset<string[]>(fileDims: [ElementCount], chunks: [ElementCount / 4]);
 
         // Act
-        var (writes, file) = Write(new H5File { ["strings"] = dataset }, writer => writer.Write(dataset, data));
+        var stream = Write(new H5File { ["strings"] = dataset }, writer => writer.Write(dataset, data));
 
         // Assert
-        Assert.Equal(data, file.Dataset("strings").Read<string[]>());
-        Assert.True(writes <= MaximumWrites, $"{writes} writes.");
+        Assert.Equal(data, stream.Reopen().Dataset("strings").Read<string[]>());
+        Assert.True(stream.Writes <= MaximumWrites, $"{stream.Writes} writes.");
     }
 
     [Fact]
@@ -79,11 +79,11 @@ public class PayloadWriteBatchingTests
         var data = Strings();
 
         // Act
-        var (writes, file) = Write(new H5File { ["strings"] = new H5Dataset(data) }, _ => { });
+        var stream = Write(new H5File { ["strings"] = new H5Dataset(data) }, _ => { });
 
         // Assert
-        Assert.Equal(data, file.Dataset("strings").Read<string[]>());
-        Assert.True(writes <= MaximumWrites, $"{writes} writes.");
+        Assert.Equal(data, stream.Reopen().Dataset("strings").Read<string[]>());
+        Assert.True(stream.Writes <= MaximumWrites, $"{stream.Writes} writes.");
     }
 
     // With AllocatePayloadOnFirstWrite, a deferred dataset's header is completed when its payload is
@@ -106,25 +106,28 @@ public class PayloadWriteBatchingTests
         }
 
         // Act
-        var (jumps, actual) = WriteCountingJumps(file, writer =>
+        var stream = Write(file, writer =>
         {
             for (var i = 0; i < count; i++)
                 writer.Write(datasets[i], Enumerable.Range(i, 100).Select(value => (double)value).ToArray());
-        });
+        }, allocatePayloadOnFirstWrite: true);
 
         // Assert
-        Assert.Equal(Enumerable.Range(count - 1, 100).Select(value => (double)value), actual.Dataset($"dataset_{count - 1:D4}").Read<double[]>());
-        Assert.True(jumps <= count / 10, $"{jumps} jumps.");
+        Assert.Equal(Enumerable.Range(count - 1, 100).Select(value => (double)value), stream.Reopen().Dataset($"dataset_{count - 1:D4}").Read<double[]>());
+        Assert.True(stream.Jumps <= count / 10, $"{stream.Jumps} jumps.");
     }
 
-    private static (long Jumps, IH5Group File) WriteCountingJumps(H5File file, Action<H5NativeWriter> writeData)
+    private static string[] Strings()
+        => Enumerable.Range(0, ElementCount).Select(i => $"value {i}").ToArray();
+
+    private static RecordingStream Write(H5File file, Action<H5NativeWriter> writeData, bool allocatePayloadOnFirstWrite = false)
     {
         var stream = new RecordingStream();
 
         var options = new H5WriteOptions
         {
             MetadataPlacement = H5MetadataPlacement.Aggregated,
-            AllocatePayloadOnFirstWrite = true
+            AllocatePayloadOnFirstWrite = allocatePayloadOnFirstWrite
         };
 
         using (var writer = file.BeginWrite(stream, options))
@@ -132,21 +135,6 @@ public class PayloadWriteBatchingTests
             writeData(writer);
         }
 
-        return (stream.Jumps, H5File.Open(new MemoryStream(stream.ToArray())));
-    }
-
-    private static string[] Strings()
-        => Enumerable.Range(0, ElementCount).Select(i => $"value {i}").ToArray();
-
-    private static (long Writes, IH5Group File) Write(H5File file, Action<H5NativeWriter> writeData)
-    {
-        var stream = new RecordingStream();
-
-        using (var writer = file.BeginWrite(stream, new H5WriteOptions { MetadataPlacement = H5MetadataPlacement.Aggregated }))
-        {
-            writeData(writer);
-        }
-
-        return (stream.Writes, H5File.Open(new MemoryStream(stream.ToArray())));
+        return stream;
     }
 }
