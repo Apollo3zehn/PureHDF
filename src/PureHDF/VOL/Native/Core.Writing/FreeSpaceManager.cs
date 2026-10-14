@@ -107,10 +107,7 @@ internal class FreeSpaceManager
     /// opened later.
     /// </summary>
     public void ReserveSharedRegion(long size)
-    {
-        OpenSharedRegion(size);
-        _shared.NextBlockSize = Math.Min(2 * size, Math.Max(_blockSize, size));
-    }
+        => OpenSharedRegion(size);
 
     /// <summary>
     /// Allocates the header of a shared object, which is written at the end. See
@@ -126,12 +123,7 @@ internal class FreeSpaceManager
     public long AllocateShared(long length)
     {
         if (_shared.Cursor + length > _shared.End)
-        {
-            var size = Math.Max(_shared.NextBlockSize, length);
-
-            OpenSharedRegion(size);
-            _shared.NextBlockSize = Math.Min(2 * size, Math.Max(_blockSize, size));
-        }
+            OpenSharedRegion(Math.Max(_shared.NextBlockSize, length));
 
         MetadataAllocated += length;
 
@@ -145,6 +137,7 @@ internal class FreeSpaceManager
     {
         _shared.Cursor = _length;
         _shared.End = _length + size;
+        _shared.NextBlockSize = Math.Min(2 * size, Math.Max(_blockSize, size));
         _length = _shared.End;
 
         SharedRegions.Add((_shared.Cursor, size));
@@ -335,6 +328,9 @@ internal class FreeSpaceManager
             ? address - (ulong)_provisionalShift
             : address;
 
+    /// <summary>Whether there are ranges for <see cref="TakeAbandoned" /> to take.</summary>
+    public bool HasAbandoned => _abandoned.Count > 0;
+
     /// <summary>
     /// Removes and returns the tails of the blocks replaced so far, as (address, length), for the writer to
     /// fill with zeros.
@@ -345,9 +341,6 @@ internal class FreeSpaceManager
     /// written. A tail placed provisionally is kept until the payload has moved, since its final address
     /// is not known before.
     /// </remarks>
-    /// <summary>Whether there are ranges for <see cref="TakeAbandoned" /> to take.</summary>
-    public bool HasAbandoned => _abandoned.Count > 0;
-
     public List<(long Address, long Length)> TakeAbandoned()
     {
         var taken = new List<(long Address, long Length)>();

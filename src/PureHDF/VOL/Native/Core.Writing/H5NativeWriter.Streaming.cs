@@ -116,6 +116,14 @@ partial class H5NativeWriter
     internal bool IsWritten(H5Object h5Object)
         => _streaming is not null && _streaming.Written.TryGetValue(h5Object, out _);
 
+    /// <summary>
+    /// Whether all of <paramref name="dataset" />'s data has been written by an earlier append: it was given
+    /// with data, or it is a filtered dataset whose chunks are all written. Neither is kept, see
+    /// <see cref="EndAppend" />.
+    /// </summary>
+    internal bool IsFinished(H5Dataset dataset)
+        => !Context.Objects.ContainsKey(dataset) && IsWritten(dataset);
+
     // Headers waiting for an address - see IPendingHeader
 
     /// <summary>

@@ -123,8 +123,7 @@ public sealed class H5StreamingWriter : IDisposable
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        // Not kept once written, see H5NativeWriter.EndAppend.
-        if (!NativeWriter.Context.Objects.ContainsKey(dataset) && NativeWriter.IsWritten(dataset))
+        if (NativeWriter.IsFinished(dataset))
             throw new InvalidOperationException(
                 "All of this dataset's data has been written: it was given with data, and written when it was " +
                 "appended, or it is a filtered dataset whose chunks have all been written. Only datasets declared " +
