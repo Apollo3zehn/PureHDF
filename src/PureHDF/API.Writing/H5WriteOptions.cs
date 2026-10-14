@@ -135,8 +135,9 @@ public record H5WriteOptions(
     /// reserved whether or not anything is shared, and its unused part is written as zeros.
     /// <para>
     /// A destination uploading in parts holds the first part until the end anyway, for the superblock: a
-    /// region that fits in it costs nothing more. When the region is full, another of the same size is
-    /// opened at the end of the file, and a destination holds the part it is in until the end as well.
+    /// region that fits in it costs nothing more. When the region is full, another is opened at the end of
+    /// the file, twice as large as the one before up to <see cref="MetadataBlockSize" />, and a destination
+    /// holds the part it is in until the end as well.
     /// </para>
     /// <para>
     /// Must be greater than zero.

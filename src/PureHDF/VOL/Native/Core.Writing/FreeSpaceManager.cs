@@ -96,7 +96,6 @@ internal class FreeSpaceManager
 
     // Holds the headers of shared objects, written at the end: see AllocateShared.
     private Region _shared;
-    private long _sharedRegionSize;
 
     /// <summary>
     /// The regions opened for the headers of shared objects, in order.
@@ -109,8 +108,8 @@ internal class FreeSpaceManager
     /// </summary>
     public void ReserveSharedRegion(long size)
     {
-        _sharedRegionSize = size;
         OpenSharedRegion(size);
+        _shared.NextBlockSize = Math.Min(2 * size, Math.Max(_blockSize, size));
     }
 
     /// <summary>
@@ -120,13 +119,19 @@ internal class FreeSpaceManager
     /// <remarks>
     /// Its own regions rather than the metadata blocks: written at the end, these headers are a gap until
     /// then, and gathered into a region at the front - which the superblock holds back anyway - they cost
-    /// a destination uploading in parts nothing more. A full region opens another of the same size, or one
-    /// as large as the header, at the end of the file.
+    /// a destination uploading in parts nothing more. A full region opens another at the end of the file,
+    /// twice as large as the one before up to the metadata block size, so that however many objects are
+    /// shared there are few such regions: each holds a part until the end.
     /// </remarks>
     public long AllocateShared(long length)
     {
         if (_shared.Cursor + length > _shared.End)
-            OpenSharedRegion(Math.Max(_sharedRegionSize, length));
+        {
+            var size = Math.Max(_shared.NextBlockSize, length);
+
+            OpenSharedRegion(size);
+            _shared.NextBlockSize = Math.Min(2 * size, Math.Max(_blockSize, size));
+        }
 
         MetadataAllocated += length;
 

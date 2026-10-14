@@ -759,6 +759,26 @@ public class StreamingWriteTests
         AssertTheCLibraryAccepts(stream);
     }
 
+    // Every region opened at the end of the file holds a part of an upload until the end, so there have to
+    // be few of them however many objects are shared.
+    [Fact]
+    public void RegionsOpenedForSharedObjectsGrow()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var options = new H5WriteOptions { SharedObjectRegionSize = 1024 };
+
+        using var writer = H5File.BeginStreaming(stream, options);
+
+        // Act - about 200 bytes each, 200 kB in all
+        for (var i = 0; i < 1_000; i++)
+            writer.Append($"shared/{i}", new H5Dataset(new[] { i }) { IsShared = true });
+
+        // Assert
+        var regions = writer.NativeWriter.Context.FreeSpaceManager.SharedRegions;
+        Assert.True(regions.Count <= 9, $"{regions.Count} regions.");
+    }
+
     [Fact]
     public void ADeclaredCountWinsOverShared()
     {
