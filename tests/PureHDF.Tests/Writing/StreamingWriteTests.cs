@@ -186,6 +186,136 @@ public class StreamingWriteTests
     }
 
     [Fact]
+    public void GroupsWaitingForDeeplyNestedDatasetsAreWrittenOnceTheyAre()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var first = new H5Dataset<int[]>(fileDims: [2]);
+        var second = new H5Dataset<int[]>(fileDims: [2]);
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            writer.Append("documents/0", new H5Group
+            {
+                Attributes = { ["name"] = "outer" },
+                ["given"] = new[] { 1 },
+                ["inner"] = new H5Group
+                {
+                    Attributes = { ["name"] = "inner" },
+                    ["first"] = first,
+                    ["deeper"] = new H5Group { ["second"] = second }
+                }
+            });
+
+            writer.Append("between", new H5Dataset(new double[1000]));
+            writer.Write(second, [3, 4]);
+            writer.Append("later", new H5Dataset(new double[1000]));
+            writer.Write(first, [1, 2]);
+        }
+
+        // Assert
+        var document = Open(stream).Group("documents").Group("0");
+
+        Assert.Equal("outer", document.Attribute("name").Read<string>());
+        Assert.Equal("inner", document.Group("inner").Attribute("name").Read<string>());
+        Assert.Equal([1], document.Dataset("given").Read<int[]>());
+        Assert.Equal([1, 2], document.Group("inner").Dataset("first").Read<int[]>());
+        Assert.Equal([3, 4], document.Group("inner").Group("deeper").Dataset("second").Read<int[]>());
+        AssertTheCLibraryAccepts(stream);
+    }
+
+    [Fact]
+    public void GroupsWaitingForDatasetsAreWrittenWhenTheirOpenGroupCloses()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var dataset = new H5Dataset<int[]>(fileDims: [2]);
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            writer.Append("documents/0", new H5Group { ["inner"] = new H5Group { ["data"] = dataset } });
+            writer.Close("documents");
+            writer.Write(dataset, [1, 2]);
+        }
+
+        // Assert
+        Assert.Equal([1, 2], Open(stream).Group("documents").Group("0").Group("inner").Dataset("data").Read<int[]>());
+        AssertTheCLibraryAccepts(stream);
+    }
+
+    [Fact]
+    public void ObjectReferencesResolveToGroupsWaitingForDatasets()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var dataset = new H5Dataset<int[]>(fileDims: [2]);
+        var group = new H5Group { ["data"] = dataset };
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            writer.Append("group", group);
+            writer.Append("references", new H5Dataset(new H5ObjectReference[] { group }));
+            writer.Write(dataset, [1, 2]);
+        }
+
+        // Assert
+        var file = (NativeFile)Open(stream);
+        var reference = file.Dataset("references").Read<NativeObjectReference1[]>()[0];
+
+        Assert.Equal(Address(file.Group("group")), reference.Value);
+        Assert.Equal([1, 2], ((IH5Group)file.Get(reference)).Dataset("data").Read<int[]>());
+    }
+
+    [Fact]
+    public void GroupsWithADeclaredCountDoNotWait()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var dataset = new H5Dataset<int[]>(fileDims: [2]);
+        var group = new H5Group { ["data"] = dataset, HardLinkCount = 2 };
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            writer.Append("a", group);
+            writer.Append("b", group);
+            writer.Write(dataset, [1, 2]);
+        }
+
+        // Assert
+        var file = Open(stream);
+
+        Assert.Equal(Address(file.Group("a")), Address(file.Group("b")));
+        Assert.Equal([1, 2], file.Group("b").Dataset("data").Read<int[]>());
+        AssertTheCLibraryAccepts(stream);
+    }
+
+    [Fact]
+    public void ADatasetLinkedTwiceInOneSubtreeDoesNotWait()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var dataset = new H5Dataset<int[]>(fileDims: [2]);
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            writer.Append("group", new H5Group { ["a"] = dataset, ["b"] = dataset });
+            writer.Write(dataset, [1, 2]);
+        }
+
+        // Assert
+        var group = Open(stream).Group("group");
+
+        Assert.Equal(Address(group.Dataset("a")), Address(group.Dataset("b")));
+        Assert.Equal(2U, ((NativeObject)group.Dataset("a")).ReferenceCount);
+        Assert.Equal([1, 2], group.Dataset("b").Read<int[]>());
+    }
+
+    [Fact]
     public void DeferredDatasetsCanBeWrittenInParts()
     {
         // Arrange

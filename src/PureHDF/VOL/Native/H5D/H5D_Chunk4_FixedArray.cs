@@ -95,6 +95,22 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
         return chunkInfo;
     }
 
+    // Allocated with the header when a deferred dataset is written rather than declared: see
+    // DataLayoutMessage4.Create.
+    protected override void AllocateIndex()
+    {
+        if (Dataset.FilterPipeline is null || Chunked4.Address != Superblock.UndefinedAddress)
+            return;
+
+        var pageBits = ((FixedArrayIndexingInformation)Chunked4.IndexingInformation).PageBits;
+
+        var size = FixedArrayHeader.ENCODE_SIZE + (long)DataLayoutMessage4.GetFixedArrayDataBlockEncodeSize(
+            pageBits, (ulong)WriteChunkInfos.Length, ChunkByteSize);
+
+        Chunked4.Address = (ulong)WriteContext!.FreeSpaceManager.Allocate(size, AllocationKind.Metadata);
+        Chunked4.IsDirty = true;
+    }
+
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
@@ -138,8 +154,8 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                     Version = 0
                 };
 
-                // Allocated with the header when the layout was created (see DataLayoutMessage4.Create),
-                // so that all of the index is structure the reservation already covers.
+                // Allocated in one piece with the header (see DataLayoutMessage4.Create, and AllocateIndex), so
+                // the data block sits right behind it.
                 var dataBlockEncodeSize = dataBlock.GetEncodeSize(pageCount, pageBitmapSize, entrySize);
                 var dataBlockAddress = (long)Chunked4.Address + FixedArrayHeader.ENCODE_SIZE;
 

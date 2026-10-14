@@ -99,7 +99,14 @@ internal partial record class DataLayoutMessage4
             if (!allocatesPayload && indexInfo.IndexingInformation is ImplicitIndexingInformation)
                 unallocatedPayloadSize = indexInfo.EncodeSize;
 
-            else if (indexInfo.EncodeSize != 0)
+            // An unfiltered single chunk is stored at its full size, so it can be allocated on the first
+            // write like contiguous data, and the header that names it completed then.
+            else if (!allocatesPayload && !isFiltered && indexInfo.IndexingInformation is SingleChunkIndexingInformation)
+                unallocatedPayloadSize = (long)(chunkDimensions.Aggregate(1UL, (product, dimension) => product * dimension) * typeSize);
+
+            // A filtered dataset's index is written once its chunks are, and is allocated then too, with
+            // the header that names it: allocated before, it is a gap until then. See H5D_Chunk4.AllocateIndex.
+            else if (indexInfo.EncodeSize != 0 && (allocatesPayload || !isFiltered))
                 address = (ulong)context.FreeSpaceManager.Allocate(indexInfo.EncodeSize, indexInfo.Kind);
 
             var properties = new ChunkedStoragePropertyDescription4(
@@ -205,7 +212,7 @@ internal partial record class DataLayoutMessage4
         => dataEncodeSize <= H5WriteOptions.MAXIMUM_COMPACT_DATASET_SIZE &&
             dataEncodeSize + variableLengthSize <= context.WriteOptions.MaximumCompactDatasetSize;
 
-    private static ulong GetFixedArrayDataBlockEncodeSize(byte pageBits, ulong chunkCount, ulong chunkByteSize)
+    internal static ulong GetFixedArrayDataBlockEncodeSize(byte pageBits, ulong chunkCount, ulong chunkByteSize)
     {
         /* H5FA__cache_hdr_serialize (H5FAcache.c) */
         var entrySize = FilteredDataBlockElement.GetEncodeSize(MathUtils.ComputeChunkSizeLength(chunkByteSize));

@@ -55,7 +55,16 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
         if (WriteContext is null)
             return;
 
-        var (objectHeaderAddress, objectHeader, isWritten, isShared) = WriteContext.DatasetInfoToObjectHeaderMap[Dataset];
+        var kept = WriteContext.DatasetInfoToObjectHeaderMap[Dataset];
+        var objectHeader = kept.Header;
+
+        AllocateIndex();
+
+        // A header allocated late gets its address now that it is complete, unless something named it before.
+        if (kept.Address < 0)
+            WriteContext.Writer.AllocatePendingHeader(kept.Late!);
+
+        var objectHeaderAddress = kept.Address;
 
         // Read before patching, which encodes the layout and so clears it.
         var isDirty = Chunked4.IsDirty;
@@ -65,7 +74,7 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
             // Patched in the copy kept at encoding rather than in the file: the storage properties
             // changed, and with them the header's checksum, which is computed from the copy so that
             // nothing is read from the file.
-            var origin = (long)WriteContext.Driver.BaseAddress + objectHeaderAddress;
+            var origin = (long)WriteContext.Driver.BaseAddress + kept.EncodedAt;
 
             using (var patchDriver = new H5SpanWriteDriver(objectHeader, origin))
             {
@@ -79,11 +88,19 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
         // A header written at encoding is final unless its layout changed since; one held back for its
         // chunk is written now, whether or not the chunk ever was. A shared object's header is written at
         // the end, from the copy patched here.
-        if (!isShared && (isDirty || !isWritten))
+        if (!kept.IsShared && (isDirty || !kept.IsWritten))
         {
             WriteContext.Driver.SeekRelativeToBaseAddress(objectHeaderAddress);
             WriteContext.Driver.Write(objectHeader);
         }
+    }
+
+    /// <summary>
+    /// Allocates an index whose size is known up front but which is allocated only once the chunks are
+    /// written, so that it is no gap until then. Marks the layout dirty when it does.
+    /// </summary>
+    protected virtual void AllocateIndex()
+    {
     }
 
     /// <remarks>

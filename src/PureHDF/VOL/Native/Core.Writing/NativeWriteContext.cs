@@ -37,6 +37,77 @@ internal struct EncodedObject
 
     /// <summary>Set for a dataset whose data can still be written, otherwise null.</summary>
     public DeferredDataset? Deferred;
+
+    /// <summary>Set for a group whose header waits for its children, otherwise null. See <see cref="PendingGroup" />.</summary>
+    public PendingGroup? Group;
+}
+
+/// <summary>
+/// A chunked dataset's encoded header, kept so that its layout can be patched into it once its chunks are
+/// written - see <see cref="H5D_Chunk4" />.
+/// </summary>
+/// <param name="address">Where the header is allocated; negative while it is not, see <see cref="DeferredDataset.IsHeaderLate" />.</param>
+/// <param name="header">The encoded header.</param>
+/// <param name="encodedAt">The address the header was encoded as if at, which positions within it are relative to.</param>
+internal sealed class KeptHeader(long address, byte[] header, long encodedAt)
+{
+    public long Address { get; set; } = address;
+
+    public byte[] Header { get; } = header;
+
+    public long EncodedAt { get; } = encodedAt;
+
+    /// <summary>Whether the header has been written, or queued to be.</summary>
+    public bool IsWritten { get; set; }
+
+    /// <summary>Whether the header belongs to a shared object, written at the end.</summary>
+    public bool IsShared { get; init; }
+
+    /// <summary>The dataset, for a header allocated late.</summary>
+    public DeferredDataset? Late { get; set; }
+}
+
+/// <summary>
+/// Where a header waiting for its address is named: a link of a <see cref="PendingGroup" />.
+/// </summary>
+internal readonly record struct LinkWaiter(PendingGroup Group, int Slot);
+
+/// <summary>
+/// A group of an appended subtree whose header waits until every child it links has an address: a deferred
+/// dataset whose header is allocated once it is written, or another such group.
+/// </summary>
+/// <remarks>
+/// Written at Append, the group's header would name its deferred datasets' headers, which would then have
+/// to be allocated at Append and stay a gap until their data is written - behind everything written in the
+/// meantime, and a destination uploading in parts would hold a part for them. Waiting, the group is written
+/// once its last child has an address, which is when that child is written, or when something has to name
+/// the group: its open group closing, another link to it, an object reference.
+/// </remarks>
+internal sealed class PendingGroup(List<HeaderMessage> headerMessages, List<(int MessageIndex, string Name, object Target)> slots)
+{
+    /// <summary>The header's messages, with a placeholder for every link still waiting.</summary>
+    public List<HeaderMessage> HeaderMessages { get; } = headerMessages;
+
+    /// <summary>The links still waiting: where their message goes, and a <see cref="DeferredDataset" /> or <see cref="PendingGroup" />.</summary>
+    public List<(int MessageIndex, string Name, object Target)> Slots { get; } = slots;
+
+    public int Unresolved { get; set; } = slots.Count;
+
+    /// <summary>The header's address, once it is written; zero until then.</summary>
+    public ulong Address { get; set; }
+
+    /// <summary>The group waiting for this one, if any.</summary>
+    public LinkWaiter? Waiter { get; set; }
+}
+
+/// <summary>
+/// An object written by an earlier append: its header's address, or the group still waiting to be written.
+/// </summary>
+internal sealed class WrittenObject(ulong address, PendingGroup? group)
+{
+    public ulong Address { get; } = address;
+
+    public PendingGroup? Group { get; } = group;
 }
 
 /// <summary>
@@ -66,6 +137,15 @@ internal abstract class DeferredDataset(object encode)
     /// dataset. See <see cref="H5NativeWriter.AllocatePendingHeader" />.
     /// </summary>
     public ulong LateHeaderAddress { get; set; }
+
+    /// <summary>The group waiting for the late header, if any. See <see cref="PendingGroup" />.</summary>
+    public LinkWaiter? Waiter { get; set; }
+
+    /// <summary>
+    /// Whether the header was encoded without an address, to be allocated once the dataset is written or
+    /// something has to name it. See <see cref="H5NativeWriter.AllocatePendingHeader" />.
+    /// </summary>
+    public bool IsHeaderLate { get; set; }
 
     /// <summary>Records where the payload was allocated.</summary>
     public virtual void SetPayloadAddress(ulong address)
@@ -173,7 +253,12 @@ internal sealed class DeferredChunked(DatasetInfo info, object encode) : Deferre
 /// Whether the header belongs to a shared object, written at the end rather than once it is complete -
 /// see <see cref="H5Object.IsShared" />.
 /// </param>
-internal sealed record PendingPayload(long HeaderAddress, byte[] Header, int AddressOffset, long Size, bool IsShared = false);
+/// <param name="MayStayUnallocated">
+/// Whether a dataset never written may be left without payload: a single chunk not allocated reads as fill
+/// values, while contiguous data has to be there.
+/// </param>
+internal sealed record PendingPayload(
+    long HeaderAddress, byte[] Header, int AddressOffset, long Size, bool IsShared = false, bool MayStayUnallocated = false);
 
 /// <summary>
 /// A dataset whose data has all been written and whose structure is final: a filtered chunked dataset
@@ -205,7 +290,7 @@ internal record NativeWriteContext(
     GlobalHeapManager GlobalHeapManager,
     H5WriteOptions WriteOptions,
     Dictionary<H5Object, EncodedObject> Objects,
-    Dictionary<DatasetInfo, (long ObjectHeaderAddress, byte[] ObjectHeader, bool IsWritten, bool IsShared)> DatasetInfoToObjectHeaderMap,
+    Dictionary<DatasetInfo, KeptHeader> DatasetInfoToObjectHeaderMap,
     Dictionary<DatatypeCacheKey, (DatatypeMessage, ElementEncodeDelegate)> TypeToMessageMap,
     Dictionary<H5Object, int> ObjectReferenceCountMap,
     Dictionary<object, H5Dataset> RawValueToDatasetMap,

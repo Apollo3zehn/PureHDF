@@ -258,20 +258,32 @@ public class WriteOnceTests
         Assert.Equal(RandomDoubles(-290, 500), file.Dataset("shared_290_again/link").Read<double[]>());
     }
 
-    // A deferred dataset appended directly into an open group is named by nothing written until its group
-    // closes, so its header is not allocated until it is written: datasets appended long before they are
-    // written leave no gap for their headers. Inside an appended group, the group's header names the
-    // dataset's, which has to be allocated then and stays a gap until the dataset is written.
-    [Fact]
-    public void DatasetsAppendedDirectlyLeaveNoGapUntilWritten()
+    // A deferred dataset's header, and a filtered one's chunk index, are complete only once its data is
+    // written. Allocated before then, each is a gap behind everything written in the meantime. Appended
+    // directly into an open group, a dataset is named by nothing written until the group closes; inside an
+    // appended group, the group waits for it. Either way, nothing has to be allocated until it is written.
+    public static TheoryData<string, bool> LateLayouts()
+    {
+        var cases = new TheoryData<string, bool>();
+
+        foreach (var layout in new[] { "contiguous", "implicit", "single chunk", "deflate", "single chunk deflate" })
+        {
+            cases.Add(layout, false);
+            cases.Add(layout, true);
+        }
+
+        return cases;
+    }
+
+    [Theory]
+    [MemberData(nameof(LateLayouts))]
+    public void DeferredDatasetsLeaveNoGapUntilWritten(string layout, bool nested)
     {
         // Act
-        var direct = MostHoleBytesStreamingDatasetsWrittenLate(nested: false, count: 4_000);
-        var nested = MostHoleBytesStreamingDatasetsWrittenLate(nested: true, count: 4_000);
+        var holeBytes = MostHoleBytesStreamingDatasetsWrittenLate(layout, nested, count: 4_000);
 
         // Assert - the open metadata block and a batch of completed headers, not a header per dataset
-        Assert.True(direct <= 160 * 1024, $"{direct} bytes were unwritten behind the furthest write.");
-        Assert.True(nested > 3 * direct, $"Nested: {nested} bytes, direct: {direct} bytes.");
+        Assert.True(holeBytes <= 160 * 1024, $"{holeBytes} bytes were unwritten behind the furthest write.");
     }
 
     // A late header that does not fit what is left of the metadata block replaces the block, on a write.
@@ -303,7 +315,7 @@ public class WriteOnceTests
         Assert.True(stream.MostHoles <= 3, $"{stream.MostHoles} gaps were open at once.");
     }
 
-    private static long MostHoleBytesStreamingDatasetsWrittenLate(bool nested, int count)
+    private static long MostHoleBytesStreamingDatasetsWrittenLate(string layout, bool nested, int count)
     {
         // Nothing is shared, so the region for shared objects, a gap until the end, is kept out of the way.
         var options = new H5WriteOptions { MetadataBlockSize = 64 * 1024, SharedObjectRegionSize = 1 };
@@ -314,7 +326,15 @@ public class WriteOnceTests
         {
             for (var i = 0; i < count; i++)
             {
-                datasets[i] = new H5Dataset<double[]>(fileDims: [1_000]);
+                datasets[i] = layout switch
+                {
+                    "contiguous" => new H5Dataset<double[]>(fileDims: [1_000]),
+                    "implicit" => new H5Dataset<double[]>(fileDims: [1_000], chunks: [250]),
+                    "single chunk" => new H5Dataset<double[]>(fileDims: [1_000], chunks: [1_000]),
+                    "deflate" => new H5Dataset<double[]>(fileDims: [1_000], chunks: [250], datasetCreation: Deflate),
+                    "single chunk deflate" => new H5Dataset<double[]>(fileDims: [1_000], chunks: [1_000], datasetCreation: Deflate),
+                    _ => throw new ArgumentOutOfRangeException(nameof(layout))
+                };
 
                 if (nested)
                     writer.Append($"documents/{i}", new H5Group { ["data"] = datasets[i] });

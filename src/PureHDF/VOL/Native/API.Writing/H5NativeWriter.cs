@@ -99,7 +99,7 @@ public partial class H5NativeWriter : IDisposable
                 {
                     // A dataset never written still gets the payload its header names.
                     if (entry.Deferred is { } deferred)
-                        AllocatePendingPayload(deferred);
+                        AllocatePendingPayload(deferred, isWritten: false);
 
                     var h5d = entry.Deferred is DeferredChunked chunked
                         ? chunked.GetOrCreateLayout(this, ((H5Dataset)h5Object).DatasetCreation)
