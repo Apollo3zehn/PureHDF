@@ -108,6 +108,9 @@ public partial class H5NativeWriter : IDisposable
                     h5d?.Dispose();
                 }
 
+                // headers of datasets written since the last batch, or never
+                WriteCompletedHeaders();
+
                 // global heap collections
                 Context.GlobalHeapManager.Encode();
 

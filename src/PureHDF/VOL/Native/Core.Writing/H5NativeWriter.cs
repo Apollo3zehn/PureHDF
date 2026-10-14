@@ -134,6 +134,11 @@ partial class H5NativeWriter
 
     internal NativeWriteContext Context { get; }
 
+    private const int COMPLETED_HEADER_BATCH_SIZE = 64 * 1024;
+
+    private readonly List<(long Address, byte[] Header)> _completedHeaders = [];
+    private int _completedHeaderBytes;
+
     internal void Write()
     {
         // Count the incoming links for every shared object so that multiply-linked
@@ -908,6 +913,41 @@ partial class H5NativeWriter
         return h5d;
     }
 
+    /// <summary>
+    /// Writes the headers completed by <see cref="AllocatePendingPayload" /> since the last time, in
+    /// address order.
+    /// </summary>
+    /// <remarks>
+    /// Batched rather than written as each is completed: a header lies with the metadata and its payload
+    /// at the end of the file, so writing them one by one would jump back and forth between the two for
+    /// every dataset, and a file stream writes out its buffer at each jump. Headers of datasets written one
+    /// after another lie next to each other, so a batch is mostly one run. A destination uploading in parts
+    /// holds the parts these headers are in a little longer - by at most a batch of headers.
+    /// </remarks>
+    internal void WriteCompletedHeaders()
+    {
+        if (_completedHeaders.Count == 0)
+            return;
+
+        _completedHeaders.Sort((x, y) => x.Address.CompareTo(y.Address));
+
+        var driver = Context.Driver;
+        var position = driver.Position;
+
+        foreach (var (address, header) in _completedHeaders)
+        {
+            if (driver.Position != (long)driver.BaseAddress + address)
+                driver.SeekRelativeToBaseAddress(address);
+
+            driver.Write(header);
+        }
+
+        driver.Seek(position, SeekOrigin.Begin);
+
+        _completedHeaders.Clear();
+        _completedHeaderBytes = 0;
+    }
+
     private PendingPayload CreatePendingPayload(
         StoragePropertyDescription properties, ulong headerAddress, byte[] header, long size)
     {
@@ -937,8 +977,11 @@ partial class H5NativeWriter
         BinaryPrimitives.WriteUInt64LittleEndian(pending.Header.AsSpan(pending.AddressOffset), address);
         ChecksummedStructure.UpdateChecksum(pending.Header);
 
-        Context.Driver.SeekRelativeToBaseAddress(pending.HeaderAddress);
-        Context.Driver.Write(pending.Header);
+        _completedHeaders.Add((pending.HeaderAddress, pending.Header));
+        _completedHeaderBytes += pending.Header.Length;
+
+        if (_completedHeaderBytes >= COMPLETED_HEADER_BATCH_SIZE)
+            WriteCompletedHeaders();
 
         // Marked written, so that H5D_Chunk4.Dispose, which writes a held-back header, skips it.
         var info = deferred.GetInfo();

@@ -86,6 +86,55 @@ public class PayloadWriteBatchingTests
         Assert.True(writes <= MaximumWrites, $"{writes} writes.");
     }
 
+    // With AllocatePayloadOnFirstWrite, a deferred dataset's header is completed when its payload is
+    // allocated, on its first write. Written
+    // there one by one, each header would be a jump back from the end of the file to the metadata and each
+    // payload a jump forward again, and a file stream writes out its buffer at every jump.
+    [Fact]
+    public void HeadersOfDeferredDatasetsAreWrittenTogether()
+    {
+        // Arrange
+        const int count = 1_000;
+
+        var file = new H5File();
+        var datasets = new H5Dataset<double[]>[count];
+
+        for (var i = 0; i < count; i++)
+        {
+            datasets[i] = new H5Dataset<double[]>(fileDims: [100]);
+            file[$"dataset_{i:D4}"] = datasets[i];
+        }
+
+        // Act
+        var (jumps, actual) = WriteCountingJumps(file, writer =>
+        {
+            for (var i = 0; i < count; i++)
+                writer.Write(datasets[i], Enumerable.Range(i, 100).Select(value => (double)value).ToArray());
+        });
+
+        // Assert
+        Assert.Equal(Enumerable.Range(count - 1, 100).Select(value => (double)value), actual.Dataset($"dataset_{count - 1:D4}").Read<double[]>());
+        Assert.True(jumps <= count / 10, $"{jumps} jumps.");
+    }
+
+    private static (long Jumps, IH5Group File) WriteCountingJumps(H5File file, Action<H5NativeWriter> writeData)
+    {
+        var stream = new WriteCountingStream();
+
+        var options = new H5WriteOptions
+        {
+            MetadataPlacement = H5MetadataPlacement.Aggregated,
+            AllocatePayloadOnFirstWrite = true
+        };
+
+        using (var writer = file.BeginWrite(stream, options))
+        {
+            writeData(writer);
+        }
+
+        return (stream.Jumps, H5File.Open(new MemoryStream(stream.ToArray())));
+    }
+
     private static string[] Strings()
         => Enumerable.Range(0, ElementCount).Select(i => $"value {i}").ToArray();
 
@@ -103,13 +152,23 @@ public class PayloadWriteBatchingTests
 
     private sealed class WriteCountingStream : MemoryStream
     {
+        private long _nextPosition = -1;
+
         public long Writes { get; private set; }
+
+        /// <summary>Writes that do not continue where the one before ended.</summary>
+        public long Jumps { get; private set; }
 
         // Stream.Write(ReadOnlySpan<byte>) on a derived MemoryStream routes here.
         public override void Write(byte[] buffer, int offset, int count)
         {
             Writes++;
+
+            if (Position != _nextPosition)
+                Jumps++;
+
             base.Write(buffer, offset, count);
+            _nextPosition = Position;
         }
 
         public override void WriteByte(byte value)
