@@ -410,6 +410,11 @@ partial class H5NativeWriter
             {
                 var linkAddress = GetOrEncodeObject(GetH5Object(entry.Value));
 
+                // As each child is done rather than once the whole tree is: payload given with the tree
+                // is written while it is encoded, so a tail left until the end sits behind all of it,
+                // and a destination uploading in parts holds a part for every one of them.
+                WriteAbandoned();
+
                 linkType = LinkType.Hard;
                 linkInfo = new HardLinkInfo(HeaderAddress: linkAddress);
             }

@@ -76,6 +76,35 @@ public class WriteOnceTests
         Assert.True(unexpected.Count == 0, $"Unwritten (offset, length): {Describe(unexpected)}");
     }
 
+    // An upload in parts holds a part for every gap behind the furthest write, so how many gaps there are
+    // at once must not grow with the file. Payload given with the tree lands between metadata blocks, and
+    // small blocks are replaced over and over while the structure is encoded.
+    [Fact]
+    public void TheTailsOfReplacedBlocksAreFilledWhileTheStructureIsEncoded()
+    {
+        // Arrange
+        var file = new H5File();
+
+        for (var i = 0; i < 1_000; i++)
+            file[$"dataset_{i:D4}"] = new H5Dataset(RandomDoubles(i, 1_000));
+
+        var options = new H5WriteOptions
+        {
+            MetadataPlacement = H5MetadataPlacement.Aggregated,
+            MetadataBlockSize = 64 * 1024
+        };
+
+        using var stream = new CoverageRecordingStream();
+
+        // Act
+        using (file.BeginWrite(stream, options))
+        {
+        }
+
+        // Assert - the superblock, written last, and the metadata block still being filled
+        Assert.True(stream.MostHoles <= 2, $"{stream.MostHoles} gaps were open at once.");
+    }
+
     private static (CoverageRecordingStream Stream, List<(long Address, long Length)> OpenTails) Write(
         Scenario scenario, H5MetadataPlacement placement)
     {
@@ -256,9 +285,17 @@ public class WriteOnceTests
             base.WriteByte(value);
         }
 
+        // Everything written so far, as disjoint ranges; the gaps between them are the holes.
+        private readonly List<(long Start, long End)> _touched = [];
+
+        /// <summary>The most gaps behind the furthest write at any one time.</summary>
+        public int MostHoles { get; private set; }
+
         private void Record(long position, int count)
         {
             var end = position + count;
+
+            Touch(position, end);
 
             if (end > _counts.Length)
                 Array.Resize(ref _counts, (int)Math.Max(end, _counts.Length * 2L));
@@ -268,6 +305,26 @@ public class WriteOnceTests
                 if (_counts[i] < byte.MaxValue)
                     _counts[i]++;
             }
+        }
+
+        private void Touch(long start, long end)
+        {
+            var index = _touched.FindIndex(range => range.End >= start);
+
+            if (index < 0)
+                index = _touched.Count;
+
+            while (index < _touched.Count && _touched[index].Start <= end)
+            {
+                start = Math.Min(start, _touched[index].Start);
+                end = Math.Max(end, _touched[index].End);
+                _touched.RemoveAt(index);
+            }
+
+            _touched.Insert(index, (start, end));
+
+            var holes = _touched.Count - 1 + (_touched[0].Start > 0 ? 1 : 0);
+            MostHoles = Math.Max(MostHoles, holes);
         }
 
         public List<(long Offset, long Length)> Ranges(Func<byte, bool> predicate)
