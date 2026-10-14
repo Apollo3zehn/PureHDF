@@ -33,6 +33,10 @@ partial class H5NativeWriter
     // Streaming only: the headers of shared objects, written at the end. See H5Object.IsShared.
     private readonly List<SharedHeader> _sharedHeaders = [];
 
+    // Streaming only: what the current append changed that AbortAppend has to undo.
+    private readonly List<LinkCounter> _linksCountedByAppend = [];
+    private int _sharedHeadersBeforeAppend;
+
     // Set by Append for a dataset appended directly into an open group, and taken by the next dataset
     // encoded. See EncodeAppended.
     private bool _allocatesHeaderLate;
@@ -293,6 +297,9 @@ partial class H5NativeWriter
     /// </remarks>
     internal ulong EncodeAppended(H5Object subtree)
     {
+        _linksCountedByAppend.Clear();
+        _sharedHeadersBeforeAppend = _sharedHeaders.Count;
+
         if (subtree is H5Group group)
             CountReferences(group, Context.ObjectReferenceCountMap);
 
@@ -358,6 +365,37 @@ partial class H5NativeWriter
     }
 
     /// <summary>
+    /// Undoes what a failed append changed in what the writer keeps, so that it can go on: forgets the
+    /// objects it encoded and the links it counted.
+    /// </summary>
+    /// <remarks>
+    /// What it wrote stays in the file, named by nothing.
+    /// </remarks>
+    internal void AbortAppend()
+    {
+        foreach (var h5Object in _appended)
+            Context.Objects.Remove(h5Object);
+
+        foreach (var counter in _linksCountedByAppend)
+            counter.Links--;
+
+        _sharedHeaders.RemoveRange(_sharedHeadersBeforeAppend, _sharedHeaders.Count - _sharedHeadersBeforeAppend);
+
+        _appended.Clear();
+        _linksCountedByAppend.Clear();
+        Context.ObjectReferenceCountMap.Clear();
+        Context.RawValueToDatasetMap.Clear();
+
+        EndTopLevelEncode();
+    }
+
+    /// <summary>
+    /// Whether <paramref name="h5Object" /> was written by an earlier append.
+    /// </summary>
+    internal bool IsWritten(H5Object h5Object)
+        => _written is not null && _written.TryGetValue(h5Object, out _);
+
+    /// <summary>
     /// Writes what can be written between top-level encodes: closed heap collections and the tails of
     /// replaced blocks.
     /// </summary>
@@ -383,6 +421,9 @@ partial class H5NativeWriter
                     $"The object declares {declared} hard link(s) (H5Object.HardLinkCount) but is linked more often.");
 
             counter.Links++;
+
+            if (_written is not null)
+                _linksCountedByAppend.Add(counter);
         }
 
         else if (_written is not null && _written.TryGetValue(h5Object, out _))
@@ -404,15 +445,6 @@ partial class H5NativeWriter
                 throw new InvalidOperationException(
                     $"An object declares {declared} hard link(s) (H5Object.HardLinkCount) but is linked {counter.Links} time(s).");
         }
-    }
-
-    /// <summary>
-    /// Gives up on the file: closes the driver without writing anything more.
-    /// </summary>
-    internal void Abandon()
-    {
-        _disposedValue = true;
-        Context.Driver.Dispose();
     }
 
     /// <summary>

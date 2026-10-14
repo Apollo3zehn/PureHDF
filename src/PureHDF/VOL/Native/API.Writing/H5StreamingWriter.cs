@@ -57,6 +57,10 @@ public sealed class H5StreamingWriter : IDisposable
     /// <see cref="H5Object.HardLinkCount" /> that allows another link.
     /// </exception>
     /// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
+    /// <remarks>
+    /// An append that throws links nothing, and the writer can go on. What it had written already stays in
+    /// the file, named by nothing.
+    /// </remarks>
     public void Append(string path, H5Object subtree)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
@@ -64,29 +68,43 @@ public sealed class H5StreamingWriter : IDisposable
 
         var segments = SplitPath(path);
         var parent = _root;
+        var existing = 0;
 
-        for (var i = 0; i < segments.Length - 1; i++)
+        // The groups on the path are created only once the subtree is written, so that a failed append
+        // leaves none behind.
+        for (; existing < segments.Length - 1; existing++)
         {
-            if (!parent.Links.TryGetValue(segments[i], out var link))
-            {
-                var group = new OpenGroup();
-                parent.Links.Add(segments[i], new OpenLink(Address: default, Pending: group));
-                parent = group;
-            }
+            if (!parent.Links.TryGetValue(segments[existing], out var link))
+                break;
 
-            else
-            {
-                parent = link.Pending as OpenGroup ?? throw new InvalidOperationException(
-                    $"'{string.Join('/', segments[..(i + 1)])}' is not an open group: it is a dataset, or a group that has been closed.");
-            }
+            parent = link.Pending as OpenGroup ?? throw new InvalidOperationException(
+                $"'{string.Join('/', segments[..(existing + 1)])}' is not an open group: it is a dataset, or a group that has been closed.");
         }
 
         var name = segments[^1];
 
-        if (parent.Links.ContainsKey(name))
+        if (existing == segments.Length - 1 && parent.Links.ContainsKey(name))
             throw new InvalidOperationException($"The link '{path}' exists already.");
 
-        var address = NativeWriter.EncodeAppended(subtree);
+        ulong address;
+
+        try
+        {
+            address = NativeWriter.EncodeAppended(subtree);
+        }
+
+        catch
+        {
+            NativeWriter.AbortAppend();
+            throw;
+        }
+
+        for (var i = existing; i < segments.Length - 1; i++)
+        {
+            var group = new OpenGroup();
+            parent.Links.Add(segments[i], new OpenLink(Address: default, Pending: group));
+            parent = group;
+        }
 
         parent.Links.Add(name, NativeWriter.GetLateHeaderDataset(subtree) is { } deferred
             ? new OpenLink(Address: default, Pending: deferred)
@@ -103,6 +121,10 @@ public sealed class H5StreamingWriter : IDisposable
     /// <param name="data">The data to write.</param>
     /// <param name="memorySelection">The memory selection.</param>
     /// <param name="fileSelection">The file selection.</param>
+    /// <exception cref="InvalidOperationException">
+    /// All of the dataset's data has been written: it was given with data, or it is a filtered dataset whose
+    /// chunks have all been written.
+    /// </exception>
     /// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
     public void Write<T>(
         H5Dataset<T> dataset,
@@ -111,6 +133,13 @@ public sealed class H5StreamingWriter : IDisposable
         Selection? fileSelection = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+
+        // Not kept once written, see H5NativeWriter.EndAppend.
+        if (!NativeWriter.Context.Objects.ContainsKey(dataset) && NativeWriter.IsWritten(dataset))
+            throw new InvalidOperationException(
+                "All of this dataset's data has been written: it was given with data, and written when it was " +
+                "appended, or it is a filtered dataset whose chunks have all been written. Only datasets declared " +
+                "without data are written through Write.");
 
         NativeWriter.Write(dataset, data, memorySelection, fileSelection);
     }
@@ -151,7 +180,7 @@ public sealed class H5StreamingWriter : IDisposable
     /// </summary>
     /// <exception cref="InvalidOperationException">
     /// An object is linked fewer times than its <see cref="H5Object.HardLinkCount" /> declares. The file is
-    /// left incomplete.
+    /// complete, and that object's header claims more links than it has.
     /// </exception>
     public void Dispose()
     {
@@ -160,19 +189,12 @@ public sealed class H5StreamingWriter : IDisposable
 
         _disposed = true;
 
-        try
-        {
-            NativeWriter.ValidateDeclaredLinks();
-        }
-
-        catch
-        {
-            NativeWriter.Abandon();
-            throw;
-        }
-
         NativeWriter.RootGroupAddress = CloseGroup(_root, NativeWriter.File.InternalAttributes);
         NativeWriter.Dispose();
+
+        // Checked once the file is complete: a file with a count too high reads fine, while one without its
+        // superblock does not read at all.
+        NativeWriter.ValidateDeclaredLinks();
     }
 
     // Bottom-up: a group's links name its children's headers, so those are written first.

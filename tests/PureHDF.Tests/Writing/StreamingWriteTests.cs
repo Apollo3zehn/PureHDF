@@ -473,6 +473,121 @@ public class StreamingWriteTests
     }
 
     [Fact]
+    public void AFailedAppendLeavesTheWriterUsable()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            writer.Append("before", new H5Dataset(new[] { 1 }));
+
+            // Act
+            void action() => writer.Append("documents/a", new H5Group
+            {
+                ["values"] = new[] { 2 },
+                ["has/slash"] = new[] { 3 }
+            });
+
+            // Assert
+            Assert.Throws<ArgumentException>(action);
+
+            writer.Append("documents/a", new H5Group { ["values"] = new[] { 4 } });
+            writer.Append("after", new H5Dataset(new[] { 5 }));
+        }
+
+        var file = Open(stream);
+
+        Assert.Equal([4], file.Group("documents").Group("a").Dataset("values").Read<int[]>());
+        Assert.Equal([5], file.Dataset("after").Read<int[]>());
+        AssertTheCLibraryAccepts(stream);
+    }
+
+    [Fact]
+    public void AFailedAppendCreatesNoGroups()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            // Act
+            void action() => writer.Append("new/deeper/a", new H5Group { ["has/slash"] = new[] { 1 } });
+
+            // Assert
+            Assert.Throws<ArgumentException>(action);
+        }
+
+        Assert.Empty(Open(stream).Children());
+    }
+
+    [Fact]
+    public void AFailedAppendDoesNotCountItsLinks()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var declared = new H5Dataset(new[] { 1 }) { HardLinkCount = 1 };
+        var shared = new H5Dataset(new[] { 2 }) { IsShared = true };
+
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            // Act
+            void action() => writer.Append("failed", new H5Group
+            {
+                ["declared"] = declared,
+                ["shared"] = shared,
+                ["has/slash"] = new[] { 3 }
+            });
+
+            // Assert
+            Assert.Throws<ArgumentException>(action);
+
+            writer.Append("declared", declared);
+            writer.Append("shared", shared);
+        }
+
+        var file = Open(stream);
+
+        Assert.Equal([1], file.Dataset("declared").Read<int[]>());
+        Assert.Equal(1U, ((NativeObject)file.Dataset("shared")).ReferenceCount);
+        AssertTheCLibraryAccepts(stream);
+    }
+
+    [Fact]
+    public void WritingADatasetGivenWithDataThrows()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        using var writer = H5File.BeginStreaming(stream);
+        var dataset = new H5Dataset<int[]>([1, 2]);
+
+        writer.Append("a", dataset);
+
+        // Act
+        void action() => writer.Write(dataset, [3, 4]);
+
+        // Assert
+        var exception = Assert.Throws<InvalidOperationException>(action);
+        Assert.Contains("given with data", exception.Message);
+    }
+
+    [Fact]
+    public void AFileWithADeclaredCountNotReachedIsStillComplete()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var writer = H5File.BeginStreaming(stream);
+
+        writer.Append("a", new H5Dataset(new[] { 1 }) { HardLinkCount = 2 });
+
+        // Act
+        Assert.Throws<InvalidOperationException>(writer.Dispose);
+
+        // Assert
+        Assert.Equal([1], Open(stream).Dataset("a").Read<int[]>());
+    }
+
+    [Fact]
     public void ADeclaredCountNotReachedThrowsAtDispose()
     {
         // Arrange
