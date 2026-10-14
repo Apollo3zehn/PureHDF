@@ -60,4 +60,41 @@ public partial class H5File : H5Group
 
         return writer;
     }
+
+    /// <summary>
+    /// Creates a new file and returns a writer that writes it piece by piece, one appended subtree at a
+    /// time. If the target file already exists, it is overwritten.
+    /// </summary>
+    /// <param name="filePath">The path of the file to write into.</param>
+    /// <param name="options">Options to control encoding behavior. See <see cref="BeginStreaming(Stream, H5WriteOptions?)" />.</param>
+    /// <exception cref="ArgumentException">The options ask for a metadata reservation.</exception>
+    public static H5StreamingWriter BeginStreaming(string filePath, H5WriteOptions? options = default)
+    {
+        options = H5StreamingWriter.ValidateOptions(options);
+
+        var fileStream = File.Open(filePath, FileMode.Create, FileAccess.ReadWrite, FileShare.Read);
+
+        return new H5StreamingWriter(fileStream, options, leaveOpen: false);
+    }
+
+    /// <summary>
+    /// Returns a writer that writes a new file to the specified stream piece by piece, one appended
+    /// subtree at a time.
+    /// </summary>
+    /// <remarks>
+    /// Streaming always clusters structure into blocks (<see cref="H5MetadataPlacement.Aggregated" />),
+    /// whatever <see cref="H5WriteOptions.MetadataPlacement" /> says: interleaving would scatter structure
+    /// through the payload, and front loading needs the whole structure before it writes any of it. A
+    /// <see cref="H5WriteOptions.MetadataReservation" /> is rejected. The payload of a dataset declared without
+    /// data is always allocated when it is first written (<see cref="H5WriteOptions.AllocatePayloadOnFirstWrite" />).
+    /// </remarks>
+    /// <param name="stream">The stream to write into. It must be writeable and seekable; it need not be readable.</param>
+    /// <param name="options">Options to control encoding behavior.</param>
+    /// <exception cref="ArgumentException">The options ask for a metadata reservation.</exception>
+    public static H5StreamingWriter BeginStreaming(Stream stream, H5WriteOptions? options = default)
+    {
+        options = H5StreamingWriter.ValidateOptions(options);
+
+        return new H5StreamingWriter(stream, options, leaveOpen: true);
+    }
 }

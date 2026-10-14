@@ -69,9 +69,7 @@ public partial class H5NativeWriter : IDisposable
 
         FinishIfComplete(dataset, h5d);
 
-        // Between top-level encodes is the only safe point to write heap collections; see there.
-        Context.GlobalHeapManager.WriteClosedCollections();
-        WriteAbandoned();
+        EndTopLevelEncode();
     }
 
     /// <summary>
@@ -107,6 +105,9 @@ public partial class H5NativeWriter : IDisposable
 
                     h5d?.Dispose();
                 }
+
+                foreach (var h5d in _detachedLayouts)
+                    h5d.Dispose();
 
                 // headers of datasets written since the last batch, or never
                 WriteCompletedHeaders();

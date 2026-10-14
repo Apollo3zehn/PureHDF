@@ -40,9 +40,31 @@ internal partial record class ObjectHeader2
     /// Whether to write the header now. A header that will be patched is better allocated now and written
     /// once it is final, since rewriting it would change bytes a destination may already have shipped.
     /// </param>
-    public (ulong Address, byte[] Encoded) EncodeAndKeep(NativeWriteContext context, bool write)
+    /// <param name="allocate">
+    /// Whether to allocate the header now. One that is not is encoded as if at address zero and written
+    /// wherever it is allocated later: nothing in a header depends on where it is.
+    /// </param>
+    public (ulong Address, byte[] Encoded) EncodeAndKeep(NativeWriteContext context, bool write, bool allocate = true)
     {
-        var address = Allocate(context, out var encodeSize, out var headerMessagesEncodeSize);
+        if (write && !allocate)
+            throw new ArgumentException("A header has to be allocated to be written.", nameof(allocate));
+
+        long address;
+        int encodeSize;
+        ulong headerMessagesEncodeSize;
+
+        if (allocate)
+        {
+            address = Allocate(context, out encodeSize, out headerMessagesEncodeSize);
+        }
+
+        else
+        {
+            address = 0;
+            headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();
+            encodeSize = (int)GetEncodeSize(headerMessagesEncodeSize);
+        }
+
         var encoded = new byte[encodeSize];
 
         ChecksummedStructure.WriteToBuffer(

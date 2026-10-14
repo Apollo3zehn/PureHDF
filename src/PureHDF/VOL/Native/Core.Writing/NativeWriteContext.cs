@@ -61,6 +61,12 @@ internal abstract class DeferredDataset(object encode)
     /// </summary>
     public PendingPayload? Pending { get; set; }
 
+    /// <summary>
+    /// Where the header was allocated, for one allocated late; zero until then, and for every other
+    /// dataset. See <see cref="H5NativeWriter.AllocatePendingHeader" />.
+    /// </summary>
+    public ulong LateHeaderAddress { get; set; }
+
     /// <summary>Records where the payload was allocated.</summary>
     public virtual void SetPayloadAddress(ulong address)
         => ((DataLayoutMessage4)GetInfo().Layout).Properties.Address = address;
@@ -156,7 +162,10 @@ internal sealed class DeferredChunked(DatasetInfo info, object encode) : Deferre
 /// parts holds a part for every such gap. Allocated when first written, it lands at the end of the file in
 /// the order the data arrives.
 /// </remarks>
-/// <param name="HeaderAddress">Where the header is allocated.</param>
+/// <param name="HeaderAddress">
+/// Where the header is allocated; negative for a header not allocated yet, see
+/// <see cref="H5NativeWriter.AllocatePendingHeader" />.
+/// </param>
 /// <param name="Header">The encoded header, with an undefined payload address.</param>
 /// <param name="AddressOffset">Where in the header the payload address goes.</param>
 /// <param name="Size">How much payload to allocate.</param>

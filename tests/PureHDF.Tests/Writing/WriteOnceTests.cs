@@ -188,6 +188,116 @@ public class WriteOnceTests
         return stream.MostHoleBytes;
     }
 
+    [Fact]
+    public void AStreamingWriteWritesEveryByteOnce()
+    {
+        // Arrange
+        var options = new H5WriteOptions { MetadataBlockSize = 64 * 1024 };
+        var stream = new CoverageRecordingStream();
+        var deferred = new List<(H5Dataset<double[]> Dataset, double[] Data)>();
+        List<(long Address, long Length)> openTails;
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream, options))
+        {
+            writer.Root.Attributes["title"] = "streamed";
+
+            for (var i = 0; i < 300; i++)
+            {
+                var direct = new H5Dataset<double[]>(fileDims: [500], chunks: i % 3 == 0 ? [100] : null);
+                var nested = new H5Dataset<double[]>(fileDims: [500], chunks: i % 2 == 0 ? [500] : null, datasetCreation: i % 4 == 0 ? Deflate : default);
+
+                deferred.Add((direct, RandomDoubles(2 * i, 500)));
+                deferred.Add((nested, RandomDoubles(2 * i + 1, 500)));
+
+                writer.Append($"batch_{i / 50}/direct_{i}", direct);
+                writer.Append($"batch_{i / 50}/document_{i}", new H5Group
+                {
+                    Attributes = new() { ["index"] = i },
+                    ["strings"] = RandomStrings(i, 20),
+                    ["values"] = RandomDoubles(i, 100),
+                    ["nested"] = nested
+                });
+
+                if (i % 50 == 49)
+                    writer.Close($"batch_{i / 50}");
+            }
+
+            var order = Enumerable.Range(0, deferred.Count).ToArray();
+            new Random(0).Shuffle(order);
+
+            foreach (var i in order)
+                writer.Write(deferred[i].Dataset, deferred[i].Data);
+
+            openTails = writer.NativeWriter.Context.FreeSpaceManager.OpenTails.ToList();
+        }
+
+        // Assert
+        var rewritten = stream.Ranges(count => count > 1);
+        Assert.True(rewritten.Count == 0, $"Rewritten (offset, length): {Describe(rewritten)}");
+
+        var unexpected = stream
+            .Ranges(count => count == 0)
+            .Where(hole => !openTails.Any(tail => tail.Address <= hole.Offset && hole.Offset + hole.Length <= tail.Address + tail.Length))
+            .ToList();
+
+        Assert.True(unexpected.Count == 0, $"Unwritten (offset, length): {Describe(unexpected)}");
+
+        using var file = H5File.Open(new MemoryStream(stream.ToArray()));
+
+        Assert.Equal(deferred[598].Data, file.Dataset("batch_5/direct_299").Read<double[]>());
+        Assert.Equal(deferred[599].Data, file.Dataset("batch_5/document_299/nested").Read<double[]>());
+    }
+
+    // A deferred dataset appended directly into an open group is named by nothing written until its group
+    // closes, so its header is not allocated until it is written: datasets appended long before they are
+    // written leave no gap for their headers. Inside an appended group, the group's header names the
+    // dataset's, which has to be allocated then and stays a gap until the dataset is written.
+    [Fact]
+    public void DatasetsAppendedDirectlyLeaveNoGapUntilWritten()
+    {
+        // Act
+        var direct = MostHoleBytesStreamingDatasetsWrittenLate(nested: false, count: 4_000);
+        var nested = MostHoleBytesStreamingDatasetsWrittenLate(nested: true, count: 4_000);
+
+        // Assert - the open metadata block and a batch of completed headers, not a header per dataset
+        Assert.True(direct <= 160 * 1024, $"{direct} bytes were unwritten behind the furthest write.");
+        Assert.True(nested > 3 * direct, $"Nested: {nested} bytes, direct: {direct} bytes.");
+    }
+
+    private static long MostHoleBytesStreamingDatasetsWrittenLate(bool nested, int count)
+    {
+        var options = new H5WriteOptions { MetadataBlockSize = 64 * 1024 };
+        var stream = new CoverageRecordingStream();
+        var datasets = new H5Dataset<double[]>[count];
+
+        using (var writer = H5File.BeginStreaming(stream, options))
+        {
+            for (var i = 0; i < count; i++)
+            {
+                datasets[i] = new H5Dataset<double[]>(fileDims: [1_000]);
+
+                if (nested)
+                    writer.Append($"documents/{i}", new H5Group { ["data"] = datasets[i] });
+
+                else
+                    writer.Append($"documents/{i}", datasets[i]);
+
+                // Given data between the declaration and the write, which the gaps sit behind.
+                writer.Append($"given/{i}", new H5Dataset(RandomDoubles(i, 1_000)));
+            }
+
+            for (var i = 0; i < count; i++)
+                writer.Write(datasets[i], RandomDoubles(i, 1_000));
+        }
+
+        using var file = H5File.Open(new MemoryStream(stream.ToArray()));
+        var path = nested ? $"documents/{count - 1}/data" : $"documents/{count - 1}";
+        Assert.Equal(RandomDoubles(count - 1, 1_000), file.Dataset(path).Read<double[]>());
+
+        return stream.MostHoleBytes;
+    }
+
     private static int MostHolesWritingFilteredDatasets(int count)
     {
         var file = new H5File();
