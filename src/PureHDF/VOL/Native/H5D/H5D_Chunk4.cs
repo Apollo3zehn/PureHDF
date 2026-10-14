@@ -61,10 +61,7 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
         AllocateIndex();
 
         // A header allocated late gets its address now that it is complete, unless something named it before.
-        if (kept.Address < 0)
-            WriteContext.Writer.AllocatePendingHeader(kept.Late!);
-
-        var objectHeaderAddress = kept.Address;
+        var objectHeaderAddress = WriteContext.Writer.AllocateHeader(kept);
 
         // Read before patching, which encodes the layout and so clears it.
         var isDirty = Chunked4.IsDirty;
@@ -74,7 +71,7 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
             // Patched in the copy kept at encoding rather than in the file: the storage properties
             // changed, and with them the header's checksum, which is computed from the copy so that
             // nothing is read from the file.
-            var origin = (long)WriteContext.Driver.BaseAddress + kept.EncodedAt;
+            var origin = (long)WriteContext.Driver.BaseAddress + (long)kept.EncodedAt;
 
             using (var patchDriver = new H5SpanWriteDriver(objectHeader, origin))
             {
@@ -90,7 +87,7 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
         // the end, from the copy patched here.
         if (!kept.IsShared && (isDirty || !kept.IsWritten))
         {
-            WriteContext.Driver.SeekRelativeToBaseAddress(objectHeaderAddress);
+            WriteContext.Driver.SeekRelativeToBaseAddress((long)objectHeaderAddress);
             WriteContext.Driver.Write(objectHeader);
         }
     }

@@ -29,7 +29,7 @@ internal partial record class ObjectHeader2
     }
 
     /// <summary>
-    /// Encodes the header like <see cref="Encode(NativeWriteContext, out int)" />, and also returns the encoded bytes.
+    /// Allocates the header like <see cref="Encode(NativeWriteContext, out int)" />, and returns the encoded bytes.
     /// </summary>
     /// <remarks>
     /// For a header that may have to be patched after it is encoded - a chunked dataset's, once its index
@@ -40,60 +40,33 @@ internal partial record class ObjectHeader2
     /// Whether to write the header now. A header that will be patched is better allocated now and written
     /// once it is final, since rewriting it would change bytes a destination may already have shipped.
     /// </param>
-    /// <param name="allocate">
-    /// Whether to allocate the header now. One that is not is encoded as if at address zero and written
-    /// wherever it is allocated later: nothing in a header depends on where it is.
-    /// </param>
-    public (ulong Address, byte[] Encoded) EncodeAndKeep(NativeWriteContext context, bool write, bool allocate = true)
+    public (ulong Address, byte[] Encoded) EncodeAndKeep(NativeWriteContext context, bool write)
     {
-        if (write && !allocate)
-            throw new ArgumentException("A header has to be allocated to be written.", nameof(allocate));
-
-        long address;
-        int encodeSize;
-        ulong headerMessagesEncodeSize;
-
-        if (allocate)
-        {
-            address = Allocate(context, out encodeSize, out headerMessagesEncodeSize);
-        }
-
-        else
-        {
-            address = 0;
-            headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();
-            encodeSize = (int)GetEncodeSize(headerMessagesEncodeSize);
-        }
-
-        var encoded = new byte[encodeSize];
-
-        ChecksummedStructure.WriteToBuffer(
-            encoded,
-            origin: (long)context.Driver.BaseAddress + address,
-            (Header: this, headerMessagesEncodeSize),
-            static (driver, state) => state.Header.EncodeCore(driver, state.headerMessagesEncodeSize));
+        var address = (ulong)context.FreeSpaceManager.Allocate(GetEncodeSize(), AllocationKind.Metadata);
+        var encoded = EncodeAt(context, address);
 
         if (write)
         {
-            context.Driver.SeekRelativeToBaseAddress(address);
+            context.Driver.SeekRelativeToBaseAddress((long)address);
             context.Driver.Write(encoded);
         }
 
-        return ((ulong)address, encoded);
+        return (address, encoded);
     }
 
     /// <summary>
-    /// Encodes the header as if at <paramref name="address" />, allocated by the caller, and returns the
-    /// encoded bytes without writing them.
+    /// Encodes the header as if at <paramref name="address" />, allocated by the caller or not yet at all,
+    /// and returns the encoded bytes without writing them. Nothing in a header depends on where it is, but
+    /// positions recorded while encoding it are relative to that address.
     /// </summary>
-    public byte[] EncodeAt(NativeWriteContext context, long address)
+    public byte[] EncodeAt(NativeWriteContext context, ulong address)
     {
         var headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();
         var encoded = new byte[GetEncodeSize(headerMessagesEncodeSize)];
 
         ChecksummedStructure.WriteToBuffer(
             encoded,
-            origin: (long)context.Driver.BaseAddress + address,
+            origin: (long)context.Driver.BaseAddress + (long)address,
             (Header: this, headerMessagesEncodeSize),
             static (driver, state) => state.Header.EncodeCore(driver, state.headerMessagesEncodeSize));
 

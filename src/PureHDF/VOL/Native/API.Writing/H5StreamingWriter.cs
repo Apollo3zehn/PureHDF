@@ -105,8 +105,8 @@ public sealed class H5StreamingWriter : IDisposable
             parent = group;
         }
 
-        parent.Links.Add(name, NativeWriter.GetLateTarget(subtree) is { } late
-            ? new OpenLink(Address: default, Pending: late)
+        parent.Links.Add(name, NativeWriter.GetPendingHeader(subtree) is { } pending
+            ? new OpenLink(Address: default, Pending: pending)
             : new OpenLink(address, Pending: null));
 
         NativeWriter.EndAppend();
@@ -206,7 +206,7 @@ public sealed class H5StreamingWriter : IDisposable
             var address = link.Pending switch
             {
                 OpenGroup child => CloseGroup(child, attributes: null),
-                { } late => NativeWriter.ResolveLateTarget(late),
+                IPendingHeader pending => pending.Resolve(NativeWriter),
                 _ => link.Address
             };
 
@@ -256,8 +256,7 @@ public sealed class H5StreamingWriter : IDisposable
 
     /// <summary>
     /// A link in an open group: the address of what it points to, or what is still to be written for
-    /// it - an open group, a deferred dataset whose header is not allocated yet, or a group waiting for
-    /// one.
+    /// it - an open group, or a header without an address yet (<see cref="IPendingHeader" />).
     /// </summary>
     private readonly record struct OpenLink(ulong Address, object? Pending);
 }
