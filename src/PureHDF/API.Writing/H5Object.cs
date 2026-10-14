@@ -10,6 +10,20 @@ public class H5Object
     internal Dictionary<string, object>? InternalAttributes { get; set; }
 
     /// <summary>
+    /// Whether this object may be linked from more than one subtree appended to a
+    /// <see cref="H5StreamingWriter" />, without its number of links known up front.
+    /// </summary>
+    /// <remarks>
+    /// A shared object's header is held in memory until the writer is disposed, when its hard link count
+    /// is known, and then written into a region reserved for shared objects - see
+    /// <see cref="H5WriteOptions.SharedObjectRegionSize" />. Set it before the object is first appended.
+    /// A <see cref="HardLinkCount" />, when known, is cheaper: the header is written at once and nothing
+    /// is held, so it takes precedence. Writes other than streaming count the links in the tree and
+    /// ignore this.
+    /// </remarks>
+    public bool IsShared { get; set; }
+
+    /// <summary>
     /// How many hard links to this object the file will have, or null to count them from the tree.
     /// </summary>
     /// <remarks>
@@ -22,6 +36,7 @@ public class H5Object
     /// declared, or fewer once the tree is complete.
     /// </remarks>
     /// <exception cref="ArgumentOutOfRangeException">The value is less than 1.</exception>
+    /// <seealso cref="IsShared" />
     public int? HardLinkCount
     {
         get => _hardLinkCount;

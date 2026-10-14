@@ -55,7 +55,7 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
         if (WriteContext is null)
             return;
 
-        var (objectHeaderAddress, objectHeader, isWritten) = WriteContext.DatasetInfoToObjectHeaderMap[Dataset];
+        var (objectHeaderAddress, objectHeader, isWritten, isShared) = WriteContext.DatasetInfoToObjectHeaderMap[Dataset];
 
         // Read before patching, which encodes the layout and so clears it.
         var isDirty = Chunked4.IsDirty;
@@ -77,8 +77,9 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
         }
 
         // A header written at encoding is final unless its layout changed since; one held back for its
-        // chunk is written now, whether or not the chunk ever was.
-        if (isDirty || !isWritten)
+        // chunk is written now, whether or not the chunk ever was. A shared object's header is written at
+        // the end, from the copy patched here.
+        if (!isShared && (isDirty || !isWritten))
         {
             WriteContext.Driver.SeekRelativeToBaseAddress(objectHeaderAddress);
             WriteContext.Driver.Write(objectHeader);

@@ -205,10 +205,18 @@ public class WriteOnceTests
             for (var i = 0; i < 300; i++)
             {
                 var direct = new H5Dataset<double[]>(fileDims: [500], chunks: i % 3 == 0 ? [100] : null);
+                var shared = new H5Dataset<double[]>(fileDims: [500], chunks: i % 2 == 0 ? [100] : null) { IsShared = true };
                 var nested = new H5Dataset<double[]>(fileDims: [500], chunks: i % 2 == 0 ? [500] : null, datasetCreation: i % 4 == 0 ? Deflate : default);
 
                 deferred.Add((direct, RandomDoubles(2 * i, 500)));
                 deferred.Add((nested, RandomDoubles(2 * i + 1, 500)));
+
+                if (i % 10 == 0)
+                {
+                    deferred.Add((shared, RandomDoubles(-i, 500)));
+                    writer.Append($"shared_{i}", shared);
+                    writer.Append($"shared_{i}_again", new H5Group { ["link"] = shared });
+                }
 
                 writer.Append($"batch_{i / 50}/direct_{i}", direct);
                 writer.Append($"batch_{i / 50}/document_{i}", new H5Group
@@ -245,8 +253,9 @@ public class WriteOnceTests
 
         using var file = H5File.Open(new MemoryStream(stream.ToArray()));
 
-        Assert.Equal(deferred[598].Data, file.Dataset("batch_5/direct_299").Read<double[]>());
-        Assert.Equal(deferred[599].Data, file.Dataset("batch_5/document_299/nested").Read<double[]>());
+        Assert.Equal(RandomDoubles(2 * 299, 500), file.Dataset("batch_5/direct_299").Read<double[]>());
+        Assert.Equal(RandomDoubles(2 * 299 + 1, 500), file.Dataset("batch_5/document_299/nested").Read<double[]>());
+        Assert.Equal(RandomDoubles(-290, 500), file.Dataset("shared_290_again/link").Read<double[]>());
     }
 
     // A deferred dataset appended directly into an open group is named by nothing written until its group
@@ -296,7 +305,8 @@ public class WriteOnceTests
 
     private static long MostHoleBytesStreamingDatasetsWrittenLate(bool nested, int count)
     {
-        var options = new H5WriteOptions { MetadataBlockSize = 64 * 1024 };
+        // Nothing is shared, so the region for shared objects, a gap until the end, is kept out of the way.
+        var options = new H5WriteOptions { MetadataBlockSize = 64 * 1024, SharedObjectRegionSize = 1 };
         var stream = new CoverageRecordingStream();
         var datasets = new H5Dataset<double[]>[count];
 

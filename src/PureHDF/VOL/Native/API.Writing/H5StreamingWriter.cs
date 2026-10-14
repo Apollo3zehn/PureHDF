@@ -15,10 +15,10 @@ namespace PureHDF;
 /// </para>
 /// <para>
 /// Everything is written once, in the order it is allocated, except the superblock at the start of the
-/// file (written at <see cref="Dispose" />) and the held-back headers of deferred datasets (written when
-/// the dataset is first written). Space allocated and never written - the unused tail of a metadata
-/// block, the payload of a deferred dataset never written - reads as zeros on a file system; a
-/// destination that is not a file has to fill it with zeros itself.
+/// file and the headers of shared objects (both written at <see cref="Dispose" />), and the headers of
+/// deferred datasets (written once their data is, or at Dispose). Space allocated and never written - the
+/// unused tail of a metadata block, the payload of a deferred dataset never written - reads as zeros on
+/// a file system; a destination that is not a file has to fill it with zeros itself.
 /// </para>
 /// </remarks>
 public sealed class H5StreamingWriter : IDisposable
@@ -210,6 +210,9 @@ public sealed class H5StreamingWriter : IDisposable
     internal static H5WriteOptions ValidateOptions(H5WriteOptions? options)
     {
         options ??= new H5WriteOptions();
+
+        if (options.SharedObjectRegionSize <= 0)
+            throw new ArgumentException("The shared object region size must be greater than zero.", nameof(options));
 
         if (options.MetadataReservation != 0)
             throw new ArgumentException(

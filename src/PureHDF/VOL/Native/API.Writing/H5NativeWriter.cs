@@ -111,6 +111,9 @@ public partial class H5NativeWriter : IDisposable
                 foreach (var h5d in _detachedLayouts)
                     h5d.Dispose();
 
+                // headers of shared objects, now that their links are counted and their layouts final
+                WriteSharedRegions();
+
                 // headers of datasets written since the last batch, or never
                 WriteCompletedHeaders();
 

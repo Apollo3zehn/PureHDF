@@ -124,6 +124,27 @@ public record H5WriteOptions(
     public long MetadataReservation { get; init; }
 
     /// <summary>
+    /// The size in bytes of the region reserved after the superblock for the headers of shared objects
+    /// (<see cref="H5Object.IsShared" />) in a file written by
+    /// <see cref="H5File.BeginStreaming(Stream, H5WriteOptions?)" />. The default is 64 KiB. Other writes
+    /// ignore it.
+    /// </summary>
+    /// <remarks>
+    /// A shared object's header carries its hard link count, which is only known once the file is
+    /// complete, so the header is held in memory and written into this region at the end. The region is
+    /// reserved whether or not anything is shared, and its unused part is written as zeros.
+    /// <para>
+    /// A destination uploading in parts holds the first part until the end anyway, for the superblock: a
+    /// region that fits in it costs nothing more. When the region is full, another of the same size is
+    /// opened at the end of the file, and a destination holds the part it is in until the end as well.
+    /// </para>
+    /// <para>
+    /// Must be greater than zero.
+    /// </para>
+    /// </remarks>
+    public long SharedObjectRegionSize { get; init; } = 64 * 1024;
+
+    /// <summary>
     /// The most data, in bytes, a dataset may hold and still be written compact when
     /// <see cref="PreferCompactDatasetLayout" /> is set. The default is 256 bytes; a compact layout can
     /// hold at most 65531.

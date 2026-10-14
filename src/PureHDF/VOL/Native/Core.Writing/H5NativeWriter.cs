@@ -25,8 +25,13 @@ partial class H5NativeWriter
     // keeps nothing alive the caller has let go of. See EndAppend.
     private ConditionalWeakTable<H5Object, StrongBox<ulong>>? _written;
 
-    // How many hard links have been encoded so far to each object that declared a count.
-    private readonly Dictionary<H5Object, int> _declaredLinks = new(ReferenceEqualityComparer.Instance);
+    // The links counted so far to each object that declared a count, or is shared. Weak, so it does not
+    // keep a dataset's data alive; the counters themselves are listed to be checked at the end.
+    private readonly ConditionalWeakTable<H5Object, LinkCounter> _linkCounters = new();
+    private readonly List<LinkCounter> _countedLinks = [];
+
+    // Streaming only: the headers of shared objects, written at the end. See H5Object.IsShared.
+    private readonly List<SharedHeader> _sharedHeaders = [];
 
     // Set by Append for a dataset appended directly into an open group, and taken by the next dataset
     // encoded. See EncodeAppended.
@@ -186,7 +191,89 @@ partial class H5NativeWriter
     internal void BeginStreaming()
     {
         _written = new();
+        Context.FreeSpaceManager.ReserveSharedRegion(Context.WriteOptions.SharedObjectRegionSize);
         Context.Driver.SeekRelativeToBaseAddress(Superblock23.ENCODE_SIZE);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="h5Object" />'s header is held until the end and written into the shared
+    /// region. See <see cref="H5Object.IsShared" />.
+    /// </summary>
+    private bool IsHeldShared(H5Object h5Object)
+        => _written is not null && h5Object.IsShared && h5Object.HardLinkCount is null;
+
+    private LinkCounter GetLinkCounter(H5Object h5Object)
+    {
+        if (!_linkCounters.TryGetValue(h5Object, out var counter))
+        {
+            counter = new LinkCounter(h5Object.HardLinkCount);
+            _linkCounters.Add(h5Object, counter);
+            _countedLinks.Add(counter);
+        }
+
+        return counter;
+    }
+
+    /// <summary>
+    /// Encodes the header of a shared object into the shared region, and keeps it to be written at the
+    /// end with its final link count.
+    /// </summary>
+    private (ulong Address, byte[] Encoded) KeepSharedHeader(ObjectHeader2 objectHeader, H5Object owner)
+    {
+        var address = Context.FreeSpaceManager.AllocateShared(objectHeader.GetEncodeSize());
+        var encoded = objectHeader.EncodeAt(Context, address);
+
+        var countMessage = objectHeader.HeaderMessages
+            .Select(message => message.Data)
+            .OfType<ObjectReferenceCountMessage>()
+            .Single();
+
+        var countOffset = countMessage.CountPosition - ((long)Context.Driver.BaseAddress + address);
+
+        _sharedHeaders.Add(new SharedHeader(address, encoded, (int)countOffset, GetLinkCounter(owner)));
+
+        return ((ulong)address, encoded);
+    }
+
+    /// <summary>
+    /// Writes the shared regions: the headers of the shared objects with their final link counts, and
+    /// zeros between and after them.
+    /// </summary>
+    internal void WriteSharedRegions()
+    {
+        var regions = Context.FreeSpaceManager.SharedRegions;
+
+        if (regions.Count == 0)
+            return;
+
+        var driver = Context.Driver;
+        var position = driver.Position;
+        var headers = 0;
+
+        _sharedHeaders.Sort((x, y) => x.Address.CompareTo(y.Address));
+
+        foreach (var (regionAddress, regionLength) in regions)
+        {
+            var buffer = new byte[regionLength];
+
+            for (; headers < _sharedHeaders.Count && _sharedHeaders[headers].Address < regionAddress + regionLength; headers++)
+            {
+                var (address, header, countOffset, counter) = _sharedHeaders[headers];
+
+                // An object only referenced, never linked, counts as linked once - as it does when the
+                // count message is left out.
+                BinaryPrimitives.WriteUInt32LittleEndian(header.AsSpan(countOffset), (uint)Math.Max(1, counter.Links));
+                ChecksummedStructure.UpdateChecksum(header);
+
+                header.CopyTo(buffer.AsSpan((int)(address - regionAddress)));
+            }
+
+            driver.SeekRelativeToBaseAddress(regionAddress);
+            driver.Write(buffer);
+        }
+
+        driver.Seek(position, SeekOrigin.Begin);
+        _sharedHeaders.Clear();
     }
 
     internal ulong RootGroupAddress
@@ -287,15 +374,15 @@ partial class H5NativeWriter
     /// </summary>
     private void CountLink(H5Object h5Object)
     {
-        if (h5Object.HardLinkCount is int declared)
+        if (h5Object.HardLinkCount is not null || IsHeldShared(h5Object))
         {
-            var links = _declaredLinks.GetValueOrDefault(h5Object) + 1;
+            var counter = GetLinkCounter(h5Object);
 
-            if (links > declared)
+            if (counter.Declared is int declared && counter.Links == declared)
                 throw new InvalidOperationException(
                     $"The object declares {declared} hard link(s) (H5Object.HardLinkCount) but is linked more often.");
 
-            _declaredLinks[h5Object] = links;
+            counter.Links++;
         }
 
         else if (_written is not null && _written.TryGetValue(h5Object, out _))
@@ -311,11 +398,11 @@ partial class H5NativeWriter
     /// </summary>
     internal void ValidateDeclaredLinks()
     {
-        foreach (var (h5Object, links) in _declaredLinks)
+        foreach (var counter in _countedLinks)
         {
-            if (links != h5Object.HardLinkCount)
+            if (counter.Declared is int declared && counter.Links != declared)
                 throw new InvalidOperationException(
-                    $"The object declares {h5Object.HardLinkCount} hard link(s) (H5Object.HardLinkCount) but is linked {links} time(s).");
+                    $"An object declares {declared} hard link(s) (H5Object.HardLinkCount) but is linked {counter.Links} time(s).");
         }
     }
 
@@ -482,7 +569,8 @@ partial class H5NativeWriter
         // objects; a missing message is interpreted as a reference count of 1.
         var count = h5Object.HardLinkCount ?? Context.ObjectReferenceCountMap.GetValueOrDefault(h5Object, 1);
 
-        if (count > 1)
+        // A shared object's count is known only at the end, when it is filled in.
+        if (count > 1 || IsHeldShared(h5Object))
         {
             var objectReferenceCountMessage = new ObjectReferenceCountMessage(
                 ReferenceCount: (uint)count
@@ -580,7 +668,7 @@ partial class H5NativeWriter
 
         AppendReferenceCountToHeaderMessages(group, headerMessages);
 
-        return EncodeObjectHeader(headerMessages);
+        return EncodeObjectHeader(headerMessages, group);
     }
 
     /// <summary>
@@ -595,7 +683,7 @@ partial class H5NativeWriter
         foreach (var (name, address) in links)
             headerMessages.Add(CreateLinkMessage(name, LinkType.Hard, new HardLinkInfo(HeaderAddress: address)));
 
-        return EncodeObjectHeader(headerMessages);
+        return EncodeObjectHeader(headerMessages, owner: null);
     }
 
     private List<HeaderMessage> CreateGroupHeaderMessages(Dictionary<string, object>? attributes)
@@ -670,7 +758,7 @@ partial class H5NativeWriter
         return ToHeaderMessage(linkMessage);
     }
 
-    private ulong EncodeObjectHeader(List<HeaderMessage> headerMessages)
+    private ulong EncodeObjectHeader(List<HeaderMessage> headerMessages, H5Object? owner)
     {
         var objectHeader = new ObjectHeader2(
             Address: default,
@@ -686,6 +774,9 @@ partial class H5NativeWriter
         {
             Version = 2
         };
+
+        if (owner is not null && IsHeldShared(owner))
+            return KeepSharedHeader(objectHeader, owner).Address;
 
         // encode object header
         // ObjectHeader2.Encode() returns a ValueTask but completes synchronously. This method and its
@@ -1076,6 +1167,27 @@ partial class H5NativeWriter
         if (h5d is H5D_Chunk chunk)
             chunk.FlushChunkCache();
 
+        // A shared dataset's header is written at the end, with its link count; the payload address and
+        // the chunk index are patched into the kept copy until then.
+        if (IsHeldShared(dataset))
+        {
+            var (sharedAddress, sharedHeader) = KeepSharedHeader(objectHeader, dataset);
+
+            if (isChunked)
+                Context.DatasetInfoToObjectHeaderMap[datasetInfo] = ((long)sharedAddress, sharedHeader, IsWritten: true, IsShared: true);
+
+            if (unallocatedPayloadSize > 0)
+            {
+                deferred.Pending = CreatePendingPayload(
+                    dataLayout.Properties, sharedAddress, sharedHeader, unallocatedPayloadSize, allocatesHeaderLate: false) with { IsShared = true };
+            }
+
+            if (isChunked)
+                FinishIfComplete(dataset, h5d);
+
+            return sharedAddress;
+        }
+
         // encode object header
         //
         // Only a chunked dataset patches its own object header later (H5D_Chunk4.Dispose, once its
@@ -1096,7 +1208,7 @@ partial class H5NativeWriter
                 Context, write: !writesHeaderLater, allocate: !allocatesChunkedHeaderLate);
 
             Context.DatasetInfoToObjectHeaderMap[datasetInfo] = (
-                allocatesChunkedHeaderLate ? -1 : (long)chunkedAddress, encoded, IsWritten: !writesHeaderLater);
+                allocatesChunkedHeaderLate ? -1 : (long)chunkedAddress, encoded, IsWritten: !writesHeaderLater, IsShared: false);
 
             if (unallocatedPayloadSize > 0)
             {
@@ -1247,11 +1359,15 @@ partial class H5NativeWriter
         BinaryPrimitives.WriteUInt64LittleEndian(pending.Header.AsSpan(pending.AddressOffset), address);
         ChecksummedStructure.UpdateChecksum(pending.Header);
 
-        _completedHeaders.Add((pending.HeaderAddress, pending.Header));
-        _completedHeaderBytes += pending.Header.Length;
+        // A shared object's header is written at the end, from this same copy.
+        if (!pending.IsShared)
+        {
+            _completedHeaders.Add((pending.HeaderAddress, pending.Header));
+            _completedHeaderBytes += pending.Header.Length;
 
-        if (_completedHeaderBytes >= COMPLETED_HEADER_BATCH_SIZE)
-            WriteCompletedHeaders();
+            if (_completedHeaderBytes >= COMPLETED_HEADER_BATCH_SIZE)
+                WriteCompletedHeaders();
+        }
 
         // Marked written, so that H5D_Chunk4.Dispose, which writes a held-back header, skips it.
         var info = deferred.GetInfo();
@@ -1666,4 +1782,14 @@ partial class H5NativeWriter
             WithCreationOrder = default
         };
     }
+
+    /// <summary>The links counted to one object, and how many it declares, if it does.</summary>
+    private sealed class LinkCounter(int? declared)
+    {
+        public int? Declared { get; } = declared;
+
+        public int Links { get; set; }
+    }
+
+    private readonly record struct SharedHeader(long Address, byte[] Header, int CountOffset, LinkCounter Counter);
 }

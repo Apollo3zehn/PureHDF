@@ -94,6 +94,57 @@ internal class FreeSpaceManager
         _deferredRawData = new Region { NextBlockSize = Math.Min(INITIAL_BLOCK_SIZE, blockSize) };
     }
 
+    // Holds the headers of shared objects, written at the end: see AllocateShared.
+    private Region _shared;
+    private long _sharedRegionSize;
+
+    /// <summary>
+    /// The regions opened for the headers of shared objects, in order.
+    /// </summary>
+    public List<(long Address, long Length)> SharedRegions { get; } = [];
+
+    /// <summary>
+    /// Reserves the first region for the headers of shared objects here, and sets the size of those
+    /// opened later.
+    /// </summary>
+    public void ReserveSharedRegion(long size)
+    {
+        _sharedRegionSize = size;
+        OpenSharedRegion(size);
+    }
+
+    /// <summary>
+    /// Allocates the header of a shared object, which is written at the end. See
+    /// <see cref="H5Object.IsShared" />.
+    /// </summary>
+    /// <remarks>
+    /// Its own regions rather than the metadata blocks: written at the end, these headers are a gap until
+    /// then, and gathered into a region at the front - which the superblock holds back anyway - they cost
+    /// a destination uploading in parts nothing more. A full region opens another of the same size, or one
+    /// as large as the header, at the end of the file.
+    /// </remarks>
+    public long AllocateShared(long length)
+    {
+        if (_shared.Cursor + length > _shared.End)
+            OpenSharedRegion(Math.Max(_sharedRegionSize, length));
+
+        MetadataAllocated += length;
+
+        var address = _shared.Cursor;
+        _shared.Cursor += length;
+
+        return address;
+    }
+
+    private void OpenSharedRegion(long size)
+    {
+        _shared.Cursor = _length;
+        _shared.End = _length + size;
+        _length = _shared.End;
+
+        SharedRegions.Add((_shared.Cursor, size));
+    }
+
     private struct Region
     {
         public long Cursor;

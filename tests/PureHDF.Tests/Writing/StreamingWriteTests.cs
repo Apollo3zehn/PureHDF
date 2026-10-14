@@ -517,6 +517,170 @@ public class StreamingWriteTests
         Assert.Equal(2U, ((NativeObject)Open(stream).Dataset("a")).ReferenceCount);
     }
 
+    public static TheoryData<string> SharedLayouts() => ["given", "contiguous", "implicit", "filtered", "single chunk"];
+
+    [Theory]
+    [MemberData(nameof(SharedLayouts))]
+    public void SharedDatasetsCanBeLinkedAcrossSubtreesWithoutACount(string layout)
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var data = Enumerable.Range(0, 1000).Select(value => (double)value).ToArray();
+
+        var shared = layout == "given"
+            ? new H5Dataset<double[]>(data)
+            : CreateDeferred(layout);
+
+        shared.IsShared = true;
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            writer.Append("a", shared);
+            writer.Append("documents/0", new H5Group { ["shared"] = shared });
+            writer.Append("documents/1", new H5Group { ["shared"] = shared });
+
+            if (layout != "given")
+                writer.Write(shared, data);
+        }
+
+        // Assert
+        var file = Open(stream);
+        var address = Address(file.Dataset("a"));
+
+        Assert.Equal(address, Address(file.Group("documents").Group("1").Dataset("shared")));
+        Assert.Equal(3U, ((NativeObject)file.Dataset("a")).ReferenceCount);
+        Assert.Equal(data, file.Group("documents").Group("0").Dataset("shared").Read<double[]>());
+        AssertTheCLibraryAccepts(stream);
+    }
+
+    [Fact]
+    public void SharedGroupsCanBeLinkedAcrossSubtreesWithoutACount()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var shared = new H5Group { ["values"] = new[] { 1, 2, 3 }, IsShared = true };
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            writer.Append("a", shared);
+            writer.Append("b", shared);
+        }
+
+        // Assert
+        var file = Open(stream);
+
+        Assert.Equal(Address(file.Group("a")), Address(file.Group("b")));
+        Assert.Equal(2U, ((NativeObject)file.Group("b")).ReferenceCount);
+        Assert.Equal([1, 2, 3], file.Group("b").Dataset("values").Read<int[]>());
+        AssertTheCLibraryAccepts(stream);
+    }
+
+    [Fact]
+    public void ASharedObjectLinkedOnceIsValid()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+            writer.Append("a", new H5Dataset(new[] { 1 }) { IsShared = true });
+
+        // Assert
+        Assert.Equal(1U, ((NativeObject)Open(stream).Dataset("a")).ReferenceCount);
+        AssertTheCLibraryAccepts(stream);
+    }
+
+    [Fact]
+    public void SharedObjectsArePlacedAtTheFrontOfTheFile()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var shared = new H5Dataset(new double[100_000]) { IsShared = true };
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            writer.Append("before", new H5Dataset(new double[100_000]));
+            writer.Append("a", shared);
+            writer.Append("b", shared);
+        }
+
+        // Assert - within the region reserved after the superblock
+        Assert.True(Address(Open(stream).Dataset("a")) < 64 * 1024 + 48);
+    }
+
+    [Fact]
+    public void SharedObjectsOverflowingTheRegionOpenAnother()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var options = new H5WriteOptions { SharedObjectRegionSize = 1024 };
+        var shared = Enumerable.Range(0, 50).Select(i => new H5Dataset(new[] { i }) { IsShared = true }).ToArray();
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream, options))
+        {
+            for (var i = 0; i < shared.Length; i++)
+            {
+                writer.Append($"first/{i}", shared[i]);
+                writer.Append($"given/{i}", new H5Dataset(new double[1000]));
+            }
+
+            for (var i = 0; i < shared.Length; i++)
+                writer.Append($"second/{i}", shared[i]);
+        }
+
+        // Assert
+        var file = Open(stream);
+
+        for (var i = 0; i < shared.Length; i++)
+        {
+            Assert.Equal([i], file.Group("second").Dataset($"{i}").Read<int[]>());
+            Assert.Equal(2U, ((NativeObject)file.Group("first").Dataset($"{i}")).ReferenceCount);
+        }
+
+        AssertTheCLibraryAccepts(stream);
+    }
+
+    [Fact]
+    public void ADeclaredCountWinsOverShared()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var shared = new H5Dataset(new[] { 1 }) { IsShared = true, HardLinkCount = 2 };
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            writer.Append("a", shared);
+            writer.Append("b", shared);
+        }
+
+        // Assert - written at once, after the region, rather than held in it
+        var file = Open(stream);
+
+        Assert.Equal(2U, ((NativeObject)file.Dataset("b")).ReferenceCount);
+        Assert.True(Address(file.Dataset("a")) >= 64 * 1024 + 48);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void ANonPositiveSharedObjectRegionSizeIsRejected(long size)
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var options = new H5WriteOptions { SharedObjectRegionSize = size };
+
+        // Act
+        void action() => H5File.BeginStreaming(stream, options).Dispose();
+
+        // Assert
+        Assert.Throws<ArgumentException>(action);
+    }
+
     [Fact]
     public void ObjectReferencesResolveToObjectsAppendedEarlier()
     {

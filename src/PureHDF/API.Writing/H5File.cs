@@ -67,7 +67,10 @@ public partial class H5File : H5Group
     /// </summary>
     /// <param name="filePath">The path of the file to write into.</param>
     /// <param name="options">Options to control encoding behavior. See <see cref="BeginStreaming(Stream, H5WriteOptions?)" />.</param>
-    /// <exception cref="ArgumentException">The options ask for a metadata reservation.</exception>
+    /// <exception cref="ArgumentException">
+    /// The options ask for a metadata reservation, or their <see cref="H5WriteOptions.SharedObjectRegionSize" />
+    /// is not greater than zero.
+    /// </exception>
     public static H5StreamingWriter BeginStreaming(string filePath, H5WriteOptions? options = default)
     {
         options = H5StreamingWriter.ValidateOptions(options);
@@ -90,7 +93,10 @@ public partial class H5File : H5Group
     /// </remarks>
     /// <param name="stream">The stream to write into. It must be writeable and seekable; it need not be readable.</param>
     /// <param name="options">Options to control encoding behavior.</param>
-    /// <exception cref="ArgumentException">The options ask for a metadata reservation.</exception>
+    /// <exception cref="ArgumentException">
+    /// The options ask for a metadata reservation, or their <see cref="H5WriteOptions.SharedObjectRegionSize" />
+    /// is not greater than zero.
+    /// </exception>
     public static H5StreamingWriter BeginStreaming(Stream stream, H5WriteOptions? options = default)
     {
         options = H5StreamingWriter.ValidateOptions(options);

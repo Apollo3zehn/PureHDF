@@ -82,6 +82,30 @@ internal partial record class ObjectHeader2
         return ((ulong)address, encoded);
     }
 
+    /// <summary>
+    /// Encodes the header as if at <paramref name="address" />, allocated by the caller, and returns the
+    /// encoded bytes without writing them.
+    /// </summary>
+    public byte[] EncodeAt(NativeWriteContext context, long address)
+    {
+        var headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();
+        var encoded = new byte[GetEncodeSize(headerMessagesEncodeSize)];
+
+        ChecksummedStructure.WriteToBuffer(
+            encoded,
+            origin: (long)context.Driver.BaseAddress + address,
+            (Header: this, headerMessagesEncodeSize),
+            static (driver, state) => state.Header.EncodeCore(driver, state.headerMessagesEncodeSize));
+
+        return encoded;
+    }
+
+    /// <summary>
+    /// The size of the encoded header.
+    /// </summary>
+    public int GetEncodeSize()
+        => (int)GetEncodeSize(GetHeaderMessagesEncodeSize());
+
     private long Allocate(NativeWriteContext context, out int encodeSize, out ulong headerMessagesEncodeSize)
     {
         headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();

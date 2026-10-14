@@ -169,7 +169,11 @@ internal sealed class DeferredChunked(DatasetInfo info, object encode) : Deferre
 /// <param name="Header">The encoded header, with an undefined payload address.</param>
 /// <param name="AddressOffset">Where in the header the payload address goes.</param>
 /// <param name="Size">How much payload to allocate.</param>
-internal sealed record PendingPayload(long HeaderAddress, byte[] Header, int AddressOffset, long Size);
+/// <param name="IsShared">
+/// Whether the header belongs to a shared object, written at the end rather than once it is complete -
+/// see <see cref="H5Object.IsShared" />.
+/// </param>
+internal sealed record PendingPayload(long HeaderAddress, byte[] Header, int AddressOffset, long Size, bool IsShared = false);
 
 /// <summary>
 /// A dataset whose data has all been written and whose structure is final: a filtered chunked dataset
@@ -201,7 +205,7 @@ internal record NativeWriteContext(
     GlobalHeapManager GlobalHeapManager,
     H5WriteOptions WriteOptions,
     Dictionary<H5Object, EncodedObject> Objects,
-    Dictionary<DatasetInfo, (long ObjectHeaderAddress, byte[] ObjectHeader, bool IsWritten)> DatasetInfoToObjectHeaderMap,
+    Dictionary<DatasetInfo, (long ObjectHeaderAddress, byte[] ObjectHeader, bool IsWritten, bool IsShared)> DatasetInfoToObjectHeaderMap,
     Dictionary<DatatypeCacheKey, (DatatypeMessage, ElementEncodeDelegate)> TypeToMessageMap,
     Dictionary<H5Object, int> ObjectReferenceCountMap,
     Dictionary<object, H5Dataset> RawValueToDatasetMap,
