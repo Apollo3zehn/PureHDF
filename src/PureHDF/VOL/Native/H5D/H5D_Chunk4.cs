@@ -55,41 +55,50 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
         if (WriteContext is null)
             return;
 
-        var kept = WriteContext.DatasetInfoToObjectHeaderMap[Dataset];
-        var objectHeader = kept.Header;
+        var header = WriteContext.DatasetInfoToObjectHeaderMap[Dataset];
 
         AllocateIndex();
 
         // A header allocated late gets its address now that it is complete, unless something named it before.
-        var objectHeaderAddress = WriteContext.Writer.AllocateHeader(kept);
-
-        // Read before patching, which encodes the layout and so clears it.
-        var isDirty = Chunked4.IsDirty;
-
-        if (isDirty)
-        {
-            // Patched in the copy kept at encoding rather than in the file: the storage properties
-            // changed, and with them the header's checksum, which is computed from the copy so that
-            // nothing is read from the file.
-            var origin = (long)WriteContext.Driver.BaseAddress + (long)kept.EncodedAt;
-
-            using (var patchDriver = new H5SpanWriteDriver(objectHeader, origin))
-            {
-                patchDriver.Seek(Chunked4.EncodeAddress, SeekOrigin.Begin);
-                Chunked4.Encode(patchDriver);
-            }
-
-            ChecksummedStructure.UpdateChecksum(objectHeader);
-        }
+        var headerAddress = WriteContext.Writer.AllocateHeader(header);
+        var isPatched = PatchLayout(header);
 
         // A header written at encoding is final unless its layout changed since; one held back for its
         // chunk is written now, whether or not the chunk ever was. A shared object's header is written at
         // the end, from the copy patched here.
-        if (!kept.IsShared && (isDirty || !kept.IsWritten))
+        if (!header.IsShared && (isPatched || !header.IsWritten))
         {
-            WriteContext.Driver.SeekRelativeToBaseAddress((long)objectHeaderAddress);
-            WriteContext.Driver.Write(objectHeader);
+            WriteContext.Driver.SeekRelativeToBaseAddress((long)headerAddress);
+            WriteContext.Driver.Write(header.Header);
         }
+    }
+
+    /// <summary>
+    /// Encodes the layout into the header's kept copy again if it changed since the header was encoded, and
+    /// updates the checksum.
+    /// </summary>
+    /// <remarks>
+    /// Patched in the copy rather than in the file: the header's checksum is computed from the copy instead
+    /// of from bytes read back.
+    /// </remarks>
+    /// <returns>Whether the layout changed.</returns>
+    private bool PatchLayout(KeptHeader header)
+    {
+        if (!Chunked4.IsDirty)
+            return false;
+
+        var origin = (long)WriteContext!.Driver.BaseAddress + (long)header.EncodedAt;
+
+        // Encoding the layout clears its dirty flag.
+        using (var patchDriver = new H5SpanWriteDriver(header.Header, origin))
+        {
+            patchDriver.Seek(Chunked4.EncodeAddress, SeekOrigin.Begin);
+            Chunked4.Encode(patchDriver);
+        }
+
+        ChecksummedStructure.UpdateChecksum(header.Header);
+
+        return true;
     }
 
     /// <summary>
