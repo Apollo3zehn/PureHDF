@@ -212,6 +212,7 @@ internal static class SelectionHelper
             if (targetStream is null /* if stream not assigned yet */ ||
                 targetStep.ChunkIndex != lastTargetChunkIndex /* or the chunk has changed */)
             {
+                targetStream?.Flush();
                 targetStream = encodeInfo.GetTargetStream(targetStep.ChunkIndex);
                 lastTargetChunkIndex = targetStep.ChunkIndex;
             }
@@ -259,6 +260,8 @@ internal static class SelectionHelper
                 currentSource = currentSource[sourceLength..];
             }
         }
+
+        targetStream?.Flush();
     }
 
     // The walk carries Memory<TResult> rather than Span<TResult>: the per-step decode is awaited,

@@ -222,7 +222,7 @@ internal abstract class H5D_Chunk : H5D_Base
         if (TryGetWriteThroughAddress(chunkIndex, out var address))
         {
             WriteContext.Driver.SeekRelativeToBaseAddress((long)address);
-            return new OffsetStream(WriteContext.Driver);
+            return new PayloadWriteStream(WriteContext.Driver);
         }
 
         if (_finishedChunks is not null && _finishedChunks.Contains(chunkIndex))

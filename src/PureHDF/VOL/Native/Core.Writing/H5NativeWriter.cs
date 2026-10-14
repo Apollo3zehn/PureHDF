@@ -566,7 +566,8 @@ partial class H5NativeWriter
         var driver = writer.Context.Driver;
         driver.SeekRelativeToBaseAddress((long)target.Address);
 
-        ((EncodeDelegate<TElement>)target.Encode)(memoryData, new OffsetStream(driver));
+        using var stream = new PayloadWriteStream(driver);
+        ((EncodeDelegate<TElement>)target.Encode)(memoryData, stream);
 
         return true;
     }
