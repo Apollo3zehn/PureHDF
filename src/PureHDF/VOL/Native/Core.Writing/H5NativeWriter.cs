@@ -414,9 +414,7 @@ partial class H5NativeWriter
     internal ulong GetOrEncodeObject(H5Object h5Object, bool allowsLateHeader = false)
     {
         // Written by an earlier append, and no longer in the map.
-        if (_streaming is not null &&
-            !Context.Objects.ContainsKey(h5Object) &&
-            _streaming.Written.TryGetValue(h5Object, out var written))
+        if (TryGetWritten(h5Object, out var written) && !Context.Objects.ContainsKey(h5Object))
         {
             return written.Group is { } waiting
                 ? ResolvePendingGroup(waiting)
@@ -511,7 +509,7 @@ partial class H5NativeWriter
             if (slot.Target!.Address == 0)
                 return false;
 
-            headerMessages[slot.MessageIndex] = CreateLinkMessage(slot.Name, LinkType.Hard, new HardLinkInfo(HeaderAddress: slot.Target.Address));
+            headerMessages[slot.MessageIndex] = CreateHardLinkMessage(slot.Name, slot.Target.Address);
             return true;
         });
 
@@ -522,7 +520,7 @@ partial class H5NativeWriter
             if (group.HardLinkCount is not null || IsHeldShared(group))
             {
                 foreach (var (messageIndex, name, target) in slots)
-                    headerMessages[messageIndex] = CreateLinkMessage(name, LinkType.Hard, new HardLinkInfo(HeaderAddress: target!.Resolve(this)));
+                    headerMessages[messageIndex] = CreateHardLinkMessage(name, target!.Resolve(this));
             }
 
             else
@@ -551,7 +549,7 @@ partial class H5NativeWriter
         var headerMessages = CreateGroupHeaderMessages(attributes);
 
         foreach (var (name, address) in links)
-            headerMessages.Add(CreateLinkMessage(name, LinkType.Hard, new HardLinkInfo(HeaderAddress: address)));
+            headerMessages.Add(CreateHardLinkMessage(name, address));
 
         return EncodeObjectHeader(headerMessages, owner: null);
     }
@@ -605,6 +603,9 @@ partial class H5NativeWriter
         return headerMessages;
     }
 
+    private static HeaderMessage CreateHardLinkMessage(string name, ulong address)
+        => CreateLinkMessage(name, LinkType.Hard, new HardLinkInfo(HeaderAddress: address));
+
     private static HeaderMessage CreateLinkMessage(string name, LinkType linkType, LinkInfo linkInfo)
     {
         var flags =
@@ -628,9 +629,9 @@ partial class H5NativeWriter
         return ToHeaderMessage(linkMessage);
     }
 
-    private ulong EncodeObjectHeader(List<HeaderMessage> headerMessages, H5Object? owner)
+    private static ObjectHeader2 CreateObjectHeader(List<HeaderMessage> headerMessages)
     {
-        var objectHeader = new ObjectHeader2(
+        return new ObjectHeader2(
             Address: default,
             Flags: ObjectHeaderFlags.SizeOfChunk1 | ObjectHeaderFlags.SizeOfChunk2,
             AccessTime: default,
@@ -644,6 +645,11 @@ partial class H5NativeWriter
         {
             Version = 2
         };
+    }
+
+    private ulong EncodeObjectHeader(List<HeaderMessage> headerMessages, H5Object? owner)
+    {
+        var objectHeader = CreateObjectHeader(headerMessages);
 
         if (owner is not null && IsHeldShared(owner))
             return KeepSharedHeader(objectHeader, owner).Address;
@@ -938,20 +944,7 @@ partial class H5NativeWriter
         AppendReferenceCountToHeaderMessages(dataset, headerMessages);
 
         // object header
-        var objectHeader = new ObjectHeader2(
-            Address: default,
-            Flags: ObjectHeaderFlags.SizeOfChunk1 | ObjectHeaderFlags.SizeOfChunk2,
-            AccessTime: default,
-            ModificationTime: default,
-            ChangeTime: default,
-            BirthTime: default,
-            MaximumCompactAttributesCount: default,
-            MinimumDenseAttributesCount: default,
-            HeaderMessages: headerMessages
-        )
-        {
-            Version = 2
-        };
+        var objectHeader = CreateObjectHeader(headerMessages);
 
         // encode data
 

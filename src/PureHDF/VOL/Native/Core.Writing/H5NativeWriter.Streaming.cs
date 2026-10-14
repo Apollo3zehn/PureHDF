@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 
 namespace PureHDF;
@@ -37,7 +38,6 @@ partial class H5NativeWriter
     /// </remarks>
     internal ulong EncodeAppended(H5Object subtree)
     {
-        Streaming.LinksCountedByAppend.Clear();
         Streaming.SharedHeadersBeforeAppend = Streaming.SharedHeaders.Count;
 
         if (subtree is H5Group group)
@@ -78,11 +78,7 @@ partial class H5NativeWriter
             }
         }
 
-        Streaming.Appended.Clear();
-        Context.ObjectReferenceCountMap.Clear();
-        Context.RawValueToDatasetMap.Clear();
-
-        EndTopLevelEncode();
+        ResetAppend();
     }
 
     /// <summary>
@@ -102,6 +98,12 @@ partial class H5NativeWriter
 
         Streaming.SharedHeaders.RemoveRange(Streaming.SharedHeadersBeforeAppend, Streaming.SharedHeaders.Count - Streaming.SharedHeadersBeforeAppend);
 
+        ResetAppend();
+    }
+
+    // Forgets what is kept only for the duration of one append.
+    private void ResetAppend()
+    {
         Streaming.Appended.Clear();
         Streaming.LinksCountedByAppend.Clear();
         Context.ObjectReferenceCountMap.Clear();
@@ -114,7 +116,13 @@ partial class H5NativeWriter
     /// Whether <paramref name="h5Object" /> was written by an earlier append.
     /// </summary>
     internal bool IsWritten(H5Object h5Object)
-        => _streaming is not null && _streaming.Written.TryGetValue(h5Object, out _);
+        => TryGetWritten(h5Object, out _);
+
+    private bool TryGetWritten(H5Object h5Object, [NotNullWhen(true)] out WrittenObject? written)
+    {
+        written = default;
+        return _streaming is not null && _streaming.Written.TryGetValue(h5Object, out written);
+    }
 
     /// <summary>
     /// Whether all of <paramref name="dataset" />'s data has been written by an earlier append: it was given
@@ -159,7 +167,7 @@ partial class H5NativeWriter
         var group = waiter.Group;
         var (messageIndex, name, _) = group.Slots[waiter.Slot];
 
-        group.HeaderMessages[messageIndex] = CreateLinkMessage(name, LinkType.Hard, new HardLinkInfo(HeaderAddress: address));
+        group.HeaderMessages[messageIndex] = CreateHardLinkMessage(name, address);
         group.Slots[waiter.Slot] = (messageIndex, name, null);
 
         if (--group.Unresolved > 0)
