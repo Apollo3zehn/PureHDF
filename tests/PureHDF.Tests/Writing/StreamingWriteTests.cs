@@ -407,6 +407,175 @@ public class StreamingWriteTests
     }
 
     [Fact]
+    public void AppendOpenWritesTheChildrenAndKeepsTheGroupOpen()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+
+        var group = new H5Group
+        {
+            ["a"] = new[] { 1 },
+            ["nested"] = new H5Group { ["b"] = new[] { 2 } },
+            Attributes = { ["kind"] = "batch" }
+        };
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            var batch = writer.AppendOpen("outer/batch", group);
+
+            Assert.Equal("outer/batch", batch.Path);
+            Assert.Same(batch, writer.Group("outer/batch"));
+
+            batch.Append("c", new H5Dataset(new[] { 3 }));
+            batch.Attributes["count"] = 3;
+
+            group.Attributes["ignored"] = 0;
+            group["ignored"] = new[] { 0 };
+        }
+
+        // Assert
+        var file = Open(stream).Group("outer").Group("batch");
+
+        Assert.Equal([1], file.Dataset("a").Read<int[]>());
+        Assert.Equal([2], file.Group("nested").Dataset("b").Read<int[]>());
+        Assert.Equal([3], file.Dataset("c").Read<int[]>());
+        Assert.Equal("batch", file.Attribute("kind").Read<string>());
+        Assert.Equal(3, file.Attribute("count").Read<int>());
+        Assert.False(file.AttributeExists("ignored"));
+        Assert.False(file.LinkExists("ignored"));
+        AssertTheCLibraryAccepts(stream);
+    }
+
+    [Fact]
+    public void AppendOpenCountsHardLinksBetweenItsChildren()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var shared = new H5Dataset(new[] { 1, 2 });
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            writer.AppendOpen("group", new H5Group
+            {
+                ["x"] = shared,
+                ["inner"] = new H5Group { ["y"] = shared }
+            });
+        }
+
+        // Assert
+        var group = Open(stream).Group("group");
+
+        Assert.Equal(Address(group.Dataset("x")), Address(group.Group("inner").Dataset("y")));
+        AssertTheCLibraryAccepts(stream);
+    }
+
+    [Fact]
+    public void AppendOpenTakesDeferredDatasetsAndSoftLinks()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var deferred = new H5Dataset<int[]>(fileDims: [2]);
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            writer.AppendOpen("group", new H5Group
+            {
+                ["deferred"] = deferred,
+                ["soft"] = new H5SoftLink("/group/deferred")
+            });
+
+            writer.Write(deferred, [4, 5]);
+        }
+
+        // Assert
+        var group = Open(stream).Group("group");
+
+        Assert.Equal([4, 5], group.Dataset("deferred").Read<int[]>());
+        Assert.Equal([4, 5], group.Dataset("soft").Read<int[]>());
+        AssertTheCLibraryAccepts(stream);
+    }
+
+    [Fact]
+    public void AnOpenGroupAppendsOpenGroupsBelowItself()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            var outer = writer.Group("outer");
+            var inner = outer.AppendOpen("inner", new H5Group { ["a"] = new[] { 1 } });
+
+            Assert.Equal("outer/inner", inner.Path);
+        }
+
+        // Assert
+        Assert.Equal([1], Open(stream).Group("outer").Group("inner").Dataset("a").Read<int[]>());
+    }
+
+    [Fact]
+    public void AGroupAppendedOpenIsNotLinkedAgain()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        using var writer = H5File.BeginStreaming(stream);
+
+        var group = new H5Group { ["a"] = new[] { 1 } };
+        writer.AppendOpen("group", group);
+
+        // Act / Assert
+        Assert.Throws<InvalidOperationException>(() => writer.Append("again", group));
+        Assert.Throws<InvalidOperationException>(() => writer.AppendOpen("again", group));
+        Assert.Throws<InvalidOperationException>(() => writer.Append("holder", new H5Group { ["link"] = group }));
+        Assert.Throws<InvalidOperationException>(() =>
+            writer.Append("reference", new H5Dataset(new H5ObjectReference[] { group })));
+    }
+
+    [Fact]
+    public void AppendOpenRejectsAGroupThatIsLinkedElsewhere()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        using var writer = H5File.BeginStreaming(stream);
+
+        var appended = new H5Group();
+        writer.Append("appended", appended);
+
+        // Act / Assert
+        Assert.Throws<InvalidOperationException>(() => writer.AppendOpen("a", new H5Group { HardLinkCount = 2 }));
+        Assert.Throws<InvalidOperationException>(() => writer.AppendOpen("b", new H5Group { IsShared = true }));
+        Assert.Throws<InvalidOperationException>(() => writer.AppendOpen("c", appended));
+    }
+
+    [Fact]
+    public void AFailedAppendOpenLinksNothingAndTheWriterGoesOn()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            var group = new H5Group { ["values"] = new[] { 1 } };
+            group["self"] = new H5Dataset(new H5ObjectReference[] { group });
+
+            writer.Append("dataset", new H5Dataset(new[] { 1 }));
+
+            // Act / Assert
+            Assert.Throws<InvalidOperationException>(() => writer.AppendOpen("group", group));
+            Assert.Throws<InvalidOperationException>(() => writer.AppendOpen("dataset", new H5Group()));
+            Assert.Throws<InvalidOperationException>(() => writer.AppendOpen("dataset/inner", new H5Group()));
+
+            writer.AppendOpen("group", new H5Group { ["values"] = new[] { 2 } });
+        }
+
+        Assert.Equal([2], Open(stream).Group("group").Dataset("values").Read<int[]>());
+    }
+
+    [Fact]
     public void AnEmptyStreamingWriteIsAnEmptyFile()
     {
         // Arrange

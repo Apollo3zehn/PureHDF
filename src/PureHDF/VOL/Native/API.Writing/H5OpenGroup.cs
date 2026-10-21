@@ -61,6 +61,23 @@ public sealed class H5OpenGroup : IDisposable
     }
 
     /// <summary>
+    ///     Writes the children of <paramref name="group" />, links it at <paramref name="path" /> below this
+    ///     group, and keeps it open, as <see cref="H5StreamingWriter.AppendOpen" /> does.
+    /// </summary>
+    /// <param name="path">The path of the new link, relative to this group, its segments separated by '/'.</param>
+    /// <param name="group">The group to write and keep open.</param>
+    /// <returns>The open group.</returns>
+    /// <exception cref="ArgumentException">The path is empty or has an empty segment.</exception>
+    /// <exception cref="InvalidOperationException">
+    ///     This group has been closed, or <see cref="H5StreamingWriter.AppendOpen" /> rejects the path or the group.
+    /// </exception>
+    public H5OpenGroup AppendOpen(string path, H5Group group)
+    {
+        ThrowIfClosed();
+        return _writer.AppendOpen(Combine(path), group);
+    }
+
+    /// <summary>
     ///     The open group at <paramref name="path" /> below this group, created if it does not exist, as
     ///     <see cref="H5StreamingWriter.Group(string)" /> returns it.
     /// </summary>

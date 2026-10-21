@@ -66,15 +66,8 @@ public sealed class H5StreamingWriter : IDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(subtree);
 
-        var segments = SplitPath(path);
-
-        // The groups on the path that do not exist yet are created only once the subtree is written, so
-        // that a failed append leaves none behind.
-        var (parent, existing) = FindParentGroups(segments);
+        var (parent, existing, segments) = FindNewLink(path);
         var name = segments[^1];
-
-        if (existing == segments.Length - 1 && parent.Links.ContainsKey(name))
-            throw new InvalidOperationException($"The link '{path}' exists already.");
 
         ulong address;
 
@@ -96,6 +89,80 @@ public sealed class H5StreamingWriter : IDisposable
             : new OpenLink(address, Pending: null));
 
         NativeWriter.EndAppend();
+    }
+
+    /// <summary>
+    ///     Writes the children of <paramref name="group" />, links the group at <paramref name="path" />, and
+    ///     keeps it open: it takes further links, and its attributes can be set, until it is closed.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         The children are written as an appended subtree is, in one pass: a child linked more than once below
+    ///         the group needs no <see cref="H5Object.HardLinkCount" />. The group's attributes are copied into the
+    ///         open group's, and its header is written when the open group closes. Changing
+    ///         <paramref name="group" /> afterwards does not change the file; the open group returned does.
+    ///     </para>
+    ///     <para>
+    ///         An open group is linked only from its parent: <paramref name="group" /> cannot be linked or referenced
+    ///         again, from below itself or by a later append.
+    ///     </para>
+    ///     <para>
+    ///         Every group on the path that does not exist yet is created and stays open. An append that throws
+    ///         links nothing, and the writer can go on. What it had written already stays in the file, named by
+    ///         nothing.
+    ///     </para>
+    /// </remarks>
+    /// <param name="path">The path of the new link, relative to the root group, its segments separated by '/'.</param>
+    /// <param name="group">The group to write and keep open.</param>
+    /// <returns>The open group.</returns>
+    /// <exception cref="ArgumentException">The path is empty or has an empty segment.</exception>
+    /// <exception cref="InvalidOperationException">
+    ///     The path leads through a closed group or a dataset, or its last segment is a link that exists
+    ///     already; or <paramref name="group" /> declares a <see cref="H5Object.HardLinkCount" /> above one, is
+    ///     <see cref="H5Object.IsShared" />, has already been appended, or is linked or referenced from below
+    ///     itself.
+    /// </exception>
+    /// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
+    public H5OpenGroup AppendOpen(string path, H5Group group)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+        ArgumentNullException.ThrowIfNull(group);
+
+        if (group.HardLinkCount > 1 || group.IsShared)
+            throw new InvalidOperationException(
+                "An open group is linked only from its parent: it cannot declare more than one hard link or be shared.");
+
+        var (parent, existing, segments) = FindNewLink(path);
+
+        List<(string Name, ulong Address, object? Pending)> links;
+
+        try
+        {
+            links = NativeWriter.EncodeAppendedOpen(group);
+        }
+
+        catch
+        {
+            NativeWriter.AbortAppend();
+            throw;
+        }
+
+        parent = CreateGroups(parent, segments, existing, segments.Length);
+
+        foreach (var (name, address, pending) in links)
+            parent.Links.Add(name, new OpenLink(address, pending));
+
+        var handle = parent.Handle!;
+
+        if (group.InternalAttributes is { } attributes)
+        {
+            foreach (var (name, value) in attributes)
+                handle.Attributes[name] = value;
+        }
+
+        NativeWriter.EndAppend();
+
+        return handle;
     }
 
     /// <summary>
@@ -123,7 +190,7 @@ public sealed class H5StreamingWriter : IDisposable
             return link.Pending is OpenGroup { Handle: { } handle }
                 ? handle
                 : throw new InvalidOperationException(
-                    $"'{path}' is not an open group: it is a dataset, or a group that has been closed.");
+                    $"'{path}' is not an open group: it is a dataset, a soft link, or a group that has been closed.");
         }
 
         return CreateGroups(parent, segments, existing, segments.Length).Handle!;
@@ -216,6 +283,25 @@ public sealed class H5StreamingWriter : IDisposable
     }
 
     /// <summary>
+    ///     Finds where a new link at <paramref name="path" /> goes. The groups on the path that do not exist yet
+    ///     are not created, so that an append that fails leaves none behind.
+    /// </summary>
+    /// <exception cref="ArgumentException">The path is empty or has an empty segment.</exception>
+    /// <exception cref="InvalidOperationException">
+    ///     The path leads through a closed group or a dataset, or its last segment is a link that exists already.
+    /// </exception>
+    private (OpenGroup Parent, int Depth, string[] Segments) FindNewLink(string path)
+    {
+        var segments = SplitPath(path);
+        var (parent, existing) = FindParentGroups(segments);
+
+        if (existing == segments.Length - 1 && parent.Links.ContainsKey(segments[^1]))
+            throw new InvalidOperationException($"The link '{path}' exists already.");
+
+        return (parent, existing, segments);
+    }
+
+    /// <summary>
     /// Follows a path's parent segments - all but the last - through the open groups, as far as they exist.
     /// </summary>
     /// <returns>The last open group reached, and how many segments lead to it.</returns>
@@ -231,7 +317,7 @@ public sealed class H5StreamingWriter : IDisposable
                 break;
 
             group = link.Pending as OpenGroup ?? throw new InvalidOperationException(
-                $"'{string.Join('/', segments[..(depth + 1)])}' is not an open group: it is a dataset, or a group that has been closed.");
+                $"'{string.Join('/', segments[..(depth + 1)])}' is not an open group: it is a dataset, a soft link, or a group that has been closed.");
         }
 
         return (group, depth);
@@ -278,10 +364,16 @@ public sealed class H5StreamingWriter : IDisposable
     // Bottom-up: a group's links name its children's headers, so those are written first.
     private ulong CloseGroup(OpenGroup group)
     {
-        var links = new List<KeyValuePair<string, ulong>>(group.Links.Count);
+        var links = new List<(string Name, ulong Address, H5SoftLink? SoftLink)>(group.Links.Count);
 
         foreach (var (name, link) in group.Links)
         {
+            if (link.Pending is H5SoftLink softLink)
+            {
+                links.Add((name, Address: default, softLink));
+                continue;
+            }
+
             var address = link.Pending switch
             {
                 OpenGroup child => CloseGroup(child),
@@ -289,7 +381,7 @@ public sealed class H5StreamingWriter : IDisposable
                 _ => link.Address
             };
 
-            links.Add(new(name, address));
+            links.Add((name, address, SoftLink: null));
         }
 
         var attributes = group.Handle is null
@@ -342,7 +434,7 @@ public sealed class H5StreamingWriter : IDisposable
 
     /// <summary>
     /// A link in an open group: the address of what it points to, or what is still to be written for
-    /// it - an open group, or a header without an address yet (<see cref="IPendingHeader" />).
+    /// it - an open group, a header without an address yet (<see cref="IPendingHeader" />), or a soft link.
     /// </summary>
     private readonly record struct OpenLink(ulong Address, object? Pending);
 }

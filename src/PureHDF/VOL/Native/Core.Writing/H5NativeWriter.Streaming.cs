@@ -49,6 +49,65 @@ partial class H5NativeWriter
     }
 
     /// <summary>
+    ///     Encodes the children of a group appended to stay open - see <see cref="H5StreamingWriter.AppendOpen" />
+    ///     - in one pass, as for an appended subtree, and returns its links. The group's header is written when
+    ///     its open group closes.
+    /// </summary>
+    /// <returns>
+    ///     Per child its name, and its address or what it still is: a header without an address yet
+    ///     (<see cref="IPendingHeader" />), or a soft link.
+    /// </returns>
+    /// <exception cref="InvalidOperationException">The group has already been appended.</exception>
+    internal List<(string Name, ulong Address, object? Pending)> EncodeAppendedOpen(H5Group group)
+    {
+        if (TryGetWritten(group, out var written))
+        {
+            throw written.IsOpen
+                ? LinkToOpenGroup()
+                : new InvalidOperationException("The group has already been written by an earlier append.");
+        }
+
+        Streaming.SharedHeadersBeforeAppend = Streaming.SharedHeaders.Count;
+
+        // Recorded first, so that a link or a reference to the group from below it finds it open rather than
+        // writing a copy of it.
+        Streaming.Written.AddOrUpdate(group, WrittenObject.Open);
+        Streaming.OpenedByAppend = group;
+
+        CountReferences(group, Context.ObjectReferenceCountMap);
+
+        var links = new List<(string Name, ulong Address, object? Pending)>(group.Count);
+
+        foreach (var (name, value) in group)
+        {
+            ValidateLinkName(name);
+
+            if (value is H5SoftLink softLink)
+            {
+                links.Add((name, Address: default, softLink));
+                continue;
+            }
+
+            var target = GetH5Object(value);
+
+            CountLink(target);
+
+            var address = GetOrEncodeObject(target, allowsLateHeader: true);
+
+            WriteAbandoned();
+
+            links.Add(GetPendingHeader(target) is { } pending
+                ? (name, Address: default, pending)
+                : (name, address, Pending: null));
+        }
+
+        return links;
+    }
+
+    private static InvalidOperationException LinkToOpenGroup()
+        => new("The group was appended to stay open (H5StreamingWriter.AppendOpen), and is linked only from where it was appended.");
+
+    /// <summary>
     /// Finishes an append: records what it wrote, and drops everything kept about it that writing its
     /// deferred datasets does not need.
     /// </summary>
@@ -96,6 +155,9 @@ partial class H5NativeWriter
         foreach (var counter in Streaming.LinksCountedByAppend)
             counter.Links--;
 
+        if (Streaming.OpenedByAppend is { } opened)
+            Streaming.Written.Remove(opened);
+
         Streaming.SharedHeaders.RemoveRange(Streaming.SharedHeadersBeforeAppend, Streaming.SharedHeaders.Count - Streaming.SharedHeadersBeforeAppend);
 
         ResetAppend();
@@ -106,6 +168,7 @@ partial class H5NativeWriter
     {
         Streaming.Appended.Clear();
         Streaming.LinksCountedByAppend.Clear();
+        Streaming.OpenedByAppend = null;
         Context.ObjectReferenceCountMap.Clear();
         Context.RawValueToDatasetMap.Clear();
 
@@ -293,6 +356,9 @@ partial class H5NativeWriter
 
         /// <summary>The links the current append counted, which <see cref="AbortAppend" /> undoes.</summary>
         public List<LinkCounter> LinksCountedByAppend { get; } = [];
+
+        /// <summary>The group the current append keeps open, if any, which <see cref="AbortAppend" /> forgets.</summary>
+        public H5Group? OpenedByAppend { get; set; }
 
         /// <summary>How many shared headers there were before the current append, for <see cref="AbortAppend" />.</summary>
         public int SharedHeadersBeforeAppend { get; set; }

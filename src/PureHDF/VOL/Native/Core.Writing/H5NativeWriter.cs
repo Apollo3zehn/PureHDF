@@ -208,11 +208,13 @@ partial class H5NativeWriter
             _streaming?.LinksCountedByAppend.Add(counter);
         }
 
-        else if (IsWritten(h5Object))
+        else if (TryGetWritten(h5Object, out var written))
         {
-            throw new InvalidOperationException(
-                "The object has already been written by an earlier append, and its header holds its hard link " +
-                "count. Set H5Object.HardLinkCount before it is first appended to link it more than once.");
+            throw written.IsOpen
+                ? LinkToOpenGroup()
+                : new InvalidOperationException(
+                    "The object has already been written by an earlier append, and its header holds its hard " +
+                    "link count. Set H5Object.HardLinkCount before it is first appended to link it more than once.");
         }
     }
 
@@ -416,6 +418,9 @@ partial class H5NativeWriter
         // Written by an earlier append, and no longer in the map.
         if (TryGetWritten(h5Object, out var written) && !Context.Objects.ContainsKey(h5Object))
         {
+            if (written.IsOpen)
+                throw LinkToOpenGroup();
+
             return written.Group is { } waiting
                 ? ResolvePendingGroup(waiting)
                 : written.Address;
@@ -540,16 +545,21 @@ partial class H5NativeWriter
     }
 
     /// <summary>
-    /// Encodes the header of a group from links to objects already written - an open group being closed.
+    ///     Encodes the header of a group from links to objects already written, or soft links - an open group
+    ///     being closed.
     /// </summary>
     internal ulong EncodeGroup(
         Dictionary<string, object>? attributes,
-        IEnumerable<KeyValuePair<string, ulong>> links)
+        IEnumerable<(string Name, ulong Address, H5SoftLink? SoftLink)> links)
     {
         var headerMessages = CreateGroupHeaderMessages(attributes);
 
-        foreach (var (name, address) in links)
-            headerMessages.Add(CreateHardLinkMessage(name, address));
+        foreach (var (name, address, softLink) in links)
+        {
+            headerMessages.Add(softLink is null
+                ? CreateHardLinkMessage(name, address)
+                : CreateLinkMessage(name, LinkType.Soft, new SoftLinkInfo(softLink.Target)));
+        }
 
         return EncodeObjectHeader(headerMessages, owner: null);
     }

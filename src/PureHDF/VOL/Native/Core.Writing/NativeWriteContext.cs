@@ -134,13 +134,18 @@ internal sealed class PendingGroup(List<HeaderMessage> headerMessages, List<(int
 }
 
 /// <summary>
-/// An object written by an earlier append: its header's address, or the group still waiting to be written.
+///     An object written by an earlier append: its header's address, or the group still waiting to be written;
+///     or a group appended to stay open, which is linked only from where it was appended.
 /// </summary>
-internal sealed class WrittenObject(ulong address, PendingGroup? group)
+internal sealed class WrittenObject(ulong address, PendingGroup? group, bool isOpen = false)
 {
+    public static WrittenObject Open { get; } = new(address: default, group: null, isOpen: true);
+
     public ulong Address { get; } = address;
 
     public PendingGroup? Group { get; } = group;
+
+    public bool IsOpen { get; } = isOpen;
 }
 
 /// <summary>
