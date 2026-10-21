@@ -8,9 +8,9 @@ namespace PureHDF;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Groups on an appended path are open until they are closed - by <see cref="Close" /> or at
-/// <see cref="Dispose" /> - and hold one entry per link until then. An appended subtree is final: changing
-/// it afterwards does not change the file.
+/// Groups on an appended path, and groups created by <see cref="Group(string)" />, are open until they are closed
+/// - by <see cref="Close" /> or at <see cref="Dispose" /> - and hold one entry per link until then. An
+/// appended subtree is final: changing it afterwards does not change the file.
 /// </para>
 /// <para>
 /// Everything is written once, in the order it is allocated, except the superblock at the start of the
@@ -22,13 +22,14 @@ namespace PureHDF;
 /// </remarks>
 public sealed class H5StreamingWriter : IDisposable
 {
-    private readonly OpenGroup _root = new();
+    private readonly OpenGroup _root;
     private bool _disposed;
 
     internal H5StreamingWriter(Stream stream, H5WriteOptions options, bool leaveOpen)
     {
         NativeWriter = new H5NativeWriter(new H5File(), stream, options, leaveOpen);
         NativeWriter.BeginStreaming();
+        _root = new OpenGroup(handle: null);
     }
 
     internal H5NativeWriter NativeWriter { get; }
@@ -43,9 +44,9 @@ public sealed class H5StreamingWriter : IDisposable
     /// Writes <paramref name="subtree" /> and links it at <paramref name="path" />.
     /// </summary>
     /// <remarks>
-    /// Every group on the path that does not exist yet is created, without attributes, and stays open.
-    /// The last segment of the path is the name of the new link. Datasets declared without data are
-    /// written later with <see cref="Write{T}" />.
+    /// Every group on the path that does not exist yet is created and stays open; its attributes are set
+    /// through <see cref="Group(string)" />. The last segment of the path is the name of the new link. Datasets
+    /// declared without data are written later with <see cref="Write{T}" />.
     /// <para>
     /// An append that throws links nothing, and the writer can go on. What it had written already stays in
     /// the file, named by nothing.
@@ -88,18 +89,73 @@ public sealed class H5StreamingWriter : IDisposable
             throw;
         }
 
-        for (var i = existing; i < segments.Length - 1; i++)
-        {
-            var group = new OpenGroup();
-            parent.Links.Add(segments[i], new OpenLink(Address: default, Pending: group));
-            parent = group;
-        }
+        parent = CreateGroups(parent, segments, existing, segments.Length - 1);
 
         parent.Links.Add(name, NativeWriter.GetPendingHeader(subtree) is { } pending
             ? new OpenLink(Address: default, Pending: pending)
             : new OpenLink(address, Pending: null));
 
         NativeWriter.EndAppend();
+    }
+
+    /// <summary>
+    ///     The open group at <paramref name="path" />, created - along with every group on the path that does
+    ///     not exist yet - if it does not exist. Its attributes can be set until it is closed, which is when its
+    ///     header is written.
+    /// </summary>
+    /// <param name="path">The path of the group, relative to the root group, its segments separated by '/'.</param>
+    /// <returns>The open group, the same one for each call with this path.</returns>
+    /// <exception cref="ArgumentException">The path is empty or has an empty segment.</exception>
+    /// <exception cref="InvalidOperationException">
+    ///     The path leads through a closed group or a dataset, or names one.
+    /// </exception>
+    /// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
+    public H5OpenGroup Group(string path)
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+
+        var segments = SplitPath(path);
+        var (parent, existing) = FindParentGroups(segments);
+        var name = segments[^1];
+
+        if (existing == segments.Length - 1 && parent.Links.TryGetValue(name, out var link))
+        {
+            return link.Pending is OpenGroup { Handle: { } handle }
+                ? handle
+                : throw new InvalidOperationException(
+                    $"'{path}' is not an open group: it is a dataset, or a group that has been closed.");
+        }
+
+        return CreateGroups(parent, segments, existing, segments.Length).Handle!;
+    }
+
+    /// <summary>
+    ///     The open group at <paramref name="path" />, as <see cref="Group(string)" /> returns it, with
+    ///     <paramref name="attributes" /> added to its attributes.
+    /// </summary>
+    /// <remarks>
+    ///     The attributes are copied: changing <paramref name="attributes" /> afterwards does not change the
+    ///     group. An attribute the group has already is overwritten. Groups created on the way to the group get
+    ///     none of them.
+    /// </remarks>
+    /// <param name="path">The path of the group, relative to the root group, its segments separated by '/'.</param>
+    /// <param name="attributes">The attributes to add.</param>
+    /// <returns>The open group, the same one for each call with this path.</returns>
+    /// <exception cref="ArgumentException">The path is empty or has an empty segment.</exception>
+    /// <exception cref="InvalidOperationException">
+    ///     The path leads through a closed group or a dataset, or names one.
+    /// </exception>
+    /// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
+    public H5OpenGroup Group(string path, IEnumerable<KeyValuePair<string, object>> attributes)
+    {
+        ArgumentNullException.ThrowIfNull(attributes);
+
+        var group = Group(path);
+
+        foreach (var (name, value) in attributes)
+            group.Attributes[name] = value;
+
+        return group;
     }
 
     /// <summary>
@@ -155,7 +211,7 @@ public sealed class H5StreamingWriter : IDisposable
             throw new InvalidOperationException($"'{path}' is not an open group.");
         }
 
-        parent.Links[name] = new OpenLink(CloseGroup(group, attributes: null), Pending: null);
+        parent.Links[name] = new OpenLink(CloseGroup(group), Pending: null);
         NativeWriter.EndTopLevelEncode();
     }
 
@@ -182,6 +238,23 @@ public sealed class H5StreamingWriter : IDisposable
     }
 
     /// <summary>
+    ///     Creates a chain of open groups below <paramref name="parent" />, one per segment from
+    ///     <paramref name="start" /> up to, not including, <paramref name="end" />.
+    /// </summary>
+    /// <returns>The last group created, or <paramref name="parent" /> when there are no segments.</returns>
+    private OpenGroup CreateGroups(OpenGroup parent, string[] segments, int start, int end)
+    {
+        for (var i = start; i < end; i++)
+        {
+            var group = new OpenGroup(new H5OpenGroup(this, string.Join('/', segments[..(i + 1)])));
+            parent.Links.Add(segments[i], new OpenLink(Address: default, Pending: group));
+            parent = group;
+        }
+
+        return parent;
+    }
+
+    /// <summary>
     /// Closes all open groups, finishes the deferred datasets, and writes the rest of the file.
     /// </summary>
     /// <exception cref="InvalidOperationException">
@@ -195,7 +268,7 @@ public sealed class H5StreamingWriter : IDisposable
 
         _disposed = true;
 
-        NativeWriter.FinishStreaming(CloseGroup(_root, NativeWriter.File.InternalAttributes));
+        NativeWriter.FinishStreaming(CloseGroup(_root));
 
         // Checked once the file is complete: a file with a count too high reads fine, while one without its
         // superblock does not read at all.
@@ -203,7 +276,7 @@ public sealed class H5StreamingWriter : IDisposable
     }
 
     // Bottom-up: a group's links name its children's headers, so those are written first.
-    private ulong CloseGroup(OpenGroup group, Dictionary<string, object>? attributes)
+    private ulong CloseGroup(OpenGroup group)
     {
         var links = new List<KeyValuePair<string, ulong>>(group.Links.Count);
 
@@ -211,13 +284,17 @@ public sealed class H5StreamingWriter : IDisposable
         {
             var address = link.Pending switch
             {
-                OpenGroup child => CloseGroup(child, attributes: null),
+                OpenGroup child => CloseGroup(child),
                 IPendingHeader pending => pending.Resolve(NativeWriter),
                 _ => link.Address
             };
 
             links.Add(new(name, address));
         }
+
+        var attributes = group.Handle is null
+            ? NativeWriter.File.InternalAttributes
+            : group.Handle.MarkClosed();
 
         return NativeWriter.EncodeGroup(attributes, links);
     }
@@ -255,8 +332,11 @@ public sealed class H5StreamingWriter : IDisposable
     }
 
     /// <summary>A group still taking links.</summary>
-    private sealed class OpenGroup
+    /// <param name="handle">The caller's view of the group, which carries its attributes; null for the root group.</param>
+    private sealed class OpenGroup(H5OpenGroup? handle)
     {
+        public H5OpenGroup? Handle { get; } = handle;
+
         public Dictionary<string, OpenLink> Links { get; } = new(StringComparer.Ordinal);
     }
 

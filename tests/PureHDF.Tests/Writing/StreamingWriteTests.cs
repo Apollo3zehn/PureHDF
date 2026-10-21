@@ -69,6 +69,344 @@ public class StreamingWriteTests
     }
 
     [Fact]
+    public void OpenGroupAttributesAreWrittenWhenTheGroupCloses()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            var documents = writer.Group("documents");
+            documents.Attributes["kind"] = "batch";
+
+            writer.Append("documents/0", new H5Dataset(new[] { 1 }));
+            documents.Attributes["count"] = 1;
+
+            writer.Close("documents");
+        }
+
+        // Assert
+        var group = Open(stream).Group("documents");
+
+        Assert.Equal("batch", group.Attribute("kind").Read<string>());
+        Assert.Equal(1, group.Attribute("count").Read<int>());
+        Assert.Equal([1], group.Dataset("0").Read<int[]>());
+    }
+
+    [Fact]
+    public void AGroupCreatedByAnAppendTakesAttributes()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            writer.Append("a/b/c", new H5Dataset(new[] { 1 }));
+
+            writer.Group("a").Attributes["level"] = 1;
+            writer.Group("a/b").Attributes["level"] = 2;
+        }
+
+        // Assert
+        var a = Open(stream).Group("a");
+
+        Assert.Equal(1, a.Attribute("level").Read<int>());
+        Assert.Equal(2, a.Group("b").Attribute("level").Read<int>());
+        Assert.Equal([1], a.Group("b").Dataset("c").Read<int[]>());
+    }
+
+    [Fact]
+    public void GroupCreatesTheGroupsOnItsPath()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            writer.Group("a/b").Attributes["name"] = "b";
+            writer.Append("a/b/c", new H5Dataset(new[] { 1 }));
+        }
+
+        // Assert
+        var b = Open(stream).Group("a").Group("b");
+
+        Assert.Equal("b", b.Attribute("name").Read<string>());
+        Assert.Equal([1], b.Dataset("c").Read<int[]>());
+    }
+
+    [Fact]
+    public void GroupReturnsTheSameObjectForTheSameOpenGroup()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        using var writer = H5File.BeginStreaming(stream);
+
+        // Act
+        var first = writer.Group("a");
+        var second = writer.Group("a");
+
+        // Assert
+        Assert.Same(first, second);
+    }
+
+    [Fact]
+    public void AnEmptyOpenGroupWithAttributesIsWritten()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            writer.Group("empty").Attributes["id"] = 3;
+        }
+
+        // Assert
+        var group = Open(stream).Group("empty");
+
+        Assert.Equal(3, group.Attribute("id").Read<int>());
+        Assert.Empty(group.Children());
+        AssertTheCLibraryAccepts(stream);
+    }
+
+    [Fact]
+    public void GroupOnAPathThatIsNotAnOpenGroupThrows()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        using var writer = H5File.BeginStreaming(stream);
+
+        writer.Append("dataset", new H5Dataset(new[] { 1 }));
+        writer.Append("appended", new H5Group { ["values"] = new[] { 1 } });
+        writer.Append("closed/a", new H5Dataset(new[] { 1 }));
+        writer.Close("closed");
+
+        // Act / Assert
+        Assert.Throws<InvalidOperationException>(() => writer.Group("dataset"));
+        Assert.Throws<InvalidOperationException>(() => writer.Group("appended"));
+        Assert.Throws<InvalidOperationException>(() => writer.Group("appended/inner"));
+        Assert.Throws<InvalidOperationException>(() => writer.Group("closed"));
+        Assert.Throws<InvalidOperationException>(() => writer.Group("closed/b"));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("/")]
+    [InlineData("a//b")]
+    public void GroupWithAnInvalidPathThrows(string path)
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        using var writer = H5File.BeginStreaming(stream);
+
+        // Act
+        void action() => writer.Group(path);
+
+        // Assert
+        Assert.Throws<ArgumentException>(action);
+    }
+
+    [Fact]
+    public void GroupAfterDisposeThrows()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var writer = H5File.BeginStreaming(stream);
+        writer.Dispose();
+
+        // Act
+        void action() => writer.Group("a");
+
+        // Assert
+        Assert.Throws<ObjectDisposedException>(action);
+    }
+
+    [Fact]
+    public void AnOpenGroupAppendsAndCreatesGroupsBelowItself()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            var documents = writer.Group("documents");
+
+            documents.Append("0", new H5Dataset(new[] { 1 }));
+            documents.Append("deeper/1", new H5Dataset(new[] { 2 }));
+            documents.Group("nested").Attributes["name"] = "nested";
+
+            Assert.Equal("documents/nested", documents.Group("nested").Path);
+        }
+
+        // Assert
+        var group = Open(stream).Group("documents");
+
+        Assert.Equal([1], group.Dataset("0").Read<int[]>());
+        Assert.Equal([2], group.Group("deeper").Dataset("1").Read<int[]>());
+        Assert.Equal("nested", group.Group("nested").Attribute("name").Read<string>());
+    }
+
+    [Fact]
+    public void DisposingAnOpenGroupClosesIt()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            using (var documents = writer.Group("documents"))
+            {
+                documents.Attributes["kind"] = "batch";
+                documents.Append("0", new H5Dataset(new[] { 1 }));
+            }
+
+            Assert.Throws<InvalidOperationException>(() => writer.Append("documents/1", new H5Dataset(new[] { 2 })));
+        }
+
+        // Assert
+        var group = Open(stream).Group("documents");
+
+        Assert.Equal("batch", group.Attribute("kind").Read<string>());
+        Assert.Equal([1], group.Dataset("0").Read<int[]>());
+    }
+
+    [Fact]
+    public void AClosedGroupRejectsChangesAndKeepsItsAttributesReadable()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        using var writer = H5File.BeginStreaming(stream);
+
+        var documents = writer.Group("documents");
+        var attributes = documents.Attributes;
+        attributes["kind"] = "batch";
+
+        // Act
+        documents.Close();
+
+        // Assert
+        Assert.Throws<InvalidOperationException>(() => documents.Attributes["count"] = 1);
+        Assert.Throws<InvalidOperationException>(() => attributes.Add("count", 1));
+        Assert.Throws<InvalidOperationException>(() => attributes.Remove("kind"));
+        Assert.Throws<InvalidOperationException>(() => attributes.Clear());
+        Assert.Throws<InvalidOperationException>(() => documents.Append("0", new H5Dataset(new[] { 1 })));
+        Assert.Throws<InvalidOperationException>(() => documents.Group("nested"));
+
+        Assert.Equal("batch", attributes["kind"]);
+        Assert.Single(attributes);
+    }
+
+    [Fact]
+    public void ClosingAnAncestorOrTheWriterClosesTheOpenGroupsBelowIt()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var writer = H5File.BeginStreaming(stream);
+
+        var inner = writer.Group("a/b");
+        var other = writer.Group("other");
+
+        // Act
+        writer.Close("a");
+        writer.Dispose();
+
+        // Assert
+        Assert.Throws<InvalidOperationException>(() => inner.Attributes["late"] = 1);
+        Assert.Throws<InvalidOperationException>(() => other.Attributes["late"] = 1);
+    }
+
+    [Fact]
+    public void ClosingAnOpenGroupTwiceDoesNothing()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var writer = H5File.BeginStreaming(stream);
+        var documents = writer.Group("documents");
+
+        // Act
+        documents.Close();
+        documents.Close();
+        writer.Dispose();
+        documents.Dispose();
+
+        // Assert
+        Assert.Empty(Open(stream).Group("documents").Children());
+    }
+
+    [Fact]
+    public void GroupPrefillsAttributesOfTheGroupItNames()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        var attributes = new Dictionary<string, object> { ["kind"] = "batch", ["count"] = 2 };
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            var group = writer.Group("a/documents", attributes);
+            group.Group("nested", new Dictionary<string, object> { ["level"] = 2 });
+
+            attributes["kind"] = "changed after the call";
+        }
+
+        // Assert
+        var a = Open(stream).Group("a");
+        var documents = a.Group("documents");
+
+        Assert.Empty(a.Attributes());
+        Assert.Equal("batch", documents.Attribute("kind").Read<string>());
+        Assert.Equal(2, documents.Attribute("count").Read<int>());
+        Assert.Equal(2, documents.Group("nested").Attribute("level").Read<int>());
+    }
+
+    [Fact]
+    public void GroupWithAttributesOnAnExistingOpenGroupAddsAndOverwritesThem()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+
+        // Act
+        using (var writer = H5File.BeginStreaming(stream))
+        {
+            var documents = writer.Group("documents");
+            documents.Attributes["kind"] = "batch";
+            documents.Attributes["count"] = 1;
+
+            var again = writer.Group("documents", new Dictionary<string, object> { ["count"] = 2, ["id"] = 7 });
+
+            Assert.Same(documents, again);
+        }
+
+        // Assert
+        var group = Open(stream).Group("documents");
+
+        Assert.Equal("batch", group.Attribute("kind").Read<string>());
+        Assert.Equal(2, group.Attribute("count").Read<int>());
+        Assert.Equal(7, group.Attribute("id").Read<int>());
+    }
+
+    [Fact]
+    public void GroupWithAttributesOnAClosedGroupThrows()
+    {
+        // Arrange
+        using var stream = new MemoryStream();
+        using var writer = H5File.BeginStreaming(stream);
+
+        writer.Group("documents").Close();
+
+        // Act
+        void action() => writer.Group("documents", new Dictionary<string, object> { ["id"] = 7 });
+
+        // Assert
+        Assert.Throws<InvalidOperationException>(action);
+    }
+
+    [Fact]
     public void AnEmptyStreamingWriteIsAnEmptyFile()
     {
         // Arrange
