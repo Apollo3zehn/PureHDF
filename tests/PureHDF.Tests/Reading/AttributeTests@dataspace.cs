@@ -38,10 +38,10 @@ public partial class AttributeTests
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
             var attribute = root.Group("dataspace").Attribute("null");
 
-            void action() => attribute.Read<double[]>();
+            var actual = attribute.Read<double[]>();
 
-            // Assert
-            Assert.Throws<Exception>(action);
+            // Assert - a null dataspace holds no elements, so the read yields none.
+            Assert.Empty(actual);
         });
     }
 }

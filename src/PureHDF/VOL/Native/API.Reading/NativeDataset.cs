@@ -1,4 +1,4 @@
-using PureHDF.Selections;
+﻿using PureHDF.Selections;
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Reflection;
@@ -450,6 +450,8 @@ public class NativeDataset : NativeObject, IH5Dataset
             skipShuffle,
             isRawMode);
 
+        EnsureNullDataspaceCanBeRepresented(resultType);
+
         /* result buffer / result array */
         Memory<TElement> resultBuffer;
         var resultArray = default(Array);
@@ -611,6 +613,14 @@ public class NativeDataset : NativeObject, IH5Dataset
         bool isRawMode,
         H5DatasetAccess datasetAccess = default)
     {
+        /* A selection of no elements has nothing to read, and asking anyway would consult the data
+         * layout - H5D_Base.GetChunkDims derives its answer from the dataspace dimensions, which a null
+         * dataspace does not have, and the storage it describes does not exist for such a dataset
+         * either. Returning here keeps that out of the layout classes, and covers a zero-element
+         * selection of an ordinary dataset on the way. */
+        if (fileSelection.TotalElementCount == 0)
+            return;
+
         // CONCURRENCY: a read operation begins in earnest here, so it gets its own driver and its
         // own context. Everything below must use `operationContext`; the file-level `Context` is
         // shared with concurrent operations and with object navigation, and its driver cursor is a
@@ -781,13 +791,18 @@ public class NativeDataset : NativeObject, IH5Dataset
                 DataUtils.CheckEndianness(byteOrderAware.ByteOrder);
         }
 
-        /* fast path for null dataspace */
-        if (InternalDataspace.Type == DataspaceType.Null)
-            throw new Exception("Datasets with null dataspace cannot be read.");
-
         /* memory selection + dims validation */
         if (memorySelection is not null && memoryDims is null)
             throw new Exception("If a memory selection is specified, the memory dimensions must be specified, too.");
+
+        /* A null dataspace holds no elements, so it selects none. It has no dimensions to derive that
+         * from - GetDims has no answer for it - and the selection below is built from those, so the
+         * empty selection is stated here rather than fallen into. Nothing downstream needs a further
+         * special case: a zero-element selection sizes the result buffer to zero and the decoder is
+         * handed nothing to do, so the dataset's data address is never consulted, which matters because
+         * a null dataspace dataset has no data to point at. */
+        if (InternalDataspace.Type == DataspaceType.Null)
+            return ([0], new HyperslabSelection(rank: 1, starts: [0], blocks: [0]));
 
         /* file dimensions */
         var fileDims = InternalDataspace.GetDims();
@@ -807,6 +822,26 @@ public class NativeDataset : NativeObject, IH5Dataset
         }
 
         return (fileDims, fileSelection);
+    }
+
+    /// <summary>
+    /// A null dataspace holds no elements, which only an array or memory result type can express.
+    /// </summary>
+    /// <remarks>
+    /// The read itself needs no special case: the file selection already has zero elements for a null
+    /// dataspace, so the result buffer is sized zero and the data layout is not consulted. A scalar result
+    /// type is the one shape with no way to say "no element", and would otherwise fail further in as a
+    /// selection/count mismatch that does not mention the dataspace.
+    /// </remarks>
+    private void EnsureNullDataspaceCanBeRepresented(Type resultType)
+    {
+        if (InternalDataspace.Type != DataspaceType.Null)
+            return;
+
+        if (!DataUtils.IsArray(resultType) && !DataUtils.IsMemory(resultType))
+            throw new InvalidOperationException(
+                $"The dataset '{Name}' has a null dataspace and so holds no elements, which cannot be "
+                + $"read into the scalar type '{resultType.Name}'. Read it as an array instead.");
     }
 
     #endregion

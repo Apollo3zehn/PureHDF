@@ -38,10 +38,10 @@ public partial class DatasetTests
             using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
             var dataset = root.Group("dataspace").Dataset("null");
 
-            void action() => dataset.Read<double[]>();
+            var actual = dataset.Read<double[]>();
 
-            // Assert
-            Assert.Throws<Exception>(action);
+            // Assert - a null dataspace holds no elements, so the read yields none.
+            Assert.Empty(actual);
         });
     }
 }
