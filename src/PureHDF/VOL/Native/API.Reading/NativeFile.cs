@@ -131,19 +131,23 @@ public class NativeFile : NativeGroup, IDisposable
         if (!BitConverter.IsLittleEndian)
             throw new Exception("This library only works on little endian systems.");
 
-        // superblock
-        var stepSize = 512;
+        // superblock: the format allows a user block in front of it, so the superblock starts at
+        // offset 0, 512, 1024, 2048, ... - each candidate is an absolute offset, not a distance
+        // from the previous one.
+        var offset = 0L;
         var signature = await driver.ReadBytes(8).ConfigureAwait(false);
 
         while (!ValidateSignature(signature, Superblock.Signature))
         {
-            driver.Seek(stepSize - 8, SeekOrigin.Current);
+            offset = offset == 0 
+                ? 512 
+                : offset * 2;
 
-            if (driver.Position >= driver.Length)
+            if (offset + 8 > driver.Length)
                 throw new Exception("The file is not a valid HDF 5 file.");
 
+            driver.Seek(offset, SeekOrigin.Begin);
             signature = await driver.ReadBytes(8).ConfigureAwait(false);
-            stepSize *= 2;
         }
 
         var version = await driver.ReadByte().ConfigureAwait(false);
