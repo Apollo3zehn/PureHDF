@@ -27,5 +27,3 @@ The prefix does not decide whether the file contains `DATASET` or `ATTRIBUTE`. T
 Add an `attr_*.dump` file when the attribute expectation differs from the `data_*.dump` fixture beyond the outer object keyword.
 
 Reuse the `data_*.dump` fixture when replacing `<type>` with `ATTRIBUTE` produces the correct expected output.
-
-For compound values, a string member usually keeps the dataset-style fixed-width behavior because the member width is part of the shared compound datatype. In that case an attribute test can often reuse the `data_*.dump` fixture.
