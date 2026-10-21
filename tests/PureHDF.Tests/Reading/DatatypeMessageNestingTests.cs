@@ -65,16 +65,14 @@ public class DatatypeMessageNestingTests
     [InlineData(1)]
     [InlineData(8)]
     [InlineData(32)]
-    public void ADatatypeNestedToAReasonableDepthDecodes(int levels)
+    public async Task ADatatypeNestedToAReasonableDepthDecodes(int levels)
     {
         // Arrange
         using var driver = DriverForNesting(levels);
 
         // Act
-        var message = DatatypeMessage
-            .Decode(driver, new H5ReadOptions().MaxDatatypeNestingDepth)
-            .GetAwaiter()
-            .GetResult();
+        var message = await DatatypeMessage
+            .Decode(driver, new H5ReadOptions().MaxDatatypeNestingDepth);
 
         // Assert
         var depth = 0;
@@ -96,19 +94,17 @@ public class DatatypeMessageNestingTests
     [Theory]
     [InlineData(1_000)]
     [InlineData(100_000)]
-    public void ADatatypeNestedTooDeeplyThrowsInsteadOfExhaustingTheStack(int levels)
+    public async Task ADatatypeNestedTooDeeplyThrowsInsteadOfExhaustingTheStack(int levels)
     {
         // Arrange
         using var driver = DriverForNesting(levels);
 
         // Act
-        void action() => DatatypeMessage
-            .Decode(driver, new H5ReadOptions().MaxDatatypeNestingDepth)
-            .GetAwaiter()
-            .GetResult();
+        async Task action() => await DatatypeMessage
+            .Decode(driver, new H5ReadOptions().MaxDatatypeNestingDepth);
 
         // Assert
-        var exception = Assert.Throws<NotSupportedException>(action);
+        var exception = await Assert.ThrowsAsync<NotSupportedException>(action);
         Assert.Contains(nameof(H5ReadOptions.MaxDatatypeNestingDepth), exception.Message);
     }
 
@@ -117,7 +113,7 @@ public class DatatypeMessageNestingTests
     /// is what keeps the default from being a limit on what PureHDF can open.
     /// </summary>
     [Fact]
-    public void TheBoundCanBeRaised()
+    public async Task TheBoundCanBeRaised()
     {
         // Arrange
         var levels = new H5ReadOptions().MaxDatatypeNestingDepth + 10;
@@ -126,18 +122,14 @@ public class DatatypeMessageNestingTests
         using var allowed = DriverForNesting(levels);
 
         // Act
-        void tooDeep() => DatatypeMessage
-            .Decode(refused, new H5ReadOptions().MaxDatatypeNestingDepth)
-            .GetAwaiter()
-            .GetResult();
+        async Task tooDeep() => await DatatypeMessage
+            .Decode(refused, new H5ReadOptions().MaxDatatypeNestingDepth);
 
-        var message = DatatypeMessage
-            .Decode(allowed, new H5ReadOptions(MaxDatatypeNestingDepth: levels).MaxDatatypeNestingDepth)
-            .GetAwaiter()
-            .GetResult();
+        var message = await DatatypeMessage
+            .Decode(allowed, new H5ReadOptions(MaxDatatypeNestingDepth: levels).MaxDatatypeNestingDepth);
 
         // Assert
-        Assert.Throws<NotSupportedException>(tooDeep);
+        await Assert.ThrowsAsync<NotSupportedException>(tooDeep);
         Assert.Equal(DatatypeMessageClass.VariableLength, message.Class);
     }
 
@@ -145,18 +137,16 @@ public class DatatypeMessageNestingTests
     /// Lowering it works too, so a caller reading untrusted files can be stricter than the default.
     /// </summary>
     [Fact]
-    public void TheBoundCanBeLowered()
+    public async Task TheBoundCanBeLowered()
     {
         // Arrange
         using var driver = DriverForNesting(8);
 
         // Act
-        void action() => DatatypeMessage
-            .Decode(driver, new H5ReadOptions(MaxDatatypeNestingDepth: 4).MaxDatatypeNestingDepth)
-            .GetAwaiter()
-            .GetResult();
+        async Task action() => await DatatypeMessage
+            .Decode(driver, new H5ReadOptions(MaxDatatypeNestingDepth: 4).MaxDatatypeNestingDepth);
 
         // Assert
-        Assert.Throws<NotSupportedException>(action);
+        await Assert.ThrowsAsync<NotSupportedException>(action);
     }
 }
