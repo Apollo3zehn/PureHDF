@@ -56,8 +56,12 @@ public class MiscTests
 
         var filePath = Path.GetTempFileName();
 
-        // Act
-        file.Write(filePath);
+        // Act - the global heap is where a VARIABLE-length string goes, and an attribute is measured into a
+        // fixed-length one by default, so the collections this is about only exist if that is turned off.
+        file.Write(filePath, new H5WriteOptions
+        {
+            AttributeStringLength = H5AttributeStringLength.VariableLength
+        });
 
         // Assert
         try
@@ -89,8 +93,12 @@ public class MiscTests
 
         var filePath = Path.GetTempFileName();
 
-        // Act
-        file.Write(filePath);
+        // Act - variable-length, so that the value lands in a global heap collection rather than in a
+        // measured fixed-length attribute.
+        file.Write(filePath, new H5WriteOptions
+        {
+            AttributeStringLength = H5AttributeStringLength.VariableLength
+        });
 
         // Assert
         try

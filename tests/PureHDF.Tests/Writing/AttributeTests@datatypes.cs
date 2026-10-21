@@ -72,8 +72,14 @@ public partial class AttributeTests
                 _ => default
             };
 
+            /* Most of these expectations are shared with the dataset tests. The exceptions are the cases
+             * whose ELEMENTS are strings: an attribute measures those into a fixed-length datatype where
+             * a dataset leaves them variable-length, so each of them has an attr_ fixture of its own. The
+             * compound and dictionary cases stay shared, because only their MEMBERS are strings. */
             var expected = File
-                .ReadAllText($"DumpFiles/data_{type.Name}{suffix}.dump")
+                .ReadAllText(File.Exists($"DumpFiles/attr_{type.Name}{suffix}.dump")
+                    ? $"DumpFiles/attr_{type.Name}{suffix}.dump"
+                    : $"DumpFiles/data_{type.Name}{suffix}.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
 
@@ -110,8 +116,15 @@ public partial class AttributeTests
             /* utf-8 is base8 encoded: https://stackoverflow.com/questions/75174726/hdf5-how-to-decode-utf8-encoded-string-from-h5dump-output*/
             var actual = TestUtils.DumpH5File(filePath);
 
+            /* Attributes have their own expectations here, not the dataset ones: a string attribute's
+             * fixed-length width is measured from its own value, while a compound member's is declared
+             * by DefaultStringLength. So the String[] case comes out 10 bytes wide with every element
+             * intact, where a dataset declares 6 and truncates. The other cases are identical to the
+             * dataset fixtures - the compound ones because only their MEMBERS are strings. */
             var expected = File
-                .ReadAllText($"DumpFiles/data_default_fls_{type.Name}.dump")
+                .ReadAllText(File.Exists($"DumpFiles/attr_default_fls_{type.Name}.dump")
+                    ? $"DumpFiles/attr_default_fls_{type.Name}.dump"
+                    : $"DumpFiles/data_default_fls_{type.Name}.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
 
@@ -547,7 +560,7 @@ public partial class AttributeTests
             var actual = TestUtils.DumpH5File(filePath);
 
             var expected = File
-                .ReadAllText($"DumpFiles/data_{type.Name}.dump")
+                .ReadAllText($"DumpFiles/attr_{type.Name}.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
 
@@ -654,7 +667,7 @@ public partial class AttributeTests
         // Assert
         try
         {
-            Assert.Throws<TargetInvocationException>(action);
+            Assert.Throws<Exception>(action);
         }
         finally
         {

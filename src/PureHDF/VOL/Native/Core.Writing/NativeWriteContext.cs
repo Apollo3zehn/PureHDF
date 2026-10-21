@@ -8,10 +8,17 @@ namespace PureHDF.VOL.Native;
 /// </summary>
 /// <param name="Type">The .NET type being encoded.</param>
 /// <param name="StringLength">The requested fixed-width string length; 0 means variable-length.</param>
+/// <param name="StringPadding">
+/// How a fixed-width string declares its unused bytes. Part of the key because two callers can ask
+/// for the same width and mean different things by it: a width measured from a value fills the field
+/// exactly and pads with nothing, while a declared width leaves room to terminate. Leaving it out
+/// would let whichever is encoded first hand its padding to the other.
+/// </param>
 /// <param name="OpaqueInfo">The opaque size and tag, when encoding an opaque type.</param>
 internal readonly record struct DatatypeCacheKey(
     Type Type,
     int StringLength,
+    PaddingType StringPadding,
     H5OpaqueInfo? OpaqueInfo);
 
 internal record NativeWriteContext(

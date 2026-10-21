@@ -3,7 +3,7 @@ GROUP "/" {
    ATTRIBUTE "0" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -15,7 +15,7 @@ GROUP "/" {
    ATTRIBUTE "1" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -27,7 +27,7 @@ GROUP "/" {
    ATTRIBUTE "10" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -39,7 +39,7 @@ GROUP "/" {
    ATTRIBUTE "11" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -51,7 +51,7 @@ GROUP "/" {
    ATTRIBUTE "12" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -63,7 +63,7 @@ GROUP "/" {
    ATTRIBUTE "13" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -75,7 +75,7 @@ GROUP "/" {
    ATTRIBUTE "14" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -87,7 +87,7 @@ GROUP "/" {
    ATTRIBUTE "15" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -99,7 +99,7 @@ GROUP "/" {
    ATTRIBUTE "16" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -111,7 +111,7 @@ GROUP "/" {
    ATTRIBUTE "17" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -123,7 +123,7 @@ GROUP "/" {
    ATTRIBUTE "18" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -135,7 +135,7 @@ GROUP "/" {
    ATTRIBUTE "19" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -147,7 +147,7 @@ GROUP "/" {
    ATTRIBUTE "2" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -159,7 +159,7 @@ GROUP "/" {
    ATTRIBUTE "20" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -171,7 +171,7 @@ GROUP "/" {
    ATTRIBUTE "21" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -183,7 +183,7 @@ GROUP "/" {
    ATTRIBUTE "22" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -195,7 +195,7 @@ GROUP "/" {
    ATTRIBUTE "23" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -207,7 +207,7 @@ GROUP "/" {
    ATTRIBUTE "24" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -219,7 +219,7 @@ GROUP "/" {
    ATTRIBUTE "25" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -231,7 +231,7 @@ GROUP "/" {
    ATTRIBUTE "26" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -243,7 +243,7 @@ GROUP "/" {
    ATTRIBUTE "27" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -255,7 +255,7 @@ GROUP "/" {
    ATTRIBUTE "28" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -267,7 +267,7 @@ GROUP "/" {
    ATTRIBUTE "29" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -279,7 +279,7 @@ GROUP "/" {
    ATTRIBUTE "3" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -291,7 +291,7 @@ GROUP "/" {
    ATTRIBUTE "30" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -303,7 +303,7 @@ GROUP "/" {
    ATTRIBUTE "31" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -315,7 +315,7 @@ GROUP "/" {
    ATTRIBUTE "32" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -327,7 +327,7 @@ GROUP "/" {
    ATTRIBUTE "33" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -339,7 +339,7 @@ GROUP "/" {
    ATTRIBUTE "34" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -351,7 +351,7 @@ GROUP "/" {
    ATTRIBUTE "35" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -363,7 +363,7 @@ GROUP "/" {
    ATTRIBUTE "36" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -375,7 +375,7 @@ GROUP "/" {
    ATTRIBUTE "37" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -387,7 +387,7 @@ GROUP "/" {
    ATTRIBUTE "38" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -399,7 +399,7 @@ GROUP "/" {
    ATTRIBUTE "39" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -411,7 +411,7 @@ GROUP "/" {
    ATTRIBUTE "4" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -423,7 +423,7 @@ GROUP "/" {
    ATTRIBUTE "40" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -435,7 +435,7 @@ GROUP "/" {
    ATTRIBUTE "41" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -447,7 +447,7 @@ GROUP "/" {
    ATTRIBUTE "42" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -459,7 +459,7 @@ GROUP "/" {
    ATTRIBUTE "43" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -471,7 +471,7 @@ GROUP "/" {
    ATTRIBUTE "44" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -483,7 +483,7 @@ GROUP "/" {
    ATTRIBUTE "45" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -495,7 +495,7 @@ GROUP "/" {
    ATTRIBUTE "46" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -507,7 +507,7 @@ GROUP "/" {
    ATTRIBUTE "47" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -519,7 +519,7 @@ GROUP "/" {
    ATTRIBUTE "48" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -531,7 +531,7 @@ GROUP "/" {
    ATTRIBUTE "49" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -543,7 +543,7 @@ GROUP "/" {
    ATTRIBUTE "5" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -555,7 +555,7 @@ GROUP "/" {
    ATTRIBUTE "50" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -567,7 +567,7 @@ GROUP "/" {
    ATTRIBUTE "51" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -579,7 +579,7 @@ GROUP "/" {
    ATTRIBUTE "52" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -591,7 +591,7 @@ GROUP "/" {
    ATTRIBUTE "53" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -603,7 +603,7 @@ GROUP "/" {
    ATTRIBUTE "54" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -615,7 +615,7 @@ GROUP "/" {
    ATTRIBUTE "55" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -627,7 +627,7 @@ GROUP "/" {
    ATTRIBUTE "56" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -639,7 +639,7 @@ GROUP "/" {
    ATTRIBUTE "57" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -651,7 +651,7 @@ GROUP "/" {
    ATTRIBUTE "58" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -663,7 +663,7 @@ GROUP "/" {
    ATTRIBUTE "59" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -675,7 +675,7 @@ GROUP "/" {
    ATTRIBUTE "6" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -687,7 +687,7 @@ GROUP "/" {
    ATTRIBUTE "60" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -699,7 +699,7 @@ GROUP "/" {
    ATTRIBUTE "61" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -711,7 +711,7 @@ GROUP "/" {
    ATTRIBUTE "62" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -723,7 +723,7 @@ GROUP "/" {
    ATTRIBUTE "63" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -735,7 +735,7 @@ GROUP "/" {
    ATTRIBUTE "64" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -747,7 +747,7 @@ GROUP "/" {
    ATTRIBUTE "65" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -759,7 +759,7 @@ GROUP "/" {
    ATTRIBUTE "66" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -771,7 +771,7 @@ GROUP "/" {
    ATTRIBUTE "67" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -783,7 +783,7 @@ GROUP "/" {
    ATTRIBUTE "68" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -795,7 +795,7 @@ GROUP "/" {
    ATTRIBUTE "69" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -807,7 +807,7 @@ GROUP "/" {
    ATTRIBUTE "7" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -819,7 +819,7 @@ GROUP "/" {
    ATTRIBUTE "70" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -831,7 +831,7 @@ GROUP "/" {
    ATTRIBUTE "71" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -843,7 +843,7 @@ GROUP "/" {
    ATTRIBUTE "72" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -855,7 +855,7 @@ GROUP "/" {
    ATTRIBUTE "73" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -867,7 +867,7 @@ GROUP "/" {
    ATTRIBUTE "74" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -879,7 +879,7 @@ GROUP "/" {
    ATTRIBUTE "75" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -891,7 +891,7 @@ GROUP "/" {
    ATTRIBUTE "76" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -903,7 +903,7 @@ GROUP "/" {
    ATTRIBUTE "77" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -915,7 +915,7 @@ GROUP "/" {
    ATTRIBUTE "78" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -927,7 +927,7 @@ GROUP "/" {
    ATTRIBUTE "79" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -939,7 +939,7 @@ GROUP "/" {
    ATTRIBUTE "8" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -951,7 +951,7 @@ GROUP "/" {
    ATTRIBUTE "80" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -963,7 +963,7 @@ GROUP "/" {
    ATTRIBUTE "81" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -975,7 +975,7 @@ GROUP "/" {
    ATTRIBUTE "82" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -987,7 +987,7 @@ GROUP "/" {
    ATTRIBUTE "83" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -999,7 +999,7 @@ GROUP "/" {
    ATTRIBUTE "84" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -1011,7 +1011,7 @@ GROUP "/" {
    ATTRIBUTE "85" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -1023,7 +1023,7 @@ GROUP "/" {
    ATTRIBUTE "86" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -1035,7 +1035,7 @@ GROUP "/" {
    ATTRIBUTE "87" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -1047,7 +1047,7 @@ GROUP "/" {
    ATTRIBUTE "88" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -1059,7 +1059,7 @@ GROUP "/" {
    ATTRIBUTE "89" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -1071,7 +1071,7 @@ GROUP "/" {
    ATTRIBUTE "9" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -1083,7 +1083,7 @@ GROUP "/" {
    ATTRIBUTE "90" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -1095,7 +1095,7 @@ GROUP "/" {
    ATTRIBUTE "91" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -1107,7 +1107,7 @@ GROUP "/" {
    ATTRIBUTE "92" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -1119,7 +1119,7 @@ GROUP "/" {
    ATTRIBUTE "93" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -1131,7 +1131,7 @@ GROUP "/" {
    ATTRIBUTE "94" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -1143,7 +1143,7 @@ GROUP "/" {
    ATTRIBUTE "95" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -1155,7 +1155,7 @@ GROUP "/" {
    ATTRIBUTE "96" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -1167,7 +1167,7 @@ GROUP "/" {
    ATTRIBUTE "97" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -1179,7 +1179,7 @@ GROUP "/" {
    ATTRIBUTE "98" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }
@@ -1191,7 +1191,7 @@ GROUP "/" {
    ATTRIBUTE "99" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
-         STRPAD H5T_STR_NULLPAD;
+         STRPAD H5T_STR_NULLTERM;
          CSET H5T_CSET_UTF8;
          CTYPE H5T_C_S1;
       }

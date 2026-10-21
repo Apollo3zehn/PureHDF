@@ -24,11 +24,18 @@ internal partial record class DatatypeMessage : Message
     // variable length entry size           length
     private const int VLEN_REFERENCE_SIZE = sizeof(uint) + REFERENCE_SIZE;
 
+    // stringLength declares the width for a fixed-length string, overriding
+    // H5WriteOptions.DefaultStringLength. Null defers to that option, which is what every dataset does;
+    // an attribute answers for itself according to H5WriteOptions.AttributeStringLength - a measured width
+    // along with the padding it implies, or an explicit 0 to force variable-length even where the option
+    // declares a width. See AttributeMessage.GetStringLengthForAttribute.
     public static (DatatypeMessage, EncodeDelegate<T>) Create<T>(
         NativeWriteContext context,
         Memory<T> topLevelData,
         bool isScalar,
-        H5OpaqueInfo? opaqueInfo
+        H5OpaqueInfo? opaqueInfo,
+        int? stringLength = default,
+        PaddingType stringPadding = PaddingType.NullTerminate
     )
     {
         var isScalarDictionary = isScalar &&
@@ -39,14 +46,14 @@ internal partial record class DatatypeMessage : Message
         if (isScalar)
             return isScalarDictionary
                 ? GetTypeInfoForTopLevelDictionary<T>(context, (IDictionary)topLevelData.Span[0]!)
-                : GetTypeInfoForScalar_SpecialEncode<T>(context, stringLength: default);
+                : GetTypeInfoForScalar_SpecialEncode<T>(context, stringLength, stringPadding);
 
         else
             return
                 DataUtils.IsReferenceOrContainsReferences(typeof(T)) || 
                 Nullable.GetUnderlyingType(typeof(T)) is not null
 
-                ? GetTypeInfoForTopLevelMemory<T>(context, opaqueInfo)
+                ? GetTypeInfoForTopLevelMemory<T>(context, opaqueInfo, stringLength, stringPadding)
 
                 : ((DatatypeMessage, EncodeDelegate<T>))_methodInfoGetTypeInfoForTopLevelUnmanagedMemory
                     // TODO cache
@@ -85,9 +92,10 @@ internal partial record class DatatypeMessage : Message
 
     private static (DatatypeMessage, EncodeDelegate<T>) GetTypeInfoForScalar_SpecialEncode<T>(
         NativeWriteContext context,
-        int stringLength = default)
+        int? stringLength = default,
+        PaddingType stringPadding = PaddingType.NullTerminate)
     {
-        var (dataType, encode) = GetTypeInfoForScalar(context, typeof(T), stringLength);
+        var (dataType, encode) = GetTypeInfoForScalar(context, typeof(T), stringLength, stringPadding: stringPadding);
 
         void encodeFirstElement(Memory<T> source, IH5WriteStream target)
             => encode(source.Span[0]!, target);
@@ -98,11 +106,13 @@ internal partial record class DatatypeMessage : Message
     private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForScalar(
         NativeWriteContext context,
         Type type,
-        int stringLength = default,
-        H5OpaqueInfo? opaqueInfo = default)
+        int? stringLength = default,
+        H5OpaqueInfo? opaqueInfo = default,
+        PaddingType stringPadding = PaddingType.NullTerminate)
     {
-        if (stringLength == default)
-            stringLength = context.WriteOptions.DefaultStringLength;
+        // Null means no answer was given, so the file-global option decides. A zero IS an answer - it asks
+        // for a variable-length string even where that option declares a width.
+        var resolvedStringLength = stringLength ?? context.WriteOptions.DefaultStringLength;
 
         // special case: opaque (= byte[])
         // use unique type to make cache happy
@@ -114,7 +124,7 @@ internal partial record class DatatypeMessage : Message
         // so one type maps to many messages. Keying on all of it means strings and opaque types
         // can be cached like anything else instead of having to be excluded.
         var cache = context.TypeToMessageMap;
-        var cacheKey = new DatatypeCacheKey(type, stringLength, opaqueInfo);
+        var cacheKey = new DatatypeCacheKey(type, resolvedStringLength, stringPadding, opaqueInfo);
 
         if (cache.TryGetValue(cacheKey, out var cachedMessage))
             return cachedMessage;
@@ -128,9 +138,9 @@ internal partial record class DatatypeMessage : Message
         {
             /* string */
             Type when type == typeof(string)
-                => stringLength == 0
+                => resolvedStringLength == 0
                     ? GetTypeInfoForVariableLengthString(context)
-                    : GetTypeInfoForFixedLengthString(context, stringLength),
+                    : GetTypeInfoForFixedLengthString(context, resolvedStringLength, stringPadding),
 
             /* dictionary */
             Type when typeof(IDictionary).IsAssignableFrom(type) &&
@@ -639,7 +649,7 @@ internal partial record class DatatypeMessage : Message
 
             new VariableLengthBitFieldDescription(
                 Type: InternalVariableLengthType.String,
-                PaddingType: PaddingType.NullPad,
+                PaddingType: PaddingType.NullTerminate,
                 Encoding: CharacterSetEncoding.UTF8
             ),
 
@@ -688,15 +698,41 @@ internal partial record class DatatypeMessage : Message
         return (message, encode);
     }
 
+    /// <summary>
+    ///     A fixed-length string datatype of <paramref name="length" /> bytes.
+    /// </summary>
+    /// <remarks>
+    ///     <paramref name="padding" /> says what the unused bytes of the field mean. A measured width passes
+    ///     <see cref="PaddingType.NullPad" />; a width the caller declared keeps
+    ///     <see cref="PaddingType.NullTerminate" />.
+    ///     <para>
+    ///         The choice does not change what a reader gets. There is no conversion path between fixed- and
+    ///         variable-length strings in the C library at all, so every consumer reads the field into a
+    ///         fixed-width buffer, and those bytes are identical either way - a value shorter than the field is
+    ///         followed by nulls whatever the declaration says, and stops a C string at the same place.
+    ///     </para>
+    ///     <para>
+    ///         What it changes is writing. The C library reserves the final byte of a NullTerminate field when
+    ///         it converts a value into one, so a tool rewriting the field through a wider datatype lands
+    ///         length - 1 bytes and drops the last character of a value that fills it. A measured width is
+    ///         filled to its last byte by the longest element by construction, so NullTerminate would put
+    ///         exactly that element at risk. NullPad leaves the whole width writable.
+    ///     </para>
+    ///     <para>
+    ///         The cost is that <c>h5dump</c> honours NullPad literally and prints a shorter value with its
+    ///         padding attached, as <c>"Wafer\000\000"</c>. That is a rendering difference in one tool, not
+    ///         something a reader sees.
+    ///     </para>
+    /// </remarks>
     private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForFixedLengthString(
-        NativeWriteContext context, int length)
+        NativeWriteContext context, int length, PaddingType padding = PaddingType.NullTerminate)
     {
         var message = new DatatypeMessage(
 
             (uint)length,
 
             new StringBitFieldDescription(
-                PaddingType: PaddingType.NullTerminate,
+                PaddingType: padding,
                 Encoding: CharacterSetEncoding.UTF8
             ),
 
@@ -709,12 +745,35 @@ internal partial record class DatatypeMessage : Message
 
         void encode(object source, IH5WriteStream target)
         {
+            var value = (string?)source;
+
+            // Refused rather than emptied. A fixed-length field has no way to hold the difference between
+            // null and an empty string, and writing one as the other loses the distinction with nothing to
+            // show for it - the same reason StringOverflow.Throw exists for a value that does not fit.
+            if (value is null)
+                throw new InvalidOperationException(
+                    $"A null string does not fit a fixed-length string of {length} bytes, which has no way "
+                    + "to represent the difference between null and an empty string. Write variable-length "
+                    + "strings instead - H5WriteOptions.DefaultStringLength of 0, or "
+                    + "H5AttributeStringLength.VariableLength for an attribute - or replace the null with an "
+                    + "empty string.");
+
             var stringBytes = Encoding.UTF8
-                .GetBytes((string)source)
+                .GetBytes(value)
                 .AsSpan();
 
-            var truncate = Math.Min(stringBytes.Length, length);
-            stringBytes = stringBytes[..truncate];
+            if (stringBytes.Length > length)
+            {
+                if (context.WriteOptions.StringOverflow == H5StringOverflow.Throw)
+                    throw new InvalidOperationException(
+                        $"The string '{value}' needs {stringBytes.Length} UTF-8 bytes and does not "
+                        + $"fit a fixed-length string of {length} bytes. Note that an HDF5 string width is "
+                        + "in BYTES, not characters, so a width counted in characters is too small for any "
+                        + "value outside ASCII. Set H5WriteOptions.StringOverflow to Truncate to discard "
+                        + "the excess instead.");
+
+                stringBytes = stringBytes[..length];
+            }
 
             target.WriteDataset(stringBytes);
 
@@ -1088,9 +1147,11 @@ internal partial record class DatatypeMessage : Message
 
     private static (DatatypeMessage, EncodeDelegate<T>) GetTypeInfoForTopLevelMemory<T>(
         NativeWriteContext context,
-        H5OpaqueInfo? opaqueInfo)
+        H5OpaqueInfo? opaqueInfo,
+        int? stringLength = default,
+        PaddingType stringPadding = PaddingType.NullTerminate)
     {
-        var (message, elementEncode) = GetTypeInfoForScalar(context, typeof(T), opaqueInfo: opaqueInfo);
+        var (message, elementEncode) = GetTypeInfoForScalar(context, typeof(T), stringLength, opaqueInfo, stringPadding);
 
         void encode(Memory<T> source, IH5WriteStream target)
         {

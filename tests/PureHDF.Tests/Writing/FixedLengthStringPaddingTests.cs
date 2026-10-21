@@ -55,6 +55,10 @@ public class FixedLengthStringPaddingTests
         return true;
     }
 
+    /// <summary>
+    /// A string attribute's width is measured from its own value, so it carries no padding at all - this
+    /// keeps guarding the read side, while the padding itself is asserted through a compound member below.
+    /// </summary>
     [Theory]
     [InlineData("")]
     [InlineData("short")]
@@ -122,11 +126,14 @@ public class FixedLengthStringPaddingTests
     [Fact]
     public void ThePaddingWrittenToTheFileIsZero()
     {
-        // Arrange
+        // Arrange - a compound member, since that is where a width is declared: an attribute is sized to
+        // its own value and leaves no padding to inspect.
         DirtyThePool();
 
-        var file = new H5File();
-        file.Attributes["text"] = "xxxxxxxx";
+        var file = new H5File
+        {
+            ["rows"] = new H5Dataset(new Row[] { new() { Text = "xxxxxxxx" } })
+        };
 
         var stream = new MemoryStream();
 
@@ -137,7 +144,7 @@ public class FixedLengthStringPaddingTests
         var bytes = stream.ToArray();
         var valueStart = bytes.AsSpan().IndexOf("xxxxxxxx"u8);
 
-        Assert.True(valueStart >= 0, "the attribute value was not found in the file");
+        Assert.True(valueStart >= 0, "the member value was not found in the file");
 
         Assert.True(
             IsAllZero(bytes.AsSpan(valueStart + 8, Width - 8)),
