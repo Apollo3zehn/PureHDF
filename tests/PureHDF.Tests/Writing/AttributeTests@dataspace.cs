@@ -57,7 +57,7 @@ public partial class AttributeTests
         var filePath = Path.GetTempFileName();
 
         // Act
-        file.Write(filePath);
+        file.Write(filePath, new H5WriteOptions(AttributeStringLength: H5AttributeStringLength.Inherit));
 
         // Assert
         try
