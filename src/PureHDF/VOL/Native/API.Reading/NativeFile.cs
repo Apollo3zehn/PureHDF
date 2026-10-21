@@ -139,7 +139,9 @@ public class NativeFile : NativeGroup, IDisposable
 
         while (!ValidateSignature(signature, Superblock.Signature))
         {
-            offset = offset == 0 ? 512 : offset * 2;
+            offset = offset == 0 
+                ? 512 
+                : offset * 2;
 
             if (offset + 8 > driver.Length)
                 throw new Exception("The file is not a valid HDF 5 file.");
