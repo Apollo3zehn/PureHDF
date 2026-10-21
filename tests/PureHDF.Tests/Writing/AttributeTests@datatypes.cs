@@ -122,7 +122,9 @@ public partial class AttributeTests
              * intact, where a dataset declares 6 and truncates. The other cases are identical to the
              * dataset fixtures - the compound ones because only their MEMBERS are strings. */
             var expected = File
-                .ReadAllText($"DumpFiles/attr_default_fls_{type.Name}.dump")
+                .ReadAllText(File.Exists($"DumpFiles/attr_default_fls_{type.Name}.dump")
+                    ? $"DumpFiles/attr_default_fls_{type.Name}.dump"
+                    : $"DumpFiles/data_default_fls_{type.Name}.dump")
                 .Replace("<file-path>", filePath)
                 .Replace("<type>", "ATTRIBUTE");
 

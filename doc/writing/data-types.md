@@ -11,7 +11,7 @@ However, there are a few cases where a little bit more work is required. These a
 
 # Object References
 
-Use the `H5ObjectReference` type to create object references. Variables of type `H5Dataset` can be implicitly casted to `H5ObjectReference`, i.e. no explicit casting is required. Here is an example:
+Use the `H5ObjectReference` type to create object references. Variables of type `H5Dataset` can be implicitly cast to `H5ObjectReference`, i.e. no explicit casting is required. Here is an example:
 
 ```
 var dataset1 = new H5Dataset(data: 1);
@@ -27,7 +27,7 @@ var file = new H5File
 
 # Nullable Value Types
 
-To write nullable value type data use the generic version of `H5Dataset` (or `H5Attribute`). If you use the non-generic one instead, you will get a compiler warning. It is necessary to use the generic `H5Dataset<T>` in combination with `null` data because `null` looses all type information at runtime and then PureHDF does not know how to encode it. The generic type parameter keeps that type information.
+To write nullable value type data use the generic version of `H5Dataset` (or `H5Attribute`). If you use the non-generic one instead, you will get a compiler warning. It is necessary to use the generic `H5Dataset<T>` in combination with `null` data because `null` loses all type information at runtime and then PureHDF does not know how to encode it. The generic type parameter keeps that type information.
 
 Example:
 
@@ -40,7 +40,7 @@ var file = new H5File()
 };
 ```
 
-As there is no native support for nullable values types in the HDF5 file format, here is some technical background about the workaround PureHDF uses:
+As there is no native support for nullable value types in the HDF5 file format, here is some technical background about the workaround PureHDF uses:
 
 Nullable value types (e.g. `int?`) require special handling within the HDF5 file because we need a way to store the possible `null` value. The HDF5 `variable-length sequence` data type is a good, though not perfect solution, for this problem if we only use the first element of the sequence. Since a variable-length sequence has no predefined length, a reference (or pointer) is stored in the dataset itself. And this reference points to the global heap where the actual data lives. In case this reference consists only of zeros, it means that the value is undefined (= `null`). 
 
@@ -48,7 +48,7 @@ Summary: To represent nullable value types, we use the HDF5 internal variable-le
 
 # Strings
 
-Strings are written as HDF5 `variable-length` strings by default, which stores the value in the file's global heap and lets it be any length. Set `DefaultStringLength` to write `fixed-length` strings instead, of that width in **bytes** - not characters, so a width chosen by counting characters is too small for anything outside ASCII:
+Strings are written as HDF5 `variable-length` strings by default, which stores the value in the file's global heap and lets it be any length. Set `DefaultStringLength` to write `fixed-length` strings instead. The width is measured in **bytes**, not characters, so a width chosen by counting characters is too small for anything outside ASCII:
 
 ```cs
 var options = new H5WriteOptions(DefaultStringLength: 32);
@@ -56,36 +56,44 @@ var options = new H5WriteOptions(DefaultStringLength: 32);
 file.Write(filePath, options);
 ```
 
-A value too long for a declared width is truncated. Set `StringOverflow` to `Throw` to throw an `InvalidOperationException` instead:
+A value that is too long for a declared fixed width is truncated. Set `StringOverflow` to `Throw` to throw an `InvalidOperationException` instead:
 
 ```cs
-var options = new H5WriteOptions(DefaultStringLength: 32)
-{
-    StringOverflow = H5StringOverflow.Throw
-};
+var options = new H5WriteOptions(
+    DefaultStringLength: 32,
+    StringOverflow: H5StringOverflow.Throw);
 ```
 
-A `null` cannot be written into a fixed-length string at all, because the field has no way to record the difference between `null` and an empty string. Such a write throws an `InvalidOperationException`; use variable-length strings for data that contains nulls.
+`StringOverflow` only applies to declared fixed widths, such as `DefaultStringLength`, string length mappers, or attributes using `AttributeStringLength.Inherit`. Measured attributes are sized from their values, so they do not truncate.
+
+A `null` cannot be written into a fixed-length string at all, because the field has no way to record the difference between `null` and an empty string. Such a write throws an `InvalidOperationException`; use variable-length strings for data that can contain nulls.
 
 ## Attributes
 
-Attributes do not follow `DefaultStringLength`. A string attribute is `fixed-length`, as wide as its own longest value, so it neither truncates nor pads - which matters because `DefaultStringLength` is file-global, and one width wide enough for the largest attribute in the file pads out every smaller one.
+String attributes do not follow `DefaultStringLength` by default. Instead, each string attribute is `fixed-length` and as wide as its own longest value, so it neither truncates nor pads. This matters because `DefaultStringLength` is file-global: one width large enough for the largest attribute in the file would pad out every smaller one.
 
 Set `AttributeStringLength` to change that:
 
 ```cs
-var options = new H5WriteOptions(DefaultStringLength: 32)
-{
+var options = new H5WriteOptions(
+    DefaultStringLength: 32,
     // Attributes take DefaultStringLength as well, so 32 bytes here.
-    AttributeStringLength = H5AttributeStringLength.Inherit
-};
+    AttributeStringLength: H5AttributeStringLength.Inherit);
 ```
 
-The three values are `Measured` (the default, as wide as the value), `Inherit` (`DefaultStringLength`, or variable-length when it is 0) and `VariableLength` (always variable-length, whatever `DefaultStringLength` says).
+The three values are `Measured` (the default, as wide as the value), `Inherit` (`DefaultStringLength`, or variable-length when it is 0) and `VariableLength` (always variable-length, regardless of `DefaultStringLength`).
 
-Under `Measured`, an attribute holding a `null` element falls back to variable-length rather than declaring a fixed width, so it avoids the `InvalidOperationException` above - measuring never loses a value.
+| Case | `Measured` (default) | `Inherit` | `VariableLength` |
+| --- | --- | --- | --- |
+| `DefaultStringLength = 0` | Fixed-length, measured from the attribute value | Variable-length | Variable-length |
+| `DefaultStringLength = 32` | Fixed-length, measured from the attribute value | Fixed-length at 32 bytes | Variable-length |
+| Attribute contains a `null` string | PureHDF writes it as variable-length | Variable-length when `DefaultStringLength = 0`; otherwise PureHDF throws because fixed-length strings cannot represent `null` | Variable-length |
+| Measured fixed-width data would make the attribute message too large | PureHDF retries as variable-length | PureHDF throws because the fixed width was requested explicitly | Not applicable; it is already variable-length |
+| Value exceeds declared fixed width | Not applicable; the width is measured from the value | Truncates, or PureHDF throws when `StringOverflow` is `Throw` | Not applicable; no fixed width is declared |
 
-An attribute too large to store inline falls back the same way. An attribute message carries its data next to its name, datatype and dataspace within a total of 65535 bytes, and a measured width is stored inline, so a wide value or a long array can exceed it - where a variable-length value costs 16 bytes per element whatever its length. A width from `DefaultStringLength` is not adjusted, since it was asked for explicitly; such a write reports the limit instead.
+In short: `Measured` gives each string attribute its own compact fixed width, but falls back when fixed-width would lose data or cannot fit in the object header. `Inherit` makes attributes behave like datasets, including fixed-width truncation and size-limit errors. `VariableLength` opts attributes out of fixed-width strings entirely.
+
+The object-header limit matters because an attribute message stores its data next to its name, datatype and dataspace within a total of 65535 bytes. A measured fixed-width string stores the string bytes inline, so a wide value or a long array can exceed that limit. Variable-length strings store the string bytes elsewhere, but still need 16 bytes per element in the attribute message. If even that is too large, PureHDF throws and suggests storing the value as a dataset instead.
 
 This applies to an attribute whose elements *are* strings. A string that is a *member* of a compound attribute keeps its width from `DefaultStringLength` or a string length mapper, because a member's width has to stay the same across every object sharing that type.
 
