@@ -187,6 +187,8 @@ partial class H5NativeWriter
 
         foreach (var entry in group)
         {
+            ValidateLinkName(entry.Key);
+
             ulong linkAddress;
 
             LinkType linkType;
@@ -640,6 +642,31 @@ partial class H5NativeWriter
 
             headerMessages.Add(ToHeaderMessage(attributeMessage));
         }
+    }
+
+    /// <summary>
+    /// Rejects a link name that HDF5 cannot represent.
+    /// </summary>
+    /// <remarks>
+    /// HDF5 reserves '/' as the path separator, so a link name containing one cannot be traversed: the
+    /// C library tools report the object as missing rather than reading a link of that name, which makes
+    /// the whole file unreadable to them even though PureHDF can still open it.
+    /// <para>
+    /// Checked here, at the point the link is written, because the group API is an
+    /// <see cref="IDictionary{TKey, TValue}" /> whose keys are set by plain assignment - there is no
+    /// call to fail earlier in, and failing at write time still fails before anything is encoded.
+    /// </para>
+    /// <para>
+    /// ATTRIBUTE names are not checked, and must not be: an attribute name is not a path component, and
+    /// the C library accepts a slash in one.
+    /// </para>
+    /// </remarks>
+    private static void ValidateLinkName(string name)
+    {
+        if (name.Contains('/'))
+            throw new ArgumentException(
+                $"The link name '{name}' contains '/', which HDF5 reserves as the path separator. "
+                + "Nest the object in an H5Group instead.");
     }
 
     private static HeaderMessage ToHeaderMessage(Message message)

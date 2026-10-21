@@ -252,4 +252,56 @@ public class LinkTests
 
         Assert.Equal(expected, actual);
     }
+
+    /// <summary>
+    /// A link name may not contain '/', which HDF5 reserves as the path separator.
+    /// </summary>
+    /// <remarks>
+    /// Nothing rejected it, and the result was a file no HDF5 C library tool can traverse: h5dump exits
+    /// with an error stack, h5ls reports nothing below the root group, and h5py lists the key but cannot
+    /// open it. The dictionary-shaped API makes <c>file["group/child"]</c> an easy thing to write.
+    /// <para>
+    /// Only LINK names are affected. An attribute name is not a path component, and the C library does
+    /// allow a slash there - h5dump prints such an attribute without complaint - so attribute names are
+    /// deliberately left alone.
+    /// </para>
+    /// </remarks>
+    [Theory]
+    [InlineData("group/child")]
+    [InlineData("/leading")]
+    [InlineData("trailing/")]
+    public void ALinkNameMayNotContainASlash(string name)
+    {
+        // Arrange
+        var file = new H5File { [name] = new H5Dataset(new int[] { 1, 2, 3 }) };
+
+        // Act
+        var exception = Assert.Throws<ArgumentException>(() => file.Write(new MemoryStream()));
+
+        // Assert - the message has to name the character and the link, since the call site that created
+        // it is a dictionary assignment with no stack of its own.
+        Assert.Contains(name, exception.Message);
+        Assert.Contains("'/'", exception.Message);
+    }
+
+    /// <summary>An attribute name is not a path, so a slash in one stays legal.</summary>
+    [Fact]
+    public void AnAttributeNameMayContainASlash()
+    {
+        // Arrange
+        var file = new H5File();
+        file.Attributes["has/slash"] = 42;
+
+        // Act
+        var stream = new MemoryStream();
+        file.Write(stream);
+
+        // Assert
+        stream.Seek(0, SeekOrigin.Begin);
+
+        using var actual = H5File.Open(stream);
+
+        Assert.Equal(42, actual.Attribute("has/slash").Read<int>());
+    }
+
 }
