@@ -18,7 +18,7 @@ internal record class ArrayPropertyDescription(
     : DatatypePropertyDescription
 {
     public static async ValueTask<ArrayPropertyDescription> Decode(
-        H5DriverBase driver, byte version)
+        H5DriverBase driver, byte version, int maxNestingDepth, int depth)
     {
         // rank
         var rank = await driver.ReadByte().ConfigureAwait(false);
@@ -47,7 +47,7 @@ internal record class ArrayPropertyDescription(
         }
 
         // base type
-        var baseType = await DatatypeMessage.Decode(driver).ConfigureAwait(false);
+        var baseType = await DatatypeMessage.Decode(driver, maxNestingDepth, depth).ConfigureAwait(false);
 
         return new ArrayPropertyDescription(
             Rank: rank,
@@ -102,7 +102,9 @@ internal record class CompoundPropertyDescription(
     public static async ValueTask<CompoundPropertyDescription> Decode(
         H5DriverBase driver,
         byte version,
-        uint valueSize)
+        uint valueSize,
+        int maxNestingDepth,
+        int depth)
     {
         string name;
         ulong memberByteOffset;
@@ -139,7 +141,7 @@ internal record class CompoundPropertyDescription(
                 }
 
                 // member type message
-                memberTypeMessage = await DatatypeMessage.Decode(driver).ConfigureAwait(false);
+                memberTypeMessage = await DatatypeMessage.Decode(driver, maxNestingDepth, depth).ConfigureAwait(false);
 
                 break;
 
@@ -152,7 +154,7 @@ internal record class CompoundPropertyDescription(
                 memberByteOffset = await driver.ReadUInt32().ConfigureAwait(false);
 
                 // member type message
-                memberTypeMessage = await DatatypeMessage.Decode(driver).ConfigureAwait(false);
+                memberTypeMessage = await DatatypeMessage.Decode(driver, maxNestingDepth, depth).ConfigureAwait(false);
 
                 break;
 
@@ -187,7 +189,7 @@ internal record class CompoundPropertyDescription(
                 }
 
                 // member type message
-                memberTypeMessage = await DatatypeMessage.Decode(driver).ConfigureAwait(false);
+                memberTypeMessage = await DatatypeMessage.Decode(driver, maxNestingDepth, depth).ConfigureAwait(false);
 
                 break;
 
@@ -251,10 +253,12 @@ internal record class EnumerationPropertyDescription(
         H5DriverBase driver,
         byte version,
         uint valueSize,
-        ushort memberCount)
+        ushort memberCount,
+        int maxNestingDepth,
+        int depth)
     {
         // base type
-        var baseType = await DatatypeMessage.Decode(driver).ConfigureAwait(false);
+        var baseType = await DatatypeMessage.Decode(driver, maxNestingDepth, depth).ConfigureAwait(false);
 
         // names
         var names = new string[memberCount];
@@ -459,10 +463,10 @@ internal record class VariableLengthPropertyDescription(
     : DatatypePropertyDescription
 {
     public static async ValueTask<VariableLengthPropertyDescription> Decode(
-        H5DriverBase driver)
+        H5DriverBase driver, int maxNestingDepth, int depth)
     {
         return new VariableLengthPropertyDescription(
-            BaseType: await DatatypeMessage.Decode(driver).ConfigureAwait(false)
+            BaseType: await DatatypeMessage.Decode(driver, maxNestingDepth, depth).ConfigureAwait(false)
         );
     }
 

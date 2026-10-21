@@ -22,6 +22,17 @@ namespace PureHDF;
 /// of a single read pass, repeated reads degrade to re-decoding everything.
 /// </para>
 /// </param>
+/// <param name="MaxDatatypeNestingDepth">
+/// A value that indicates how deeply a datatype may nest before the file is rejected. The default value
+/// is 64.
+/// <para>
+/// A datatype message contains its base type inline - an array of a compound of a variable-length
+/// sequence - so decoding one is recursive, and the depth comes from the file being read. Without a
+/// bound, a file nesting deeply enough exhausts the stack, which terminates the process instead of
+/// raising an exception the caller could handle. Real datatypes nest a handful of levels, so the default
+/// sits far above anything a writer produces and far below the point where the stack runs out.
+/// </para>
+/// </param>
 public record H5ReadOptions(
     bool IncludeStructFields = true,
     bool IncludeStructProperties = false,
@@ -29,5 +40,6 @@ public record H5ReadOptions(
     bool IncludeClassProperties = true,
     Func<FieldInfo, string?>? FieldNameMapper = default,
     Func<PropertyInfo, string?>? PropertyNameMapper = default,
-    long GlobalHeapCacheByteBudget = 64 * 1024 * 1024
+    long GlobalHeapCacheByteBudget = 64 * 1024 * 1024,
+    int MaxDatatypeNestingDepth = 64
 );

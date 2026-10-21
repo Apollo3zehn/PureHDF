@@ -70,7 +70,7 @@ internal partial record class AttributeMessage(
             : MessageFlags.NoFlags;
 
         var datatype = await Decode(context, objectHeaderAddress, flags1,
-            () => DatatypeMessage.Decode(context.Driver)).ConfigureAwait(false);
+            () => DatatypeMessage.Decode(context.Driver, context.ReadOptions.MaxDatatypeNestingDepth)).ConfigureAwait(false);
 
         if (version == 1)
         {

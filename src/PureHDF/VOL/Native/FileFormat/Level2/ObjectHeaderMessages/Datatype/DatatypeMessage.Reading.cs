@@ -55,8 +55,26 @@ internal partial record class DatatypeMessage(
         }
     }
 
-    public static async ValueTask<DatatypeMessage> Decode(H5DriverBase driver)
+    /// <summary>
+    /// Decodes a datatype message, and the base types nested inside it.
+    /// </summary>
+    /// <remarks>
+    /// <paramref name="depth" /> counts how far the nesting has already descended, and is checked against
+    /// <see cref="H5ReadOptions.MaxDatatypeNestingDepth" /> on the way in. The recursion is driven by the
+    /// file, so an unbounded one exhausts the stack - which kills the process rather than raising something
+    /// a caller can catch.
+    /// </remarks>
+    public static async ValueTask<DatatypeMessage> Decode(
+        H5DriverBase driver,
+        int maxNestingDepth,
+        int depth = 0)
     {
+        if (depth > maxNestingDepth)
+            throw new NotSupportedException(
+                $"The datatype is nested more than {maxNestingDepth} levels deep. Increase "
+                + $"{nameof(H5ReadOptions)}.{nameof(H5ReadOptions.MaxDatatypeNestingDepth)} if the file is "
+                + "genuinely nested this deeply.");
+
         var classVersion = await driver.ReadByte().ConfigureAwait(false);
         var version = (byte)(classVersion >> 4);
         var @class = (DatatypeMessageClass)(classVersion & 0x0F);
@@ -98,10 +116,10 @@ internal partial record class DatatypeMessage(
                 DatatypeMessageClass.Time => await TimePropertyDescription.Decode(driver).ConfigureAwait(false),
                 DatatypeMessageClass.BitField => await BitFieldPropertyDescription.Decode(driver).ConfigureAwait(false),
                 DatatypeMessageClass.Opaque => await OpaquePropertyDescription.Decode(driver, ((OpaqueBitFieldDescription)bitField).TagByteLength).ConfigureAwait(false),
-                DatatypeMessageClass.Compound => await CompoundPropertyDescription.Decode(driver, version, size).ConfigureAwait(false),
-                DatatypeMessageClass.Enumerated => await EnumerationPropertyDescription.Decode(driver, version, size, ((EnumerationBitFieldDescription)bitField).MemberCount).ConfigureAwait(false),
-                DatatypeMessageClass.VariableLength => await VariableLengthPropertyDescription.Decode(driver).ConfigureAwait(false),
-                DatatypeMessageClass.Array => await ArrayPropertyDescription.Decode(driver, version).ConfigureAwait(false),
+                DatatypeMessageClass.Compound => await CompoundPropertyDescription.Decode(driver, version, size, maxNestingDepth, depth + 1).ConfigureAwait(false),
+                DatatypeMessageClass.Enumerated => await EnumerationPropertyDescription.Decode(driver, version, size, ((EnumerationBitFieldDescription)bitField).MemberCount, maxNestingDepth, depth + 1).ConfigureAwait(false),
+                DatatypeMessageClass.VariableLength => await VariableLengthPropertyDescription.Decode(driver, maxNestingDepth, depth + 1).ConfigureAwait(false),
+                DatatypeMessageClass.Array => await ArrayPropertyDescription.Decode(driver, version, maxNestingDepth, depth + 1).ConfigureAwait(false),
                 _ => throw new NotSupportedException($"The data type message '{@class}' is not supported.")
             };
 

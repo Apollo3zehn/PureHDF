@@ -82,7 +82,7 @@ internal readonly partial record struct HeaderMessage(
             MessageType.NIL => new NilMessage(),
             MessageType.Dataspace => await Message.Decode(context, objectHeaderAddress, flags, () => DataspaceMessage.Decode(context)).ConfigureAwait(false),
             MessageType.LinkInfo => await LinkInfoMessage.Decode(context).ConfigureAwait(false),
-            MessageType.Datatype => await Message.Decode(context, objectHeaderAddress, flags, () => DatatypeMessage.Decode(context.Driver)).ConfigureAwait(false),
+            MessageType.Datatype => await Message.Decode(context, objectHeaderAddress, flags, () => DatatypeMessage.Decode(context.Driver, context.ReadOptions.MaxDatatypeNestingDepth)).ConfigureAwait(false),
             MessageType.OldFillValue => await Message.Decode(context, objectHeaderAddress, flags, () => OldFillValueMessage.Decode(context.Driver)).ConfigureAwait(false),
             MessageType.FillValue => await Message.Decode(context, objectHeaderAddress, flags, () => FillValueMessage.Decode(context.Driver)).ConfigureAwait(false),
             MessageType.Link => await LinkMessage.Decode(context).ConfigureAwait(false),
