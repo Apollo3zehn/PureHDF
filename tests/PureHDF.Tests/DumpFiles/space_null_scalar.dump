@@ -1,12 +1,12 @@
 HDF5 "<file-path>" {
 GROUP "/" {
-   ATTRIBUTE "NullInt" {
+   <type> "NullInt" {
       DATATYPE  H5T_STD_I32LE
       DATASPACE  NULL
       DATA {
       }
    }
-   ATTRIBUTE "NullString" {
+   <type> "NullString" {
       DATATYPE  H5T_STRING {
          STRSIZE H5T_VARIABLE;
          STRPAD H5T_STR_NULLPAD;

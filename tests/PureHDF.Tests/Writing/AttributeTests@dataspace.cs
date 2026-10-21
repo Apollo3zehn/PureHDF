@@ -66,7 +66,8 @@ public partial class AttributeTests
 
             var expected = File
                 .ReadAllText($"DumpFiles/space_null_scalar.dump")
-                .Replace("<file-path>", filePath);
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "ATTRIBUTE");
 
             Assert.Equal(expected, actual);
         }

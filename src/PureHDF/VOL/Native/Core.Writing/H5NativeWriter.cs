@@ -302,7 +302,31 @@ partial class H5NativeWriter
         T data,
         bool isScalar)
     {
-        var (memoryData, memoryDims) = WriteUtils.ToMemory<T, TElement>(data);
+        Memory<TElement> memoryData;
+        ulong[]? memoryDims;
+
+        if (dataset.IsNullDataspace)
+        {
+            memoryData = default;
+            memoryDims = default;
+        }
+
+        /* A scalar whose value is null is one element that is null, which is not the same thing as
+         * carrying no data. WriteUtils.ToMemory cannot tell those apart - it is handed an object? and a
+         * null reference is all it gets - so it answers with no dimensions, and no dimensions is how
+         * DataspaceMessage.Create is asked for a null dataspace. This keeps nullable reference types
+         * behaving like nullable value types.
+         */
+        else if (data is null && isScalar)
+        {
+            memoryData = new TElement[1];
+            memoryDims = [];
+        }
+
+        else
+        {
+            (memoryData, memoryDims) = WriteUtils.ToMemory<T, TElement>(data);
+        }
 
         // datatype
         var (datatype, encode) =

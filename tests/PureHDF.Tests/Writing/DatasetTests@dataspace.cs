@@ -39,6 +39,70 @@ public partial class DatasetTests
         }
     }
 
+    /// <summary>
+    /// A null dataspace holds no elements, so the dataset carries no data - whatever its datatype.
+    /// </summary>
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void CanWrite_Space_Null_ScalarDatatype(bool preferCompact)
+    {
+        // Arrange
+        var file = new H5File();
+
+        file["NullInt"] = new H5Dataset<int>();
+        file["NullString"] = new H5Dataset<string>();
+
+        var filePath = Path.GetTempFileName();
+        var options = new H5WriteOptions(PreferCompactDatasetLayout: preferCompact);
+
+        // Act
+        file.Write(filePath, options);
+
+        // Assert
+        try
+        {
+            var actual = TestUtils.DumpH5File(filePath);
+
+            var expected = File
+                .ReadAllText($"DumpFiles/space_null_scalar.dump")
+                .Replace("<file-path>", filePath)
+                .Replace("<type>", "DATASET");
+
+            Assert.Equal(expected, actual);
+        }
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+
+    /// <summary>
+    /// A scalar whose value is null is one element that is null, not an absence of elements.
+    /// </summary>
+    [Fact]
+    public void CanWrite_Space_Scalar_NullValue()
+    {
+        // Arrange - the value cast rather than 'default', which binds to the null-dataspace constructor.
+        var file = new H5File();
+
+        file["text"] = new H5Dataset<string?>((string?)null);
+
+        var stream = new MemoryStream();
+
+        // Act
+        file.Write(stream);
+
+        // Assert
+        stream.Seek(0, SeekOrigin.Begin);
+
+        using var actual = H5File.Open(stream);
+
+        Assert.Equal(H5DataspaceType.Scalar, actual.Dataset("text").Space.Type);
+        Assert.Null(actual.Dataset("text").Read<string?>());
+    }
+
     [Fact]
     public void CanWrite_Space_2D()
     {
