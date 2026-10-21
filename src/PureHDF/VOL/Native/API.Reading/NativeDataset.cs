@@ -450,6 +450,8 @@ public class NativeDataset : NativeObject, IH5Dataset
             skipShuffle,
             isRawMode);
 
+        EnsureNullDataspaceCanBeRepresented(resultType);
+
         /* result buffer / result array */
         Memory<TElement> resultBuffer;
         var resultArray = default(Array);
@@ -820,6 +822,26 @@ public class NativeDataset : NativeObject, IH5Dataset
         }
 
         return (fileDims, fileSelection);
+    }
+
+    /// <summary>
+    /// A null dataspace holds no elements, which only an array or memory result type can express.
+    /// </summary>
+    /// <remarks>
+    /// The read itself needs no special case: the file selection already has zero elements for a null
+    /// dataspace, so the result buffer is sized zero and the data layout is not consulted. A scalar result
+    /// type is the one shape with no way to say "no element", and would otherwise fail further in as a
+    /// selection/count mismatch that does not mention the dataspace.
+    /// </remarks>
+    private void EnsureNullDataspaceCanBeRepresented(Type resultType)
+    {
+        if (InternalDataspace.Type != DataspaceType.Null)
+            return;
+
+        if (!DataUtils.IsArray(resultType) && !DataUtils.IsMemory(resultType))
+            throw new InvalidOperationException(
+                $"The dataset '{Name}' has a null dataspace and so holds no elements, which cannot be "
+                + $"read into the scalar type '{resultType.Name}'. Read it as an array instead.");
     }
 
     #endregion
