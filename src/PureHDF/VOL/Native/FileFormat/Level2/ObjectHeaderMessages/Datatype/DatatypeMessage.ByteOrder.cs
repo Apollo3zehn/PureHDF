@@ -151,8 +151,10 @@ internal partial record class DatatypeMessage
 
         if (!TryCollectByteOrderSwaps(baseOffset: 0, swaps))
             throw new Exception(
-                "This data is stored in a byte order that PureHDF cannot convert: either VAX "
-                + "floating-point, or a variable-length datatype whose values need conversion.");
+                "Unable to convert this datatype by reversing bytes already present in the "
+                + "decoded value. VAX floating-point values cannot be fixed by byte reversal, "
+                + "and variable-length values keep their payload in the HDF5 heap, not inside "
+                + "the inline decoded value.");
 
         return [.. swaps];
     }

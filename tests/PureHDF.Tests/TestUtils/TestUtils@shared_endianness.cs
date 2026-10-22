@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Runtime.InteropServices;
 using HDF.PInvoke;
 
 namespace PureHDF.Tests;
@@ -125,5 +126,40 @@ public partial class TestUtils
 
         _ = H5T.close(outerCompoundTypeId);
         _ = H5T.close(innerCompoundTypeId);
+
+        /* a variable-length sequence whose heap payload is big-endian */
+        var vlenIntTypeId = H5T.vlen_create(H5T.STD_I32BE);
+        var vlenPayload = new byte[3 * sizeof(int)];
+
+        for (var i = 0; i < 3; i++)
+            BinaryPrimitives.WriteInt32BigEndian(vlenPayload.AsSpan(i * sizeof(int)), i + 1);
+
+        fixed (byte* payloadPtr = vlenPayload)
+        {
+            var hvl = new H5T.hvl_t { len = new IntPtr(3), p = new IntPtr(payloadPtr) };
+
+            Add(container, fileId, "endianness", "be_vlen_i32", vlenIntTypeId, &hvl, 1UL);
+        }
+
+        /* a compound that stores the variable-length header inline, but its values in the heap */
+        var vlenHeaderSize = Marshal.SizeOf<H5T.hvl_t>();
+        var compoundVlenTypeId = H5T.create(H5T.class_t.COMPOUND, new IntPtr(sizeof(int) + vlenHeaderSize));
+        _ = H5T.insert(compoundVlenTypeId, "id", new IntPtr(0), H5T.STD_I32BE);
+        _ = H5T.insert(compoundVlenTypeId, "values", new IntPtr(sizeof(int)), vlenIntTypeId);
+
+        var compoundVlenData = new byte[sizeof(int) + vlenHeaderSize];
+        BinaryPrimitives.WriteInt32BigEndian(compoundVlenData, 5);
+
+        fixed (byte* payloadPtr = vlenPayload)
+        {
+            var hvl = new H5T.hvl_t { len = new IntPtr(3), p = new IntPtr(payloadPtr) };
+            MemoryMarshal.Write(compoundVlenData.AsSpan(sizeof(int)), in hvl);
+
+            fixed (byte* ptr = compoundVlenData)
+                Add(container, fileId, "endianness", "be_compound_vlen_member", compoundVlenTypeId, ptr, 1UL);
+        }
+
+        _ = H5T.close(compoundVlenTypeId);
+        _ = H5T.close(vlenIntTypeId);
     }
 }

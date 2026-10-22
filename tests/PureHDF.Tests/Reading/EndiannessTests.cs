@@ -37,6 +37,8 @@ public class EndiannessTests
 
     private class NestedCompoundClass { public NestedCompoundMember nested { get; set; } }
 
+    private class CompoundVLenClass { public int id { get; set; } public int[] values { get; set; } = default!; }
+
     private class MixedClass { public int le { get; set; } public int be { get; set; } }
 
     private static NativeFile OpenFixture()
@@ -53,6 +55,16 @@ public class EndiannessTests
         using var root = OpenFixture();
 
         Assert.Equal<int>([1, 2, 3], root.Group("endianness").Dataset("be_i32").Read<int[]>());
+    }
+
+    [Fact]
+    public void ABigEndianRawByteReadIsNotConverted()
+    {
+        using var root = OpenFixture();
+
+        var actual = root.Group("endianness").Dataset("be_i32").Read<byte[]>();
+
+        Assert.Equal<byte>([0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3], actual);
     }
 
     [Fact]
@@ -170,6 +182,29 @@ public class EndiannessTests
         var actual = root.Group("endianness").Dataset("be_nested_compound_member").Read<NestedCompoundClass[]>();
 
         Assert.Equal(42, Assert.Single(actual).nested.x);
+    }
+
+    /// <summary>A variable-length sequence is converted after its heap payload has been resolved.</summary>
+    [Fact]
+    public void ABigEndianVariableLengthSequenceIsConverted()
+    {
+        using var root = OpenFixture();
+
+        var actual = root.Group("endianness").Dataset("be_vlen_i32").Read<int[][]>();
+
+        Assert.Equal([1, 2, 3], Assert.Single(actual));
+    }
+
+    /// <summary>A variable-length compound member is decoded through its own heap-aware member path.</summary>
+    [Fact]
+    public void ABigEndianVariableLengthCompoundMemberIsConvertedWhenReadAsAClass()
+    {
+        using var root = OpenFixture();
+
+        var actual = Assert.Single(root.Group("endianness").Dataset("be_compound_vlen_member").Read<CompoundVLenClass[]>());
+
+        Assert.Equal(5, actual.id);
+        Assert.Equal([1, 2, 3], actual.values);
     }
 
     /// <summary>An enumeration carries its order on its base type, one level down.</summary>
