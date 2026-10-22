@@ -240,7 +240,7 @@ internal partial record class DatatypeMessage(
             (false, false) when memoryTypeSize == fileTypeSize || isRawMode
                 => (DecodeDelegate<TElement>)_methodInfoGetDecodeInfoForUnmanagedMemory
                     .MakeGenericMethod(typeof(TElement))
-                    .Invoke(default, [GetByteOrderSwaps(isRawMode)])!,
+                    .Invoke(default, [isRawMode ? [] : CollectByteOrderSwaps()])!,
             _ 
                 => throw new Exception("Unable to decode values types of different type size.")
         };
@@ -1222,20 +1222,6 @@ internal partial record class DatatypeMessage(
 
             return decode;
         }
-    }
-
-    /// <summary>
-    /// The byte reversals this datatype needs before its decoded bytes mean anything on this host.
-    /// </summary>
-    /// <remarks>
-    /// Raw mode asks for the file's bytes as they are, so it converts nothing.
-    /// </remarks>
-    private ByteOrderSwap[] GetByteOrderSwaps(bool isRawMode)
-    {
-        if (isRawMode)
-            return [];
-
-        return CollectByteOrderSwaps();
     }
 
     private static DecodeDelegate<T> GetDecodeInfoForUnmanagedMemory<T>(ByteOrderSwap[] swaps)
