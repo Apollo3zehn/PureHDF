@@ -21,6 +21,27 @@ internal partial record class DatatypeMessage(
     private static readonly MethodInfo _methodInfoBuildVariableLengthSequenceUnmanagedDecoder = typeof(DatatypeMessage)
         .GetMethod(nameof(BuildVariableLengthSequenceUnmanagedDecoder), BindingFlags.NonPublic | BindingFlags.Static)!;
 
+    private static readonly MethodInfo _methodInfoGetDecodeInfoForUnmanagedElement = typeof(DatatypeMessage)
+        .GetMethod(
+            nameof(GetDecodeInfoForUnmanagedElement),
+            genericParameterCount: 1,
+            BindingFlags.NonPublic | BindingFlags.Static,
+            binder: null,
+            types: [typeof(ByteOrderSwap[])],
+            modifiers: null)!;
+
+    // Caches reusable unmanaged element decoders for layout-independent cases. HasFullElementSwap is
+    // part of the key because the decoder either applies a full-element conversion or does not
+    // convert. Keying on type alone would let a converting decoder leak into no-conversion reads of
+    // the same CLR type, or vice versa.
+    private static readonly ConcurrentDictionary<(Type Type, bool HasFullElementSwap), ElementDecodeDelegate> _unmanagedElementDecoderCache = new();
+
+    // Caches constructor factories for reference-typed compound decoding. The factory is shared by
+    // datatype instances for the same CLR type; GetDecodeInfoForReferenceCompound validates class
+    // constructors before building the decode closure, and value types use their implicit
+    // parameterless constructor boxed as object.
+    private static readonly ConcurrentDictionary<Type, Func<object>> _parameterlessCtorCache = new();
+
     private byte _version;
 
     private DatatypeMessageClass _class;
@@ -219,7 +240,7 @@ internal partial record class DatatypeMessage(
             (false, false) when memoryTypeSize == fileTypeSize || isRawMode
                 => (DecodeDelegate<TElement>)_methodInfoGetDecodeInfoForUnmanagedMemory
                     .MakeGenericMethod(typeof(TElement))
-                    .Invoke(default, [])!,
+                    .Invoke(default, [isRawMode ? [] : CollectByteOrderSwaps()])!,
             _ 
                 => throw new Exception("Unable to decode values types of different type size.")
         };
@@ -278,17 +299,17 @@ internal partial record class DatatypeMessage(
                     ? memoryType is null
                         ? (Size, ((FixedPointBitFieldDescription)BitField).IsSigned) switch
                         {
-                            (1, false) => (typeof(byte), GetDecodeInfoForUnmanagedElement<byte>()),
-                            (1, true) => (typeof(sbyte), GetDecodeInfoForUnmanagedElement<sbyte>()),
-                            (2, false) => (typeof(ushort), GetDecodeInfoForUnmanagedElement<ushort>()),
-                            (2, true) => (typeof(short), GetDecodeInfoForUnmanagedElement<short>()),
-                            (4, false) => (typeof(uint), GetDecodeInfoForUnmanagedElement<uint>()),
-                            (4, true) => (typeof(int), GetDecodeInfoForUnmanagedElement<int>()),
-                            (8, false) => (typeof(ulong), GetDecodeInfoForUnmanagedElement<ulong>()),
-                            (8, true) => (typeof(long), GetDecodeInfoForUnmanagedElement<long>()),
+                            (1, false) => (typeof(byte), GetDecodeInfoForUnmanagedElement<byte>(CollectByteOrderSwaps())),
+                            (1, true) => (typeof(sbyte), GetDecodeInfoForUnmanagedElement<sbyte>(CollectByteOrderSwaps())),
+                            (2, false) => (typeof(ushort), GetDecodeInfoForUnmanagedElement<ushort>(CollectByteOrderSwaps())),
+                            (2, true) => (typeof(short), GetDecodeInfoForUnmanagedElement<short>(CollectByteOrderSwaps())),
+                            (4, false) => (typeof(uint), GetDecodeInfoForUnmanagedElement<uint>(CollectByteOrderSwaps())),
+                            (4, true) => (typeof(int), GetDecodeInfoForUnmanagedElement<int>(CollectByteOrderSwaps())),
+                            (8, false) => (typeof(ulong), GetDecodeInfoForUnmanagedElement<ulong>(CollectByteOrderSwaps())),
+                            (8, true) => (typeof(long), GetDecodeInfoForUnmanagedElement<long>(CollectByteOrderSwaps())),
 #if NET8_0_OR_GREATER
-                            (16, false) => (typeof(UInt128), GetDecodeInfoForUnmanagedElement<UInt128>()),
-                            (16, true) => (typeof(Int128), GetDecodeInfoForUnmanagedElement<Int128>()),
+                            (16, false) => (typeof(UInt128), GetDecodeInfoForUnmanagedElement<UInt128>(CollectByteOrderSwaps())),
+                            (16, true) => (typeof(Int128), GetDecodeInfoForUnmanagedElement<Int128>(CollectByteOrderSwaps())),
 #endif
                             _ => throw new Exception("Unable to decode fixed-point data without additional runtime type information.")
                         }
@@ -301,9 +322,9 @@ internal partial record class DatatypeMessage(
                     ? memoryType is null
                         ? Size switch
                         {
-                            2 => (typeof(Half), GetDecodeInfoForUnmanagedElement<Half>()),
-                            4 => (typeof(float), GetDecodeInfoForUnmanagedElement<float>()),
-                            8 => (typeof(double), GetDecodeInfoForUnmanagedElement<double>()),
+                            2 => (typeof(Half), GetDecodeInfoForUnmanagedElement<Half>(CollectByteOrderSwaps())),
+                            4 => (typeof(float), GetDecodeInfoForUnmanagedElement<float>(CollectByteOrderSwaps())),
+                            8 => (typeof(double), GetDecodeInfoForUnmanagedElement<double>(CollectByteOrderSwaps())),
                             _ => throw new Exception("Unable to decode floating-point data without additional runtime type information.")
                         }
                         : (memoryType, GetDecodeInfoForUnmanagedElement(memoryType))
@@ -315,13 +336,11 @@ internal partial record class DatatypeMessage(
                     ? memoryType is null
                         ? Size switch
                         {
-                            1 => (typeof(byte), GetDecodeInfoForUnmanagedElement<byte>()),
-                            2 => (typeof(ushort), GetDecodeInfoForUnmanagedElement<ushort>()),
-                            4 => (typeof(uint), GetDecodeInfoForUnmanagedElement<uint>()),
-                            8 => (typeof(ulong), GetDecodeInfoForUnmanagedElement<ulong>()),
-#if NET8_0_OR_GREATER
-                            16 => (typeof(UInt128), GetDecodeInfoForUnmanagedElement<UInt128>()),
-#endif
+                            1 => (typeof(byte), GetDecodeInfoForUnmanagedElement<byte>(CollectByteOrderSwaps())),
+                            2 => (typeof(ushort), GetDecodeInfoForUnmanagedElement<ushort>(CollectByteOrderSwaps())),
+                            4 => (typeof(uint), GetDecodeInfoForUnmanagedElement<uint>(CollectByteOrderSwaps())),
+                            8 => (typeof(ulong), GetDecodeInfoForUnmanagedElement<ulong>(CollectByteOrderSwaps())),
+                            16 => (typeof(UInt128), GetDecodeInfoForUnmanagedElement<UInt128>(CollectByteOrderSwaps())),
                             _ => throw new Exception("Unable to decode bitfield data without additional runtime type information.")
                         }
                         : (memoryType, GetDecodeInfoForUnmanagedElement(memoryType))
@@ -338,7 +357,7 @@ internal partial record class DatatypeMessage(
             /* reference */
             DatatypeMessageClass.Reference =>
                 memoryType is null || memoryType == typeof(NativeObjectReference1)
-                    ? (typeof(NativeObjectReference1), GetDecodeInfoForUnmanagedElement<NativeObjectReference1>())
+                    ? (typeof(NativeObjectReference1), GetDecodeInfoForUnmanagedElement<NativeObjectReference1>(CollectByteOrderSwaps()))
                     : throw new Exception($"Reference data can only be decoded as NativeObjectReference1 (incompatible type: {memoryType})."),
 
             /* default */
@@ -346,61 +365,73 @@ internal partial record class DatatypeMessage(
         };
     }
 
-    private ElementDecodeDelegate GetDecodeInfoForUnmanagedElement<T>() where T : struct
+    private ElementDecodeDelegate GetDecodeInfoForUnmanagedElement(Type type)
     {
-        // FAST PATH (#162-ish): plain unmanaged element decode. Captures no context, same as
-        // GetDecodeInfoForUnmanagedMemory<T> below - the context parameter is unused here, it
-        // only exists to match ElementDecodeDelegate's shape.
-        // Without the await this returns a boxed ValueTask<T> as the element value.
+        static bool isSingleFullElementSwap(Type type, ByteOrderSwap[] swaps)
+        {
+            return swaps.Length == 1 &&
+                swaps[0].Offset == 0 &&
+                swaps[0].Width == DataUtils.UnmanagedSizeOf(type);
+        }
+
+        static ElementDecodeDelegate build(Type type, ByteOrderSwap[] swaps)
+        {
+            var method = _methodInfoGetDecodeInfoForUnmanagedElement.MakeGenericMethod(type);
+            return (ElementDecodeDelegate)method.Invoke(default, [swaps])!;
+        }
+
+        var swaps = CollectByteOrderSwaps();
+
+        // Only cache decoders whose swap plan can be described by the cache key: no swaps, or one
+        // swap covering the whole CLR value. Layout-specific plans, such as nested compound member
+        // swaps, depend on this datatype's member offsets and are built for this datatype only.
+        if (swaps.Length == 0 || isSingleFullElementSwap(type, swaps))
+        {
+            return _unmanagedElementDecoderCache.GetOrAdd((type, swaps.Length != 0), key =>
+            {
+                ByteOrderSwap[] cachedSwaps = key.HasFullElementSwap
+                    ? [new ByteOrderSwap(0, DataUtils.UnmanagedSizeOf(key.Type))]
+                    : [];
+
+                return build(key.Type, cachedSwaps);
+            });
+        }
+
+        return build(type, swaps);
+    }
+
+    private static ElementDecodeDelegate GetDecodeInfoForUnmanagedElement<T>(ByteOrderSwap[] swaps) where T : struct
+    {
+        // The swaps parameter is collected by the DatatypeMessage-specific caller. This typed builder
+        // only reads one CLR value and applies those swaps, so it can be used both by the reusable
+        // scalar cache and by uncached layout-specific decoders.
         async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
             => await ReadUtils.DecodeUnmanagedElement<T>(source).ConfigureAwait(false);
 
-        return decode;
+        if (swaps.Length == 0)
+            return decode;
+
+        var elementSize = Unsafe.SizeOf<T>();
+
+        // Scalar element decoders can run for every decoded member/value, so keep the no-swap
+        // delegate free of conversion state and branch only by selecting this delegate up front.
+        async ValueTask<object?> decodeAndConvert(NativeReadContext context, IH5ReadStream source)
+        {
+            var value = await ReadUtils.DecodeUnmanagedElement<T>(source).ConfigureAwait(false);
+            var span = MemoryMarshal.CreateSpan(ref value, 1);
+            ApplyByteOrderSwaps(MemoryMarshal.AsBytes(span), elementSize, swaps);
+
+            return value;
+        }
+
+        return decodeAndConvert;
     }
-
-    // Builds and caches one ElementDecodeDelegate per element Type. Previously the
-    // closure performed MethodInfo.Invoke on every element, which allocated a boxed
-    // argument array per call and dominated CPU on element-heavy reads. Routing
-    // through a typed delegate built once per element type pays the reflection
-    // once at cache-miss time and makes the per-element call a direct invocation
-    // of the generic GetDecodeInfoForUnmanagedElement<T>.
-    private static readonly ConcurrentDictionary<Type, ElementDecodeDelegate> _unmanagedElementDecoderCache = new();
-
-    // Caches a compiled parameterless-constructor factory per Type. The compound
-    // decode closure (GetDecodeInfoForReferenceCompound) invokes the factory on
-    // every element of reference-typed compound data; a compiled delegate avoids
-    // the per-call reflection cost of constructor lookup and invocation. The
-    // factory is built once per Type via a compiled expression tree and is shared
-    // across all DatatypeMessage instances since the Type recurs across files.
-    // GetDecodeInfoForReferenceCompound validates the parameterless ctor for class
-    // types before the closure is built, so cache misses never throw. Value types
-    // have an implicit parameterless ctor; the factory boxes the result so it fits
-    // the Func<object> return type.
-    private static readonly ConcurrentDictionary<Type, Func<object>> _parameterlessCtorCache = new();
 
     private static Func<object> GetParameterlessConstructor(Type type)
     {
         return _parameterlessCtorCache.GetOrAdd(type, static t =>
             Expression.Lambda<Func<object>>(
                 Expression.Convert(Expression.New(t), typeof(object))).Compile());
-    }
-
-    private static readonly MethodInfo _methodInfoGetDecodeInfoForUnmanagedElement = typeof(DatatypeMessage)
-        .GetMethod(
-            nameof(GetDecodeInfoForUnmanagedElement),
-            genericParameterCount: 1,
-            BindingFlags.NonPublic | BindingFlags.Instance,
-            binder: null,
-            types: Type.EmptyTypes,
-            modifiers: null)!;
-
-    private ElementDecodeDelegate GetDecodeInfoForUnmanagedElement(Type type)
-    {
-        return _unmanagedElementDecoderCache.GetOrAdd(type, t =>
-        {
-            var method = _methodInfoGetDecodeInfoForUnmanagedElement.MakeGenericMethod(t);
-            return (ElementDecodeDelegate)method.Invoke(this, parameters: null)!;
-        });
     }
 
     private (Type, ElementDecodeDelegate) GetDecodeInfoForCompound(
@@ -704,7 +735,8 @@ internal partial record class DatatypeMessage(
         {
             (true, _) => GetDecodeInfoForReferenceArray(elementType, elementDecode, property),
             (false, true) => throw new Exception("Unable to decode a reference type as value type."),
-            (false, false) when memoryTypeSize == fileTypeSize => GetDecodeInfoForUnmanagedArray(elementType, property),
+            (false, false) when memoryTypeSize == fileTypeSize
+                => GetDecodeInfoForUnmanagedArray(elementType, property, property.BaseType.CollectByteOrderSwaps()),
             _ => throw new Exception("Unable to decode values types of different type size.")
         };
 
@@ -748,9 +780,12 @@ internal partial record class DatatypeMessage(
 
     private static ElementDecodeDelegate GetDecodeInfoForUnmanagedArray(
         Type elementType,
-        ArrayPropertyDescription property
+        ArrayPropertyDescription property,
+        ByteOrderSwap[] swaps
     )
     {
+        var baseTypeSize = (int)property.BaseType.Size;
+
         var dims = property.DimensionSizes
             .Select(dim => (int)dim)
             .ToArray();
@@ -759,8 +794,6 @@ internal partial record class DatatypeMessage(
         var invokeDecodeUnmanagedArray = ReadUtils.MethodInfoDecodeUnmanagedArray.MakeGenericMethod(elementType);
         var parameters = new object[2];
 
-        // DecodeUnmanagedArray needs no context (pure unmanaged bulk read); the context
-        // parameter here only exists to match ElementDecodeDelegate's shape.
         async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
         {
             parameters[0] = source;
@@ -769,7 +802,13 @@ internal partial record class DatatypeMessage(
             // See GetDecodeInfoForReferenceArray: unwrap the boxed ValueTask<object>.
             var task = (ValueTask<object>)invokeDecodeUnmanagedArray.Invoke(default, parameters)!;
 
-            return await task.ConfigureAwait(false);
+            var result = await task.ConfigureAwait(false);
+
+            // The elements were bulk-copied, so they did not pass the per-leaf decoder that converts.
+            if (swaps.Length != 0 && result is Array array)
+                ApplyByteOrderSwaps(array, baseTypeSize, swaps);
+
+            return result;
         }
 
         return decode;
@@ -885,7 +924,7 @@ internal partial record class DatatypeMessage(
         {
             var fastDecode = (ElementDecodeDelegate)_methodInfoBuildVariableLengthSequenceUnmanagedDecoder
                 .MakeGenericMethod(elementType)
-                .Invoke(default, [(int)property.BaseType.Size])!;
+                .Invoke(default, [(int)property.BaseType.Size, property.BaseType.CollectByteOrderSwaps()])!;
 
             memoryType ??= Type.GetType($"{elementType}[]")
                 ?? throw new Exception($"Unable to find array type for element type {elementType}.");
@@ -1185,7 +1224,7 @@ internal partial record class DatatypeMessage(
         }
     }
 
-    private static DecodeDelegate<T> GetDecodeInfoForUnmanagedMemory<T>()
+    private static DecodeDelegate<T> GetDecodeInfoForUnmanagedMemory<T>(ByteOrderSwap[] swaps)
         where T : struct
     {
         // HOT PATH: plain unmanaged (numeric) datasets, which must reach
@@ -1210,7 +1249,25 @@ internal partial record class DatatypeMessage(
             return source.ReadDatasetAsync(target.Cast<T, byte>());
         }
 
-        return decode;
+        // Data already in the host's byte order - which is nearly all of it - keeps the delegate
+        // above untouched, capturing nothing and adding no pass over the buffer.
+        if (swaps.Length == 0)
+            return decode;
+
+        var elementSize = Unsafe.SizeOf<T>();
+
+        async ValueTask decodeAndConvert(
+            NativeReadContext context, IH5ReadStream source, Memory<T> target)
+        {
+            // The read stays zero-copy; the conversion is a second pass over the bytes it landed in,
+            // rather than a staging buffer.
+            if (!source.TryReadDatasetSync(MemoryMarshal.AsBytes(target.Span)))
+                await source.ReadDatasetAsync(target.Cast<T, byte>()).ConfigureAwait(false);
+
+            ApplyByteOrderSwaps(MemoryMarshal.AsBytes(target.Span), elementSize, swaps);
+        }
+
+        return decodeAndConvert;
     }
 
     /// <summary>
@@ -1330,7 +1387,8 @@ internal partial record class DatatypeMessage(
     }
 
     private static ElementDecodeDelegate BuildVariableLengthSequenceUnmanagedDecoder<TElement>(
-        int fileTypeSize)
+        int fileTypeSize,
+        ByteOrderSwap[] swaps)
         where TElement : unmanaged
     {
         async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
@@ -1351,6 +1409,9 @@ internal partial record class DatatypeMessage(
 
             var byteCount = count * fileTypeSize;
             MemoryMarshal.Cast<byte, TElement>(objectData.AsSpan(0, byteCount)).CopyTo(result);
+
+            // Bulk-copied from the heap, so the values have not been converted yet.
+            ApplyByteOrderSwaps(MemoryMarshal.AsBytes(result.AsSpan()), fileTypeSize, swaps);
 
             return result;
         }

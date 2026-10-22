@@ -348,12 +348,6 @@ public class NativeAttribute : IH5Attribute
     private (DecodeDelegate<TElement>, ulong) GetDecoderAndFileElementCount<TElement>(
         NativeReadContext context)
     {
-        /* check endianness */
-        var byteOrderAware = Message.Datatype.BitField as IByteOrderAware;
-
-        if (byteOrderAware is not null)
-            DataUtils.CheckEndianness(byteOrderAware.ByteOrder);
-
         /* get decoder (succeeds only if decoding is possible) */
         var decoder = Message.Datatype.GetDecodeInfo<TElement>(
             context,

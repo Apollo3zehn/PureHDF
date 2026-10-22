@@ -48,6 +48,7 @@ dotnet add package PureHDF
 | &check; | &check; | multidimensional arrays      |
 | &check; | &check; | compound data                |
 | &check; | &check; | variable-length data         |
+| &check; | -       | big-endian data              |
 | &check; | -       | async reading                |
 | &check; | -       | multithreading (^1)          |
 | &check; | -       | Amazon S3 access             |

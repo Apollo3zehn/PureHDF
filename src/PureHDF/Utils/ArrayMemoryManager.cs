@@ -17,7 +17,8 @@ internal class ArrayMemoryManager<T> : MemoryManager<T>
     {
         var span = MemoryMarshal.CreateSpan(
             ref Unsafe.As<byte, T>(ref MemoryMarshal.GetArrayDataReference(_array)),
-            _array.Length);
+            _array.Length
+        );
 
         return span;
     }
