@@ -382,10 +382,9 @@ internal partial record class DatatypeMessage(
 
         var swaps = CollectByteOrderSwaps();
 
-        // The process-wide cache only covers reusable scalar cases. For those, the cache factory
-        // reconstructs normalized plans - either [] or one full-element swap - without depending on
-        // this DatatypeMessage's layout. Non-leaf layout plans, such as nested compounds, are tied
-        // to this datatype and are therefore passed explicitly into uncached delegates.
+        // Only cache decoders whose swap plan can be described by the cache key: no swaps, or one
+        // swap covering the whole CLR value. Layout-specific plans, such as nested compound member
+        // swaps, depend on this datatype's member offsets and are built for this datatype only.
         if (swaps.Length == 0 || isSingleFullElementSwap(type, swaps))
         {
             return _unmanagedElementDecoderCache.GetOrAdd((type, swaps.Length != 0), key =>
@@ -403,8 +402,8 @@ internal partial record class DatatypeMessage(
 
     private static ElementDecodeDelegate GetDecodeInfoForUnmanagedElement<T>(ByteOrderSwap[] swaps) where T : struct
     {
-        // The swap plan is collected by the DatatypeMessage-specific caller. This typed builder only
-        // reads one CLR value and applies the provided plan, so it can be used both by the reusable
+        // The swaps parameter is collected by the DatatypeMessage-specific caller. This typed builder
+        // only reads one CLR value and applies those swaps, so it can be used both by the reusable
         // scalar cache and by uncached layout-specific decoders.
         async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
             => await ReadUtils.DecodeUnmanagedElement<T>(source).ConfigureAwait(false);
@@ -795,7 +794,7 @@ internal partial record class DatatypeMessage(
 
         if (swaps.Length == 0)
         {
-            async ValueTask<object?> decodeWithoutConversion(NativeReadContext context, IH5ReadStream source)
+            async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
             {
                 parameters[0] = source;
                 parameters[1] = dims;
@@ -806,12 +805,12 @@ internal partial record class DatatypeMessage(
                 return await task.ConfigureAwait(false);
             }
 
-            return decodeWithoutConversion;
+            return decode;
         }
 
         // DecodeUnmanagedArray needs no context (pure unmanaged bulk read); the context
         // parameter here only exists to match ElementDecodeDelegate's shape.
-        async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
+        async ValueTask<object?> decodeAndConvert(NativeReadContext context, IH5ReadStream source)
         {
             parameters[0] = source;
             parameters[1] = dims;
@@ -828,7 +827,7 @@ internal partial record class DatatypeMessage(
             return result;
         }
 
-        return decode;
+        return decodeAndConvert;
     }
 
     private ElementDecodeDelegate GetDecodeInfoForOpaqueAsByteArray()
