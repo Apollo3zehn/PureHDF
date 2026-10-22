@@ -109,5 +109,21 @@ public partial class TestUtils
 
         _ = H5T.close(arrayTypeId);
         _ = H5T.close(arrayBaseId);
+
+        /* a compound member whose type is itself a compound: the inner member carries the order */
+        var innerCompoundTypeId = H5T.create(H5T.class_t.COMPOUND, new IntPtr(sizeof(int)));
+        _ = H5T.insert(innerCompoundTypeId, "x", new IntPtr(0), H5T.STD_I32BE);
+
+        var outerCompoundTypeId = H5T.create(H5T.class_t.COMPOUND, new IntPtr(sizeof(int)));
+        _ = H5T.insert(outerCompoundTypeId, "nested", new IntPtr(0), innerCompoundTypeId);
+
+        var nestedCompoundData = new byte[sizeof(int)];
+        BinaryPrimitives.WriteInt32BigEndian(nestedCompoundData, 42);
+
+        fixed (byte* ptr = nestedCompoundData)
+            Add(container, fileId, "endianness", "be_nested_compound_member", outerCompoundTypeId, ptr, 1UL);
+
+        _ = H5T.close(outerCompoundTypeId);
+        _ = H5T.close(innerCompoundTypeId);
     }
 }

@@ -28,9 +28,14 @@ public class EndiannessTests
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     private struct Mixed { public int le; public int be; }
 
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    private struct NestedCompoundMember { public int x; }
+
     private class CompoundClass { public int a { get; set; } public double b { get; set; } }
 
     private class ArrayMemberClass { public int[] v { get; set; } = default!; }
+
+    private class NestedCompoundClass { public NestedCompoundMember nested { get; set; } }
 
     private class MixedClass { public int le { get; set; } public int be { get; set; } }
 
@@ -153,7 +158,18 @@ public class EndiannessTests
 
         var actual = root.Group("endianness").Dataset("be_array_member").Read<ArrayMemberClass[]>();
 
-        Assert.Equal<int>([1, 2, 3], Assert.Single(actual).v);
+        Assert.Equal([1, 2, 3], Assert.Single(actual).v);
+    }
+
+    /// <summary>A nested compound member still has to be converted by its leaf member layout.</summary>
+    [Fact]
+    public void ABigEndianNestedCompoundMemberIsConverted()
+    {
+        using var root = OpenFixture();
+
+        var actual = root.Group("endianness").Dataset("be_nested_compound_member").Read<NestedCompoundClass[]>();
+
+        Assert.Equal(42, Assert.Single(actual).nested.x);
     }
 
     /// <summary>An enumeration carries its order on its base type, one level down.</summary>
@@ -162,6 +178,6 @@ public class EndiannessTests
     {
         using var root = OpenFixture();
 
-        Assert.Equal<int>([0, 1], root.Group("endianness").Dataset("be_enum").Read<int[]>());
+        Assert.Equal([0, 1], root.Group("endianness").Dataset("be_enum").Read<int[]>());
     }
 }

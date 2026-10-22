@@ -122,26 +122,6 @@ internal partial record class DatatypeMessage
     }
 
     /// <summary>
-    /// Whether this LEAF datatype's own bytes have to be reversed on this host.
-    /// </summary>
-    /// <remarks>
-    /// The element-at-a-time decoders work one leaf at a time and already have the right message in
-    /// hand, so they ask this rather than being handed a layout plan.
-    /// </remarks>
-    internal bool NeedsByteOrderSwap()
-    {
-        if (BitField is not IByteOrderAware byteOrderAware)
-            return false;
-
-        if (byteOrderAware.ByteOrder == ByteOrder.VaxEndian)
-            throw new Exception("VAX-endian byte order is not supported.");
-
-        var fileIsLittleEndian = byteOrderAware.ByteOrder == ByteOrder.LittleEndian;
-
-        return fileIsLittleEndian != BitConverter.IsLittleEndian;
-    }
-
-    /// <summary>
     /// Reverses every span the plan names, in every element of a decoded array.
     /// </summary>
     /// <remarks>
@@ -163,13 +143,13 @@ internal partial record class DatatypeMessage
     }
 
     /// <summary>
-    /// The plan for one value of <paramref name="type" />, refusing what cannot be converted.
+    /// The plan for one value of this datatype, refusing what cannot be converted.
     /// </summary>
-    internal static ByteOrderSwap[] CollectByteOrderSwaps(DatatypeMessage type)
+    internal ByteOrderSwap[] CollectByteOrderSwaps()
     {
         var swaps = new List<ByteOrderSwap>();
 
-        if (!type.TryCollectByteOrderSwaps(baseOffset: 0, swaps))
+        if (!TryCollectByteOrderSwaps(baseOffset: 0, swaps))
             throw new Exception(
                 "This data is stored in a byte order that PureHDF cannot convert: either VAX "
                 + "floating-point, or a variable-length datatype whose values need conversion.");
@@ -180,8 +160,8 @@ internal partial record class DatatypeMessage
     /// <summary>Reverses one value's bytes in place.</summary>
     internal static T ReverseBytes<T>(T value) where T : struct
     {
-        var span = System.Runtime.InteropServices.MemoryMarshal.CreateSpan(ref value, 1);
-        System.Runtime.InteropServices.MemoryMarshal.AsBytes(span).Reverse();
+        var span = MemoryMarshal.CreateSpan(ref value, 1);
+        MemoryMarshal.AsBytes(span).Reverse();
 
         return value;
     }
