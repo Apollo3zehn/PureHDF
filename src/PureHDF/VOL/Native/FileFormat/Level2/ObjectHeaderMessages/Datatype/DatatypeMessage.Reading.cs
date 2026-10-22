@@ -413,6 +413,8 @@ internal partial record class DatatypeMessage(
 
         var elementSize = Unsafe.SizeOf<T>();
 
+        // Scalar element decoders can run for every decoded member/value, so keep the no-swap
+        // delegate free of conversion state and branch only by selecting this delegate up front.
         async ValueTask<object?> decodeAndConvert(NativeReadContext context, IH5ReadStream source)
         {
             var value = await ReadUtils.DecodeUnmanagedElement<T>(source).ConfigureAwait(false);
@@ -792,25 +794,7 @@ internal partial record class DatatypeMessage(
         var invokeDecodeUnmanagedArray = ReadUtils.MethodInfoDecodeUnmanagedArray.MakeGenericMethod(elementType);
         var parameters = new object[2];
 
-        if (swaps.Length == 0)
-        {
-            async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
-            {
-                parameters[0] = source;
-                parameters[1] = dims;
-
-                // See GetDecodeInfoForReferenceArray: unwrap the boxed ValueTask<object>.
-                var task = (ValueTask<object>)invokeDecodeUnmanagedArray.Invoke(default, parameters)!;
-
-                return await task.ConfigureAwait(false);
-            }
-
-            return decode;
-        }
-
-        // DecodeUnmanagedArray needs no context (pure unmanaged bulk read); the context
-        // parameter here only exists to match ElementDecodeDelegate's shape.
-        async ValueTask<object?> decodeAndConvert(NativeReadContext context, IH5ReadStream source)
+        async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)
         {
             parameters[0] = source;
             parameters[1] = dims;
@@ -821,13 +805,13 @@ internal partial record class DatatypeMessage(
             var result = await task.ConfigureAwait(false);
 
             // The elements were bulk-copied, so they did not pass the per-leaf decoder that converts.
-            if (result is Array array)
+            if (swaps.Length != 0 && result is Array array)
                 ApplyByteOrderSwaps(array, baseTypeSize, swaps);
 
             return result;
         }
 
-        return decodeAndConvert;
+        return decode;
     }
 
     private ElementDecodeDelegate GetDecodeInfoForOpaqueAsByteArray()
