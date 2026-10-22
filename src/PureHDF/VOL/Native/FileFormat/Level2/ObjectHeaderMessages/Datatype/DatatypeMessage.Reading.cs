@@ -367,13 +367,26 @@ internal partial record class DatatypeMessage(
 
     private ElementDecodeDelegate GetDecodeInfoForUnmanagedElement(Type type)
     {
+        static bool isSingleFullElementSwap(Type type, ByteOrderSwap[] swaps)
+        {
+            return swaps.Length == 1 &&
+                swaps[0].Offset == 0 &&
+                swaps[0].Width == DataUtils.UnmanagedSizeOf(type);
+        }
+
+        static ElementDecodeDelegate build(Type type, ByteOrderSwap[] swaps)
+        {
+            var method = _methodInfoGetDecodeInfoForUnmanagedElement.MakeGenericMethod(type);
+            return (ElementDecodeDelegate)method.Invoke(default, [swaps])!;
+        }
+
         var swaps = CollectByteOrderSwaps();
 
         // The process-wide cache only covers reusable scalar cases. For those, the cache factory
         // reconstructs normalized plans - either [] or one full-element swap - without depending on
         // this DatatypeMessage's layout. Non-leaf layout plans, such as nested compounds, are tied
         // to this datatype and are therefore passed explicitly into uncached delegates.
-        if (swaps.Length == 0 || IsSingleFullElementSwap(type, swaps))
+        if (swaps.Length == 0 || isSingleFullElementSwap(type, swaps))
         {
             return _unmanagedElementDecoderCache.GetOrAdd((type, swaps.Length != 0), key =>
             {
@@ -381,24 +394,11 @@ internal partial record class DatatypeMessage(
                     ? [new ByteOrderSwap(0, DataUtils.UnmanagedSizeOf(key.Type))]
                     : [];
 
-                return BuildDecodeInfoForUnmanagedElement(key.Type, cachedSwaps);
+                return build(key.Type, cachedSwaps);
             });
         }
 
-        return BuildDecodeInfoForUnmanagedElement(type, swaps);
-    }
-
-    private static bool IsSingleFullElementSwap(Type type, ByteOrderSwap[] swaps)
-    {
-        return swaps.Length == 1 &&
-            swaps[0].Offset == 0 &&
-            swaps[0].Width == DataUtils.UnmanagedSizeOf(type);
-    }
-
-    private static ElementDecodeDelegate BuildDecodeInfoForUnmanagedElement(Type type, ByteOrderSwap[] swaps)
-    {
-        var method = _methodInfoGetDecodeInfoForUnmanagedElement.MakeGenericMethod(type);
-        return (ElementDecodeDelegate)method.Invoke(default, [swaps])!;
+        return build(type, swaps);
     }
 
     private static ElementDecodeDelegate GetDecodeInfoForUnmanagedElement<T>(ByteOrderSwap[] swaps) where T : struct
