@@ -6,13 +6,14 @@ using Xunit;
 namespace PureHDF.Tests.Reading;
 
 /// <summary>
-/// One process, several files, the same .NET types, opposite byte orders.
+/// Verifies that byte-order decoder caching is scoped by file datatype, not just by CLR type.
 /// </summary>
 /// <remarks>
-/// The decoders are cached beyond the lifetime of the file that produced them, so correctness here is
-/// not implied by reading either file on its own. Every read below is of the same .NET type as its
-/// counterpart in the other file, and the files are opened in both orders and revisited, because a
-/// cache that decides once would pass a single pass in whichever order it was primed.
+/// The two files contain the same datasets and are read into the same .NET types, but one file stores
+/// those values big-endian and the other little-endian. Reading either file alone would not prove that
+/// a cached decoder still uses the byte order of the file it is decoding now. The files are therefore
+/// opened in both orders and revisited, so a decoder cache keyed only by CLR type would reuse the first
+/// file's conversion plan and corrupt reads from the other file.
 /// </remarks>
 [Collection(SharedHdf5StateCollection.Name)]
 public unsafe class MultiFileEndiannessTests
