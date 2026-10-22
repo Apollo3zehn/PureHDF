@@ -121,9 +121,9 @@ public unsafe class MultiFileEndiannessTests
 
         try
         {
-            var order = bigEndianFirst
-                ? new[] { bigEndianPath, littleEndianPath, bigEndianPath, littleEndianPath }
-                : new[] { littleEndianPath, bigEndianPath, littleEndianPath, bigEndianPath };
+            string[] order = bigEndianFirst
+                ? [bigEndianPath, littleEndianPath, bigEndianPath, littleEndianPath]
+                : [littleEndianPath, bigEndianPath, littleEndianPath, bigEndianPath];
 
             // Revisited, not just interleaved: a decoder cached on the first pass has to still be
             // right for the file it was not built from, and then right again for the one it was.

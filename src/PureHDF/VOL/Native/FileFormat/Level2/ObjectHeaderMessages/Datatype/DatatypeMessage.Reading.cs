@@ -775,6 +775,22 @@ internal partial record class DatatypeMessage(
         var invokeDecodeUnmanagedArray = ReadUtils.MethodInfoDecodeUnmanagedArray.MakeGenericMethod(elementType);
         var parameters = new object[2];
 
+        if (swaps.Length == 0)
+        {
+            async ValueTask<object?> decodeWithoutConversion(NativeReadContext context, IH5ReadStream source)
+            {
+                parameters[0] = source;
+                parameters[1] = dims;
+
+                // See GetDecodeInfoForReferenceArray: unwrap the boxed ValueTask<object>.
+                var task = (ValueTask<object>)invokeDecodeUnmanagedArray.Invoke(default, parameters)!;
+
+                return await task.ConfigureAwait(false);
+            }
+
+            return decodeWithoutConversion;
+        }
+
         // DecodeUnmanagedArray needs no context (pure unmanaged bulk read); the context
         // parameter here only exists to match ElementDecodeDelegate's shape.
         async ValueTask<object?> decode(NativeReadContext context, IH5ReadStream source)

@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 namespace PureHDF.VOL.Native;
 
 internal partial record class DatatypeMessage
@@ -52,7 +54,7 @@ internal partial record class DatatypeMessage
                 }
 
             case DatatypeMessageClass.Compound:
-                foreach (var property in Properties.Cast<CompoundPropertyDescription>())
+                foreach (CompoundPropertyDescription property in Properties)
                 {
                     if (!property.MemberTypeMessage
                         .TryCollectByteOrderSwaps(baseOffset + (int)property.MemberByteOffset, swaps))
@@ -72,13 +74,25 @@ internal partial record class DatatypeMessage
                     var baseSize = (int)array.BaseType.Size;
                     var count = array.DimensionSizes
                         .Aggregate(1UL, (product, dimension) => product * dimension);
+                    var nested = new List<ByteOrderSwap>();
+
+                    if (!array.BaseType.TryCollectByteOrderSwaps(0, nested))
+                        return false;
+
+                    if (nested.Count == 0)
+                        return true;
+
+                    var additionalCount = checked(nested.Count * (int)count);
+                    swaps.EnsureCapacity(swaps.Count + additionalCount);
 
                     // Unrolled rather than described once and repeated, because the swaps are applied
                     // as a flat list over the element and an array datatype is stored inline.
                     for (var i = 0UL; i < count; i++)
                     {
-                        if (!array.BaseType.TryCollectByteOrderSwaps(baseOffset + (int)i * baseSize, swaps))
-                            return false;
+                        var elementOffset = baseOffset + (int)i * baseSize;
+
+                        foreach (var swap in nested)
+                            swaps.Add(swap with { Offset = elementOffset + swap.Offset });
                     }
 
                     return true;
@@ -135,9 +149,10 @@ internal partial record class DatatypeMessage
         if (swaps.Length == 0 || array.Length == 0)
             return;
 
-        var bytes = System.Runtime.InteropServices.MemoryMarshal.CreateSpan(
-            ref System.Runtime.InteropServices.MemoryMarshal.GetArrayDataReference(array),
-            array.Length * elementSize);
+        var bytes = MemoryMarshal.CreateSpan(
+            ref MemoryMarshal.GetArrayDataReference(array),
+            array.Length * elementSize
+        );
 
         ApplyByteOrderSwaps(bytes, elementSize, swaps);
     }
