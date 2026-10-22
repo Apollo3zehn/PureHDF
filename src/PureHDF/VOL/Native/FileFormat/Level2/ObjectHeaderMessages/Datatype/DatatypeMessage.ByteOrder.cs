@@ -74,25 +74,30 @@ internal partial record class DatatypeMessage
                     var baseSize = (int)array.BaseType.Size;
                     var count = array.DimensionSizes
                         .Aggregate(1UL, (product, dimension) => product * dimension);
-                    var nested = new List<ByteOrderSwap>();
+                    var initialCount = swaps.Count;
 
-                    if (!array.BaseType.TryCollectByteOrderSwaps(0, nested))
+                    if (!array.BaseType.TryCollectByteOrderSwaps(baseOffset, swaps))
                         return false;
 
-                    if (nested.Count == 0)
+                    var addedCount = swaps.Count - initialCount;
+
+                    if (addedCount == 0)
                         return true;
 
-                    var additionalCount = checked(nested.Count * (int)count);
+                    var additionalCount = checked(addedCount * ((int)count - 1));
                     swaps.EnsureCapacity(swaps.Count + additionalCount);
 
                     // Unrolled rather than described once and repeated, because the swaps are applied
                     // as a flat list over the element and an array datatype is stored inline.
-                    for (var i = 0UL; i < count; i++)
+                    for (var i = 1UL; i < count; i++)
                     {
-                        var elementOffset = baseOffset + (int)i * baseSize;
+                        var elementOffset = (int)i * baseSize;
 
-                        foreach (var swap in nested)
+                        for (var j = 0; j < addedCount; j++)
+                        {
+                            var swap = swaps[initialCount + j];
                             swaps.Add(swap with { Offset = elementOffset + swap.Offset });
+                        }
                     }
 
                     return true;
