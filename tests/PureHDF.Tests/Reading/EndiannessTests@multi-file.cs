@@ -24,7 +24,7 @@ public unsafe class MultiFileEndiannessTests
     private class CompoundClass { public int a { get; set; } public double b { get; set; } }
 
     /// <summary>Writes the identical structure in the requested byte order.</summary>
-    private static unsafe void AddShapes(long fileId, bool bigEndian)
+    private static void AddShapes(long fileId, bool bigEndian)
     {
         var intType = bigEndian ? H5T.STD_I32BE : H5T.STD_I32LE;
         var doubleType = bigEndian ? H5T.IEEE_F64BE : H5T.IEEE_F64LE;
