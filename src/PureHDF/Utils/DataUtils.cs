@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Concurrent;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -9,13 +10,17 @@ internal static class DataUtils
     public static MethodInfo MethodInfoIsReferenceOrContainsReferences { get; } = typeof(RuntimeHelpers)
         .GetMethod(nameof(IsReferenceOrContainsReferences), BindingFlags.Public | BindingFlags.Static)!;
 
+    // Cached because it is asked once per dataset on the write path and per read on the read path, and
+    // answering it allocates a closed generic method, its type arguments and the boxed result.
+    private static readonly ConcurrentDictionary<Type, bool> _isReferenceOrContainsReferencesCache = new();
+
     public static bool IsReferenceOrContainsReferences(Type type)
     {
-        // TODO cache
-        var generic = MethodInfoIsReferenceOrContainsReferences.MakeGenericMethod(type);
-        var isReferenceOrContainsReferences = (bool)generic.Invoke(null, null)!;
-
-        return isReferenceOrContainsReferences;
+        return _isReferenceOrContainsReferencesCache.GetOrAdd(type, static type =>
+        {
+            var generic = MethodInfoIsReferenceOrContainsReferences.MakeGenericMethod(type);
+            return (bool)generic.Invoke(null, null)!;
+        });
     }
 
     public static void EnsureEndianness(Span<byte> source, Span<byte> destination, ByteOrder byteOrder, uint bytesOfType)

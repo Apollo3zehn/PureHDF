@@ -26,7 +26,6 @@ public class H5Dataset : H5Object
         H5DatasetCreation datasetCreation = default,
         H5OpaqueInfo? opaqueInfo = default)
         : this(
-            data.GetType(),
             data,
             chunks,
             memorySelection,
@@ -40,7 +39,6 @@ public class H5Dataset : H5Object
     }
 
     internal H5Dataset(
-        Type type,
         object? data,
         uint[]? chunks,
         Selection? memorySelection,
@@ -50,34 +48,72 @@ public class H5Dataset : H5Object
         H5OpaqueInfo? opaqueInfo,
         bool isNullDataspace)
     {
-        Type = type;
         Data = data;
-        Chunks = chunks;
-        MemorySelection = memorySelection;
-        FileSelection = fileSelection;
-        FileDims = fileDims;
-        DatasetCreation = datasetCreation;
-        OpaqueInfo = opaqueInfo;
-        IsNullDataspace = isNullDataspace;
+
+        // A dataset of one dimension, by far the most common, keeps it inline rather than in an array.
+        if (fileDims is { Length: 1 })
+        {
+            _fileDim0 = fileDims[0];
+            _hasInlineFileDim = true;
+            fileDims = default;
+        }
+
+        if (chunks is not null ||
+            memorySelection is not null ||
+            fileSelection is not null ||
+            fileDims is not null ||
+            datasetCreation != default ||
+            opaqueInfo is not null ||
+            isNullDataspace)
+        {
+            _options = new Options(
+                chunks,
+                memorySelection,
+                fileSelection,
+                fileDims,
+                datasetCreation,
+                opaqueInfo,
+                isNullDataspace);
+        }
     }
 
-    internal Type Type { get; }
+    // What a dataset is given beyond its data and its dimensions, which most datasets are not: kept
+    // apart so that a dataset without any of it does not carry a field for each. A file of many small
+    // datasets is mostly tree, and as fields of their own these would be half of each dataset.
+    private sealed record Options(
+        uint[]? Chunks,
+        Selection? MemorySelection,
+        Selection? FileSelection,
+        ulong[]? FileDims,
+        H5DatasetCreation DatasetCreation,
+        H5OpaqueInfo? OpaqueInfo,
+        bool IsNullDataspace);
+
+    private readonly Options? _options;
+    private readonly ulong _fileDim0;
+    private readonly bool _hasInlineFileDim;
+
+    // The data's own type, or for H5Dataset<T> its type argument, which can differ from it - the only
+    // way a dataset gets one that does - so it is not stored.
+    internal virtual Type Type => Data!.GetType();
 
     internal object? Data { get; }
 
-    internal uint[]? Chunks { get; }
+    internal uint[]? Chunks => _options?.Chunks;
 
-    internal Selection? MemorySelection { get; }
+    internal Selection? MemorySelection => _options?.MemorySelection;
 
-    internal Selection? FileSelection { get; }
+    internal Selection? FileSelection => _options?.FileSelection;
 
-    internal ulong[]? FileDims { get; }
+    internal ulong[]? FileDims => _hasInlineFileDim
+        ? [_fileDim0]
+        : _options?.FileDims;
 
-    internal H5DatasetCreation DatasetCreation { get; }
+    internal H5DatasetCreation DatasetCreation => _options?.DatasetCreation ?? default;
 
-    internal H5OpaqueInfo? OpaqueInfo { get; }
+    internal H5OpaqueInfo? OpaqueInfo => _options?.OpaqueInfo;
 
-    internal bool IsNullDataspace { get; }
+    internal bool IsNullDataspace => _options?.IsNullDataspace ?? false;
 }
 
 /// <summary>
@@ -86,6 +122,8 @@ public class H5Dataset : H5Object
 /// <typeparam name="T">The type of the data.</typeparam>
 public class H5Dataset<T> : H5Dataset
 {
+    internal override Type Type => typeof(T);
+
     /// <summary>
     /// Initializes a new instance of the <see cref="H5Dataset"/> class.
     /// </summary>
@@ -99,7 +137,6 @@ public class H5Dataset<T> : H5Dataset
         H5DatasetCreation datasetCreation = default,
         H5OpaqueInfo? opaqueInfo = default)
         : base(
-            typeof(T),
             data: default,
             chunks,
             memorySelection: default,
@@ -127,7 +164,6 @@ public class H5Dataset<T> : H5Dataset
         H5DatasetCreation datasetCreation = default,
         H5OpaqueInfo? opaqueInfo = default)
         : base(
-            typeof(T),
             data,
             chunks,
             memorySelection: default,
@@ -148,7 +184,6 @@ public class H5Dataset<T> : H5Dataset
         H5OpaqueInfo? opaqueInfo = default
     )
         : base(
-            typeof(T),
             data: default,
             chunks: default,
             memorySelection: default,
