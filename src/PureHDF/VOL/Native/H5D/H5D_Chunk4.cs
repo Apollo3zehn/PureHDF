@@ -1,4 +1,4 @@
-﻿using System.Buffers;
+﻿using PureHDF.VFD;
 
 namespace PureHDF.VOL.Native;
 
@@ -54,32 +54,22 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
 
         if (Chunked4.IsDirty)
         {
-            // Encode ChunkedStoragePropertyDescriptions
-            WriteContext.Driver.Seek(Chunked4.EncodeAddress, SeekOrigin.Begin);
-            Chunked4.Encode(WriteContext.Driver);
+            // Patched in the copy kept at encoding rather than in the file, then written whole: the
+            // storage properties changed, and with them the header's checksum, which is computed from
+            // the copy so that nothing is read from the file.
+            var (objectHeaderAddress, objectHeader) = WriteContext.DatasetInfoToObjectHeaderMap[Dataset];
+            var origin = (long)WriteContext.Driver.BaseAddress + objectHeaderAddress;
 
-            // Update object header checksum
-            var (objectHeaderAddress, length) = WriteContext.DatasetInfoToObjectHeaderMap[Dataset];
-            var lengthWithoutChecksum = length - sizeof(uint);
-            using var memorOwner = MemoryPool<byte>.Shared.Rent(lengthWithoutChecksum);
-            var checksumData = memorOwner.Memory.Slice(0, lengthWithoutChecksum);
+            using (var patchDriver = new H5SpanWriteDriver(objectHeader, origin))
+            {
+                patchDriver.Seek(Chunked4.EncodeAddress, SeekOrigin.Begin);
+                Chunked4.Encode(patchDriver);
+            }
+
+            ChecksummedStructure.UpdateChecksum(objectHeader);
 
             WriteContext.Driver.SeekRelativeToBaseAddress(objectHeaderAddress);
-
-            // SYNC SURFACE: this runs from Dispose on the synchronous writer, while driver.Read is
-            // async. The ValueTask must be waited on rather than discarded - discarding it draws no
-            // CS4014 warning, because the enclosing method is not async, and computes the checksum
-            // over uninitialized pooled memory, producing a file h5dump rejects. AsTask() is required:
-            // blocking directly on an IValueTaskSource-backed ValueTask is unsupported.
-            WriteContext.Driver.Read(checksumData).AsTask().GetAwaiter().GetResult();
-
-            var checksum = ChecksumUtils.JenkinsLookup3(checksumData.Span);
-
-            // Absolute seek: the async read leaves a BufferedFileStream's read buffer in a state
-            // where the sync Write below can fail inside its internal FlushRead.
-            WriteContext.Driver.SeekRelativeToBaseAddress((long)objectHeaderAddress + lengthWithoutChecksum);
-
-            WriteContext.Driver.Write(checksum);
+            WriteContext.Driver.Write(objectHeader);
         }
     }
 

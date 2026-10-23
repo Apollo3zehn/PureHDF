@@ -197,9 +197,15 @@ public class GlobalHeapCacheTests
                 ["peaks"] = new H5Dataset<Peak[][]>([(ulong)cellCount])
             };
 
+            // One cell per write, so that each cell's values get a collection of their own: the cache is
+            // only exercised by a file of many collections, and a single write is given as few as its
+            // values fit into.
             using (var writer = file.BeginWrite(filePath))
             {
-                writer.Write((H5Dataset<Peak[][]>)file["peaks"], data);
+                var dataset = (H5Dataset<Peak[][]>)file["peaks"];
+
+                for (int c = 0; c < cellCount; c++)
+                    writer.Write(dataset, [data[c]], fileSelection: new HyperslabSelection(start: (ulong)c, block: 1));
             }
 
             return (File.ReadAllBytes(filePath), data);

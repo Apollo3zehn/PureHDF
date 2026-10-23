@@ -1,77 +1,68 @@
-﻿using System.Buffers;
+﻿using PureHDF.VFD;
 
 namespace PureHDF.VOL.Native;
 
 internal partial record class FixedArrayDataBlock<T>
 {
     public ulong GetEncodeSize(ulong pageCount, ulong pageBitmapSize, byte entrySize)
+        => GetEncodeSize((ulong)Elements.Length, pageCount, pageBitmapSize, entrySize);
+
+    /// <summary>
+    /// The size of a data block holding <paramref name="elementCount" /> elements, known before any of
+    /// them is - which is what lets it be allocated with the index header rather than when the
+    /// elements are finally written.
+    /// </summary>
+    public static ulong GetEncodeSize(ulong elementCount, ulong pageCount, ulong pageBitmapSize, byte entrySize)
     {
         var encodeSize =
-            4 +
+            4UL +
             sizeof(byte) +
             sizeof(byte) +
             sizeof(ulong) +
             (pageCount > 0
-                ? (long)pageBitmapSize
-                : Elements.Length * entrySize) +
+                ? pageBitmapSize
+                : elementCount * entrySize) +
             sizeof(uint);
 
-        return (ulong)encodeSize;
+        return encodeSize;
     }
 
+    /// <param name="driver">Positioned where the data block goes.</param>
+    /// <param name="encodeSize">From <see cref="GetEncodeSize(ulong, ulong, byte)" />, checksum included.</param>
+    /// <param name="encode">Encodes one element.</param>
     internal void Encode(
         H5DriverBase driver,
+        int encodeSize,
         Action<H5DriverBase, T> encode)
     {
-        var position = driver.Position;
-
-        // signature
-        driver.Write(Signature);
-
-        // version
-        driver.Write(Version);
-
-        // Client ID
-        driver.Write(ClientID);
-
-        // Header Address
-        driver.Write(HeaderAddress);
-
-        // Page Bitmap
-        if (PageCount > 0)
+        ChecksummedStructure.Write(driver, encodeSize, driver =>
         {
-            throw new NotImplementedException();
-        }
+            // signature
+            driver.Write(Signature);
 
-        // Elements
-        else
-        {
-            foreach (var element in Elements)
+            // version
+            driver.Write(Version);
+
+            // Client ID
+            driver.Write(ClientID);
+
+            // Header Address
+            driver.Write(HeaderAddress);
+
+            // Page Bitmap
+            if (PageCount > 0)
             {
-                encode(driver, element);
+                throw new NotImplementedException();
             }
-        }
 
-        // Checksum
-        var bufferSize = (int)(driver.Position - position);
-        using var buffer = MemoryPool<byte>.Shared.Rent(bufferSize);
-        var checksumData = buffer.Memory[..bufferSize];
-
-        driver.Seek(position, SeekOrigin.Begin);
-
-        // SYNC SURFACE: Encode is synchronous (the writer is), while driver.Read is async. The
-        // ValueTask must be waited on rather than discarded - discarding it draws no CS4014 warning,
-        // because the enclosing method is not async, and computes the checksum over uninitialized
-        // pooled memory. AsTask() is required: blocking directly on an IValueTaskSource-backed
-        // ValueTask is not supported and throws.
-        driver.Read(checksumData).AsTask().GetAwaiter().GetResult();
-
-        var checksum = ChecksumUtils.JenkinsLookup3(checksumData.Span);
-
-        // Absolute seek: the async read leaves a BufferedFileStream's read buffer in a state where
-        // the sync Write below can fail inside its internal FlushRead.
-        driver.Seek(position + bufferSize, SeekOrigin.Begin);
-
-        driver.Write(checksum);
+            // Elements
+            else
+            {
+                foreach (var element in Elements)
+                {
+                    encode(driver, element);
+                }
+            }
+        });
     }
 }
