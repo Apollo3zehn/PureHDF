@@ -1,0 +1,111 @@
+using Xunit;
+using Xunit.Abstractions;
+
+namespace PureHDF.Tests.Writing;
+
+/// <summary>
+/// The file has to be as long as the addresses inside it claim, whatever was actually written.
+/// </summary>
+/// <remarks>
+/// An address can be referenced without ever being written to. A dataset created through
+/// <see cref="H5File.BeginWrite(string, H5WriteOptions?)" /> has its payload allocated and named by its
+/// layout message as soon as the structure is written, so a caller who never gets round to writing the
+/// data leaves a region that everything points at and nothing has touched.
+/// <para>
+/// Whether that shows up as a broken file is decided by the placement, which is what makes it worth a
+/// test of its own. An interleaved file tends to survive by accident: metadata is allocated after the
+/// payload, and writing it extends the stream over the gap. A front-loaded file serves metadata from a
+/// region at the front, so nothing extends the stream and it ends before the payload the layout points
+/// at - which the HDF5 C library reports as "invalid dataset size, likely file corruption" rather than
+/// as a short file.
+/// </para>
+/// </remarks>
+public class EndOfFileAddressTests(ITestOutputHelper output)
+{
+    private const int ElementCount = 100_000;
+    private const long PayloadBytes = ElementCount * sizeof(double);
+
+    /// <remarks>
+    /// Run with and without a user block, because the two are counted from different places: the
+    /// allocator counts from the superblock, the stream from the start of the file, and a user block puts
+    /// those a <see cref="H5WriteOptions.UserBlockSize" /> apart. Comparing them untranslated makes the
+    /// file look long enough already and skips the extension, which is invisible until a user block is
+    /// in play - so the zero case cannot stand in for the nonzero one.
+    /// <para>
+    /// 512 because it is the smallest user block the format allows, which keeps the file small while
+    /// still putting the two coordinate systems apart.
+    /// </para>
+    /// </remarks>
+    [SkippableTheory]
+    [InlineData(H5MetadataPlacement.Interleaved, 0UL)]
+    [InlineData(H5MetadataPlacement.Aggregated, 0UL)]
+    [InlineData(H5MetadataPlacement.FrontLoaded, 0UL)]
+    [InlineData(H5MetadataPlacement.Interleaved, 512UL)]
+    [InlineData(H5MetadataPlacement.Aggregated, 512UL)]
+    [InlineData(H5MetadataPlacement.FrontLoaded, 512UL)]
+    public void AnUnwrittenDeferredPayloadIsStillCoveredByTheFile(H5MetadataPlacement placement, ulong userBlockSize)
+    {
+        // Arrange - a dataset whose payload is allocated and referenced, and which is then never
+        // written. Compact layout is off so the payload cannot end up inside the object header.
+        var neverWritten = new H5Dataset<double[]>(fileDims: [ElementCount]);
+
+        var file = new H5File
+        {
+            ["written"] = new H5Dataset(Enumerable.Range(0, 64).ToArray()),
+            ["never-written"] = neverWritten
+        };
+
+        var filePath = Path.GetTempFileName();
+
+        try
+        {
+            // Act
+            using (var writer = file.BeginWrite(filePath, new H5WriteOptions
+            {
+                PreferCompactDatasetLayout = false,
+                MetadataPlacement = placement,
+                UserBlockSize = userBlockSize
+            }))
+            {
+                // Deliberately no write: the point is the payload nobody fills.
+            }
+
+            var size = new FileInfo(filePath).Length;
+
+            output.WriteLine($"{placement,-12} user block {userBlockSize,5}, file {size,10:N0} bytes, payload alone {PayloadBytes,10:N0}");
+
+            // Assert - checkable without any external tool: the file cannot be shorter than a region
+            // its own layout message points at.
+            Assert.True(
+                size > PayloadBytes + (long)userBlockSize,
+                $"{placement} with a {userBlockSize}-byte user block produced {size:N0} bytes for a file "
+                + $"referencing {PayloadBytes:N0} bytes of payload, so the end-of-file address does not "
+                + $"cover what the layout points at.");
+
+            // And PureHDF must still see the dataset it declared.
+            using (var root = H5File.OpenRead(filePath))
+            {
+                Assert.Equal((ulong)ElementCount, root.Dataset("never-written").Space.Dimensions[0]);
+                Assert.Equal(Enumerable.Range(0, 64).ToArray(), root.Dataset("written").Read<int[]>());
+            }
+
+            // The C library is stricter than PureHDF's own reader here - it validates a contiguous
+            // dataset's extent against the end of the file, which is exactly the check being satisfied.
+            var result = TestUtils.RunH5Dump(filePath);
+
+            Skip.If(result is null, "h5dump is not available.");
+
+            // The exit code and the raw error stream, not DumpH5File's output: that strips the error
+            // stack, so a test asserting the dump does not contain "corruption" passes on a file h5dump
+            // called corrupt.
+            Assert.False(result!.Failed, $"h5dump rejected the file:{Environment.NewLine}{result.Diagnostics}");
+            Assert.Contains("never-written", result.Stdout);
+        }
+
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
+    }
+}

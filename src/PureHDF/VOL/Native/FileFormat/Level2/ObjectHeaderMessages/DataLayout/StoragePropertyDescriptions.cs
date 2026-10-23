@@ -8,6 +8,12 @@ internal abstract record class StoragePropertyDescription(
 {
     public required ulong Address { get; set; }
 
+    /// <summary>
+    /// The file position <see cref="Address" /> was last encoded at, for a writer that has to correct it
+    /// in the encoded bytes afterwards. Only the layouts whose address can name payload set it.
+    /// </summary>
+    public long AddressPosition { get; protected set; }
+
     public abstract ushort GetEncodeSize();
 
     public abstract void Encode(H5DriverBase driver);
@@ -82,6 +88,7 @@ internal record class ContiguousStoragePropertyDescription(
     public override void Encode(H5DriverBase driver)
     {
         // address
+        AddressPosition = driver.Position;
         driver.Write(Address);
 
         // size
@@ -272,6 +279,7 @@ internal record class ChunkedStoragePropertyDescription4(
         IndexingInformation.Encode(driver, Flags);
 
         // address
+        AddressPosition = driver.Position;
         driver.Write(Address);
 
         IsDirty = false;

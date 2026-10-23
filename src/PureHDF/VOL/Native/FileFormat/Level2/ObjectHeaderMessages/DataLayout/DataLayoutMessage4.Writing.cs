@@ -23,7 +23,7 @@ internal partial record class DataLayoutMessage4
                     .Ceiling(dataDimensions[dimension] / (double)chunkDimensions[dimension]);
             }
 
-            (IndexingInformation IndexingInformation, long EncodeSize, ChunkedStoragePropertyFlags Flags) indexInfo;
+            (IndexingInformation IndexingInformation, long EncodeSize, AllocationKind Kind, ChunkedStoragePropertyFlags Flags) indexInfo;
 
             if (chunkCount == 1)
             {
@@ -37,19 +37,33 @@ internal partial record class DataLayoutMessage4
                 indexInfo = (
                     indexingInformation,
                     0,
+                    AllocationKind.Metadata,
                     flags);
             }
 
             else
             {
+                /* H5D__layout_set_latest_indexing (H5Dlayout.c) => H5D_FARRAY_MAX_DBLK_PAGE_NELMTS_BITS */
+                var pageBits = (byte)Math.Ceiling(Math.Log2(chunkCount));
+
                 indexInfo = isFiltered
                     ?
                         (
                             new FixedArrayIndexingInformation(
-                                /* H5D__layout_set_latest_indexing (H5Dlayout.c) => H5D_FARRAY_MAX_DBLK_PAGE_NELMTS_BITS */
-                                PageBits: (byte)Math.Ceiling(Math.Log2(chunkCount))
+                                PageBits: pageBits
                             ),
-                            FixedArrayHeader.ENCODE_SIZE,
+
+                            /* The header and its data block, together: the block's size follows from the
+                             * chunk count, so it need not wait until the chunks are written. Allocated at
+                             * Dispose, it would be structure that turns up after the structure has been
+                             * placed. See H5D_Chunk4_FixedArray.Dispose.
+                             */
+                            FixedArrayHeader.ENCODE_SIZE + (long)GetFixedArrayDataBlockEncodeSize(
+                                pageBits,
+                                chunkCount,
+                                chunkByteSize: chunkDimensions.Aggregate(1UL, (product, dimension) => product * dimension) * typeSize),
+
+                            AllocationKind.Metadata,
                             ChunkedStoragePropertyFlags.None
                         )
                     :
@@ -60,6 +74,13 @@ internal partial record class DataLayoutMessage4
                                 chunkDimensions.Aggregate(1UL, (product, dimension) => product * dimension) * 
                                 typeSize
                             ),
+
+                            /* An implicit index has no index structure at all: the chunks sit
+                             * contiguously from this address, so what is allocated here is the whole
+                             * payload rather than metadata. See H5D_Chunk4_Implicit, which derives a
+                             * chunk's address by offsetting into it arithmetically.
+                             */
+                            AllocationKind.RawData,
                             ChunkedStoragePropertyFlags.None
                         );
             }
@@ -67,7 +88,7 @@ internal partial record class DataLayoutMessage4
             /* some indexes can only be allocated later */
             var address = indexInfo.EncodeSize == 0
                 ? Superblock.UndefinedAddress
-                : (ulong)context.FreeSpaceManager.Allocate(indexInfo.EncodeSize);
+                : (ulong)context.FreeSpaceManager.Allocate(indexInfo.EncodeSize, indexInfo.Kind);
 
             var properties = new ChunkedStoragePropertyDescription4(
                 Rank: (byte)(chunkDimensions.Length + 1),
@@ -142,7 +163,7 @@ internal partial record class DataLayoutMessage4
             /* create contiguous dataset */
             if (dataLayout == default)
             {
-                var address = context.FreeSpaceManager.Allocate(dataEncodeSize);
+                var address = context.FreeSpaceManager.Allocate(dataEncodeSize, AllocationKind.RawData);
 
                 var properties = new ContiguousStoragePropertyDescription(
                     Size: (ulong)dataEncodeSize
@@ -162,6 +183,15 @@ internal partial record class DataLayoutMessage4
         }
 
         return dataLayout;
+    }
+
+    private static ulong GetFixedArrayDataBlockEncodeSize(byte pageBits, ulong chunkCount, ulong chunkByteSize)
+    {
+        /* H5FA__cache_hdr_serialize (H5FAcache.c) */
+        var entrySize = FilteredDataBlockElement.GetEncodeSize(MathUtils.ComputeChunkSizeLength(chunkByteSize));
+        var (_, pageCount, pageBitmapSize) = H5D_Chunk4_FixedArray.GetInfo(pageBits, chunkCount);
+
+        return FixedArrayDataBlock<FilteredDataBlockElement>.GetEncodeSize(chunkCount, pageCount, pageBitmapSize, entrySize);
     }
 
     public override ushort GetEncodeSize()
