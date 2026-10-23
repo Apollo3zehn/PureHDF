@@ -220,7 +220,23 @@ internal partial record class AttributeMessage
                 if (dataspace.Type == DataspaceType.Null)
                     return;
 
-                encode(memoryData, localWriter);
+                // An attribute's value is structure: it is what a viewer reads while browsing, rather
+                // than while reading a dataset. Set explicitly rather than relied upon, since this can
+                // run inside a dataset's data write - an object reference encodes the object it points
+                // at, and that object's attributes are still attributes.
+                var enclosing = context.GlobalHeapManager.AllocationKind;
+                context.GlobalHeapManager.AllocationKind = AllocationKind.Metadata;
+
+                try
+                {
+                    encode(memoryData, localWriter);
+                }
+
+                finally
+                {
+                    context.GlobalHeapManager.AllocationKind = enclosing;
+                }
+
                 driver.Write(buffer);
             }
         )

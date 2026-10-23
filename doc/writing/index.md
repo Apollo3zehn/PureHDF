@@ -70,6 +70,41 @@ file.Write("path/to/file.h5");
 > [!NOTE]
 > Please refer to [data types](data-types.md) for more information about how to write special data types.
 
+## Metadata placement
+
+By default the writer allocates file structure - object headers, chunk indexes, global heap collections - in the order it encodes it, so structure ends up spread evenly through the file alongside the data.
+
+That costs nothing locally, but it is expensive for a reader that fetches ranges rather than seeking freely, typically over HTTP. Such a reader has to see every byte of structure to walk the file, so structure in every range means downloading every range. `H5WriteOptions.MetadataPlacement` offers two alternatives:
+
+```cs
+var options = new H5WriteOptions
+{
+    MetadataPlacement = H5MetadataPlacement.FrontLoaded
+};
+
+file.Write("path/to/file.h5", options);
+```
+
+| Placement | Allocation | Effect |
+|---|---|---|
+| `Interleaved` | in encode order | the default; adds nothing to a write |
+| `Aggregated` | from blocks that double in size, forming a few clusters | needs no estimate of the total; costs a proportion of the metadata, not a fixed block |
+| `FrontLoaded` | from one region reserved at the front | a reader fetches all structure in one range |
+
+Measured over a stream counting what an HTTP range client would transfer, walking a file of 600 groups of deflated measurement series at 256 kB ranges:
+
+```
+interleaved    fetched 4,058,242 B of 4,058,242 B   100.0% of file   16 requests
+aggregated     fetched   786,432 B of 4,060,404 B    19.4% of file    3 requests
+front-loaded   fetched   262,144 B of 4,058,242 B     6.5% of file    1 request
+```
+
+Front loading ends at a single request whenever the reservation holds all the structure, since it is one contiguous span; a reservation that falls short spills into blocks and costs one request per block. The interleaved cost is the whole file however large it grows, so the gap widens with size.
+
+Without a `MetadataReservation`, `FrontLoaded` sizes its region exactly: the writer encodes the structure once, holds it in memory until it is complete, then closes the region where the structure ends, moves the payload behind it and writes the structure front to back. Because the region is exactly what the structure uses, no structure is abandoned. The price is memory the size of the structure while it is held. Set `MetadataReservation` to a byte count to write the structure as it is encoded instead, at the cost of abandoning whatever the guess over-reserves. Nothing requires it, including a deferred write through `BeginWrite`, since nothing written later changes how much structure the file has.
+
+A reservation that turns out too small spills into blocks, so it loses locality rather than failing. All three placements produce valid HDF5 - the format imposes no ordering - and the choice costs nothing on read for a local file.
+
 ## Deferred writing
 
 You may want to write data at a later point in time (for instance if the data is not available yet) and for this scenario PureHDF offers a slightly different API. The following example shows how to use the `H5File.BeginWrite(...)` method to get a writer which allows you to write data to the dataset one or multiple times until the writer instance is being disposed.
