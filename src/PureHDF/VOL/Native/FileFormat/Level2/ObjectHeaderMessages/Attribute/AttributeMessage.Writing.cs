@@ -69,10 +69,10 @@ internal partial record class AttributeMessage
     ///     </para>
     ///     <para>
     ///         Reaches an attribute whose ELEMENTS are strings. A string that is a MEMBER of a compound attribute
-    ///         is sized by <see cref="H5WriteOptions.DefaultStringLength" /> or a string length mapper whatever the
-    ///         setting says, for the same reason datasets are left out entirely: a member's width has to cover
-    ///         every row and stay uniform across the objects sharing that type, so it must not be derived from one
-    ///         value.
+    ///         is sized by the attribute's <see cref="H5StringInfo" />, a string length mapper or
+    ///         <see cref="H5WriteOptions.DefaultStringLength" /> whatever the setting says: a member's width has
+    ///         to cover every row, so it is not derived from one value. Not called at all when the attribute's
+    ///         <see cref="H5StringInfo.Length" /> is set.
     ///     </para>
     /// </remarks>
     private static (int? Width, PaddingType Padding) GetStringLengthForAttribute<TElement>(
@@ -156,7 +156,13 @@ internal partial record class AttributeMessage
         var type = memoryData.GetType();
 
         /* datatype */
-        var (stringLength, stringPadding) = GetStringLengthForAttribute(context, memoryData);
+        var stringInfo = attribute.StringInfo;
+
+        var (stringLength, stringPadding) = stringInfo?.Length is int length
+            ? (length, PaddingType.NullTerminate)
+            : GetStringLengthForAttribute(context, memoryData);
+
+        stringPadding = DatatypeMessage.ToPaddingType(stringInfo?.Padding, stringPadding);
 
         var (datatype, encode) =
             DatatypeMessage.Create(
@@ -165,7 +171,8 @@ internal partial record class AttributeMessage
                 isScalar,
                 attribute.OpaqueInfo,
                 stringLength,
-                stringPadding);
+                stringPadding,
+                stringInfo?.MemberLength);
 
         if (attribute.OpaqueInfo is not null && datatype.Class == DatatypeMessageClass.Opaque)
             memoryDims = [(ulong)memoryData.Length / attribute.OpaqueInfo.TypeSize];
@@ -176,8 +183,9 @@ internal partial record class AttributeMessage
         var dataspace = DataspaceMessage.Create(
             fileDims: fileDims);
 
-        /* a measured width that does not fit hands the attribute back to variable-length */
-        if (stringLength > 0 && GetEncodeSize(name, datatype, dataspace) > ushort.MaxValue)
+        /* a measured width that does not fit hands the attribute back to variable-length; a width the
+         * caller gave in its string info is kept */
+        if (stringInfo?.Length is null && stringLength > 0 && GetEncodeSize(name, datatype, dataspace) > ushort.MaxValue)
         {
             (datatype, encode) = DatatypeMessage.Create(
                 context,
@@ -185,7 +193,8 @@ internal partial record class AttributeMessage
                 isScalar,
                 attribute.OpaqueInfo,
                 0,
-                default);
+                default,
+                stringInfo?.MemberLength);
         }
 
         /* validation */

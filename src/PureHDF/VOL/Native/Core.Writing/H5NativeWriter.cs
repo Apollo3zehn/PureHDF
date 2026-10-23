@@ -331,8 +331,17 @@ partial class H5NativeWriter
         }
 
         // datatype
+        var stringInfo = dataset.StringInfo;
+
         var (datatype, encode) =
-            DatatypeMessage.Create(Context, memoryData, isScalar, dataset.OpaqueInfo);
+            DatatypeMessage.Create(
+                Context,
+                memoryData,
+                isScalar,
+                dataset.OpaqueInfo,
+                stringInfo?.Length,
+                DatatypeMessage.ToPaddingType(stringInfo?.Padding, PaddingType.NullTerminate),
+                stringInfo?.MemberLength);
 
         if (dataset.OpaqueInfo is not null && datatype.Class == DatatypeMessageClass.Opaque)
             memoryDims = [(ulong)memoryData.Length / dataset.OpaqueInfo.TypeSize];

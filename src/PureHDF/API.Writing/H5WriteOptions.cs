@@ -45,8 +45,8 @@ namespace PureHDF;
 ///     </para>
 ///     <para>
 ///         Applies only where a width is DECLARED - a compound member sized by
-///         <see cref="DefaultStringLength" /> or a string length mapper, or an attribute set to
-///         <see cref="H5AttributeStringLength.Inherit" />. A measured width is taken from the value itself, so
+///         <see cref="DefaultStringLength" /> or a string length mapper, an attribute set to
+///         <see cref="H5AttributeStringLength.Inherit" />, or a width given in an <see cref="H5StringInfo" />. A measured width is taken from the value itself, so
 ///         it cannot overflow.
 ///     </para>
 /// </param>

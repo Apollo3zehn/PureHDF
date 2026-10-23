@@ -17,6 +17,7 @@ public class H5Dataset : H5Object
     /// <param name="fileDims">The dimensions of the dataset when written to the file.</param>
     /// <param name="datasetCreation">The dataset creation properties.</param>
     /// <param name="opaqueInfo">Set this paramter to a non-null value to treat data of type byte[] as opaque.</param>
+    /// <param name="stringInfo">How the strings of this dataset are stored, in place of the file-wide string options.</param>
     public H5Dataset(
         object data,
         uint[]? chunks = default,
@@ -24,7 +25,8 @@ public class H5Dataset : H5Object
         Selection? fileSelection = default,
         ulong[]? fileDims = default,
         H5DatasetCreation datasetCreation = default,
-        H5OpaqueInfo? opaqueInfo = default)
+        H5OpaqueInfo? opaqueInfo = default,
+        H5StringInfo? stringInfo = default)
         : this(
             data.GetType(),
             data,
@@ -34,6 +36,7 @@ public class H5Dataset : H5Object
             fileDims,
             datasetCreation,
             opaqueInfo,
+            stringInfo,
             isNullDataspace: false)
     {
         //
@@ -48,6 +51,7 @@ public class H5Dataset : H5Object
         ulong[]? fileDims,
         H5DatasetCreation datasetCreation,
         H5OpaqueInfo? opaqueInfo,
+        H5StringInfo? stringInfo,
         bool isNullDataspace)
     {
         Type = type;
@@ -58,6 +62,7 @@ public class H5Dataset : H5Object
         FileDims = fileDims;
         DatasetCreation = datasetCreation;
         OpaqueInfo = opaqueInfo;
+        StringInfo = stringInfo;
         IsNullDataspace = isNullDataspace;
     }
 
@@ -77,6 +82,8 @@ public class H5Dataset : H5Object
 
     internal H5OpaqueInfo? OpaqueInfo { get; }
 
+    internal H5StringInfo? StringInfo { get; }
+
     internal bool IsNullDataspace { get; }
 }
 
@@ -93,11 +100,13 @@ public class H5Dataset<T> : H5Dataset
     /// <param name="chunks">The dataset's chunk dimensions.</param>
     /// <param name="datasetCreation">The dataset creation properties.</param>
     /// <param name="opaqueInfo">Set this paramter to a non-null value to treat data of type byte[] as opaque.</param>
+    /// <param name="stringInfo">How the strings of this dataset are stored, in place of the file-wide string options.</param>
     public H5Dataset(
         ulong[] fileDims,
         uint[]? chunks = default,
         H5DatasetCreation datasetCreation = default,
-        H5OpaqueInfo? opaqueInfo = default)
+        H5OpaqueInfo? opaqueInfo = default,
+        H5StringInfo? stringInfo = default)
         : base(
             typeof(T),
             data: default,
@@ -107,6 +116,7 @@ public class H5Dataset<T> : H5Dataset
             fileDims,
             datasetCreation,
             opaqueInfo,
+            stringInfo,
             isNullDataspace: false)
     {
         //
@@ -120,12 +130,14 @@ public class H5Dataset<T> : H5Dataset
     /// <param name="fileDims">The dimensions of the dataset when written to the file.</param>
     /// <param name="datasetCreation">The dataset creation properties.</param>
     /// <param name="opaqueInfo">Set this paramter to a non-null value to treat data of type byte[] as opaque.</param>
+    /// <param name="stringInfo">How the strings of this dataset are stored, in place of the file-wide string options.</param>
     public H5Dataset(
         T data,
         uint[]? chunks = default,
         ulong[]? fileDims = default,
         H5DatasetCreation datasetCreation = default,
-        H5OpaqueInfo? opaqueInfo = default)
+        H5OpaqueInfo? opaqueInfo = default,
+        H5StringInfo? stringInfo = default)
         : base(
             typeof(T),
             data,
@@ -135,6 +147,7 @@ public class H5Dataset<T> : H5Dataset
             fileDims,
             datasetCreation,
             opaqueInfo,
+            stringInfo,
             isNullDataspace: false)
     {
         //
@@ -143,9 +156,11 @@ public class H5Dataset<T> : H5Dataset
     /// <summary>
     /// Initializes a new instance of the <see cref="H5Dataset"/> class with a null dataspace.
     /// <param name="opaqueInfo">Set this paramter to a non-null value to treat data of type byte[] as opaque.</param>
+    /// <param name="stringInfo">How the strings of this dataset are stored, in place of the file-wide string options.</param>
     /// </summary>
     public H5Dataset(
-        H5OpaqueInfo? opaqueInfo = default
+        H5OpaqueInfo? opaqueInfo = default,
+        H5StringInfo? stringInfo = default
     )
         : base(
             typeof(T),
@@ -156,6 +171,7 @@ public class H5Dataset<T> : H5Dataset
             fileDims: default,
             datasetCreation: default,
             opaqueInfo: opaqueInfo,
+            stringInfo: stringInfo,
             isNullDataspace: true)
     {
         //

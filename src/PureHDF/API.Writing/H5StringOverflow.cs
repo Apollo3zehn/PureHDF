@@ -5,8 +5,8 @@ namespace PureHDF;
 /// </summary>
 /// <remarks>
 ///     Only reachable where a width is DECLARED rather than measured - a compound member sized by
-///     <see cref="H5WriteOptions.DefaultStringLength" /> or one of the string length mappers, or an attribute
-///     set to <see cref="H5AttributeStringLength.Inherit" />. A measured width is taken from the value itself,
+///     <see cref="H5WriteOptions.DefaultStringLength" /> or one of the string length mappers, an attribute
+///     set to <see cref="H5AttributeStringLength.Inherit" />, or a width given in an <see cref="H5StringInfo" />. A measured width is taken from the value itself,
 ///     so it cannot overflow.
 ///     <para>
 ///         Note that an HDF5 string width is in BYTES, not characters. A width chosen by counting characters is
