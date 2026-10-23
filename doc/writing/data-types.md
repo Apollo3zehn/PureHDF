@@ -64,7 +64,7 @@ var options = new H5WriteOptions(
     StringOverflow: H5StringOverflow.Throw);
 ```
 
-`StringOverflow` only applies to declared fixed widths, such as `DefaultStringLength`, string length mappers, or attributes using `AttributeStringLength.Inherit`. Measured attributes are sized from their values, so they do not truncate.
+`StringOverflow` only applies to declared fixed widths, such as `DefaultStringLength`, string length mappers, attributes using `AttributeStringLength.Inherit`, or widths given in an `H5StringInfo`. Measured attributes are sized from their values, so they do not truncate.
 
 A `null` cannot be written into a fixed-length string at all, because the field has no way to record the difference between `null` and an empty string. Such a write throws an `InvalidOperationException`; use variable-length strings for data that can contain nulls.
 
@@ -95,7 +95,37 @@ In short: `Measured` gives each string attribute its own compact fixed width, bu
 
 The object-header limit matters because an attribute message stores its data next to its name, datatype and dataspace within a total of 65535 bytes. A measured fixed-width string stores the string bytes inline, so a wide value or a long array can exceed that limit. Variable-length strings store the string bytes elsewhere, but still need 16 bytes per element in the attribute message. If even that is too large, PureHDF throws and suggests storing the value as a dataset instead.
 
-This applies to an attribute whose elements *are* strings. A string that is a *member* of a compound attribute keeps its width from `DefaultStringLength` or a string length mapper, because a member's width has to stay the same across every object sharing that type.
+This applies to an attribute whose elements *are* strings. A string that is a *member* of a compound attribute takes its width from `DefaultStringLength` or a string length mapper, or from the attribute's own `H5StringInfo` (see below).
+
+## Per dataset or attribute
+
+The options above apply to the whole file. Pass an `H5StringInfo` to an `H5Dataset` or `H5Attribute` constructor to size the strings of that one object instead:
+
+```cs
+var file = new H5File
+{
+    // fixed-length, 12 bytes
+    ["names"] = new H5Dataset(names, stringInfo: new H5StringInfo(Length: 12)),
+
+    // variable-length, whatever DefaultStringLength says
+    ["notes"] = new H5Dataset(notes, stringInfo: new H5StringInfo(Length: 0)),
+
+    // a compound type whose string members get widths of their own in this dataset
+    ["setpoints"] = new H5Dataset(rows, stringInfo: new H5StringInfo(
+        MemberLength: member => member.Name switch
+        {
+            nameof(NameValueUnit.Name) => 32,
+            nameof(NameValueUnit.Unit) => 8,
+            _ => null
+        }))
+};
+```
+
+- `Length` takes the place of `DefaultStringLength` for the object, and of `AttributeStringLength` for an attribute. A string member of a compound type takes it when nothing more specific answers.
+- `MemberLength` is consulted for each string field or property of the object's element type, before `FieldStringLengthMapper` and `PropertyStringLengthMapper`. Return `null` to leave a member to them. A compound nested inside the element type is sized by the mappers and `Length`.
+- `Padding` declares what fills the unused bytes of the object's fixed-length strings: `NullTerminate` (the default), `NullPad` or `SpacePad`. A reader strips trailing spaces from a `SpacePad` string, so a value's own trailing spaces do not survive.
+
+Datasets of the same element type can have different widths this way, and datasets asking for the same widths share one datatype however their `MemberLength` delegates were created.
 
 # Opaque Data
 

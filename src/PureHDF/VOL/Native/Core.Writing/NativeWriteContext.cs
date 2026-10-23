@@ -15,11 +15,46 @@ namespace PureHDF.VOL.Native;
 /// would let whichever is encoded first hand its padding to the other.
 /// </param>
 /// <param name="OpaqueInfo">The opaque size and tag, when encoding an opaque type.</param>
+/// <param name="MemberStringLengths">The widths an object's own member length gives a compound's string members.</param>
 internal readonly record struct DatatypeCacheKey(
     Type Type,
     int StringLength,
     PaddingType StringPadding,
-    H5OpaqueInfo? OpaqueInfo);
+    H5OpaqueInfo? OpaqueInfo,
+    MemberStringLengths MemberStringLengths);
+
+/// <summary>
+/// The widths <see cref="H5StringInfo.MemberLength"/> gives the members of a compound type, indexed by member
+/// with null where it gives none. Compared by content, because each object brings its own delegate.
+/// </summary>
+internal readonly struct MemberStringLengths(int?[] lengths) : IEquatable<MemberStringLengths>
+{
+    private readonly int?[]? _lengths = lengths;
+
+    public int? this[int index] => _lengths?[index];
+
+    public bool Equals(MemberStringLengths other)
+    {
+        return (_lengths ?? []).SequenceEqual(other._lengths ?? []);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is MemberStringLengths other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        var hashCode = new HashCode();
+
+        foreach (var length in _lengths ?? [])
+        {
+            hashCode.Add(length);
+        }
+
+        return hashCode.ToHashCode();
+    }
+}
 
 internal record NativeWriteContext(
     H5NativeWriter Writer,

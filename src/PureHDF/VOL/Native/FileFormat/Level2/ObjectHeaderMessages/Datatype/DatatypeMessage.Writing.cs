@@ -25,17 +25,20 @@ internal partial record class DatatypeMessage : Message
     private const int VLEN_REFERENCE_SIZE = sizeof(uint) + REFERENCE_SIZE;
 
     // stringLength declares the width for a fixed-length string, overriding
-    // H5WriteOptions.DefaultStringLength. Null defers to that option, which is what every dataset does;
-    // an attribute answers for itself according to H5WriteOptions.AttributeStringLength - a measured width
-    // along with the padding it implies, or an explicit 0 to force variable-length even where the option
-    // declares a width. See AttributeMessage.GetStringLengthForAttribute.
+    // H5WriteOptions.DefaultStringLength, and is the width of a compound's string members that nothing
+    // else sizes. Null defers to that option. It comes from the object's H5StringInfo, or for an attribute
+    // from H5WriteOptions.AttributeStringLength - a measured width along with the padding it implies, or an
+    // explicit 0 to force variable-length even where the option declares a width. See
+    // AttributeMessage.GetStringLengthForAttribute. memberLength is H5StringInfo.MemberLength, consulted
+    // for the string members of the element type before the file-wide mappers.
     public static (DatatypeMessage, EncodeDelegate<T>) Create<T>(
         NativeWriteContext context,
         Memory<T> topLevelData,
         bool isScalar,
         H5OpaqueInfo? opaqueInfo,
         int? stringLength = default,
-        PaddingType stringPadding = PaddingType.NullTerminate
+        PaddingType stringPadding = PaddingType.NullTerminate,
+        Func<MemberInfo, int?>? memberLength = default
     )
     {
         var isScalarDictionary = isScalar &&
@@ -46,19 +49,31 @@ internal partial record class DatatypeMessage : Message
         if (isScalar)
             return isScalarDictionary
                 ? GetTypeInfoForTopLevelDictionary<T>(context, (IDictionary)topLevelData.Span[0]!)
-                : GetTypeInfoForScalar_SpecialEncode<T>(context, stringLength, stringPadding);
+                : GetTypeInfoForScalar_SpecialEncode<T>(context, stringLength, stringPadding, memberLength);
 
         else
             return
                 DataUtils.IsReferenceOrContainsReferences(typeof(T)) || 
                 Nullable.GetUnderlyingType(typeof(T)) is not null
 
-                ? GetTypeInfoForTopLevelMemory<T>(context, opaqueInfo, stringLength, stringPadding)
+                ? GetTypeInfoForTopLevelMemory<T>(context, opaqueInfo, stringLength, stringPadding, memberLength)
 
                 : ((DatatypeMessage, EncodeDelegate<T>))_methodInfoGetTypeInfoForTopLevelUnmanagedMemory
                     // TODO cache
                     .MakeGenericMethod(typeof(T))
                     .Invoke(default, [context, opaqueInfo])!;
+    }
+
+    public static PaddingType ToPaddingType(H5StringPadding? padding, PaddingType fallback)
+    {
+        return padding switch
+        {
+            null => fallback,
+            H5StringPadding.NullTerminate => PaddingType.NullTerminate,
+            H5StringPadding.NullPad => PaddingType.NullPad,
+            H5StringPadding.SpacePad => PaddingType.SpacePad,
+            _ => throw new NotSupportedException($"The string padding '{padding}' is not supported.")
+        };
     }
 
     public override void Encode(H5DriverBase driver)
@@ -93,9 +108,11 @@ internal partial record class DatatypeMessage : Message
     private static (DatatypeMessage, EncodeDelegate<T>) GetTypeInfoForScalar_SpecialEncode<T>(
         NativeWriteContext context,
         int? stringLength = default,
-        PaddingType stringPadding = PaddingType.NullTerminate)
+        PaddingType stringPadding = PaddingType.NullTerminate,
+        Func<MemberInfo, int?>? memberLength = default)
     {
-        var (dataType, encode) = GetTypeInfoForScalar(context, typeof(T), stringLength, stringPadding: stringPadding);
+        var (dataType, encode) = GetTypeInfoForScalar(
+            context, typeof(T), stringLength, stringPadding: stringPadding, memberLength: memberLength);
 
         void encodeFirstElement(Memory<T> source, IH5WriteStream target)
             => encode(source.Span[0]!, target);
@@ -108,7 +125,8 @@ internal partial record class DatatypeMessage : Message
         Type type,
         int? stringLength = default,
         H5OpaqueInfo? opaqueInfo = default,
-        PaddingType stringPadding = PaddingType.NullTerminate)
+        PaddingType stringPadding = PaddingType.NullTerminate,
+        Func<MemberInfo, int?>? memberLength = default)
     {
         // Null means no answer was given, so the file-global option decides. A zero IS an answer - it asks
         // for a variable-length string even where that option declares a width.
@@ -123,8 +141,14 @@ internal partial record class DatatypeMessage : Message
         // requested width, an opaque type's size and tag — because those come from the caller,
         // so one type maps to many messages. Keying on all of it means strings and opaque types
         // can be cached like anything else instead of having to be excluded.
+        // The widths a member length gives are part of the key, not the delegate, so that objects asking for
+        // the same widths share one message however many delegates they were given.
+        var memberStringLengths = memberLength is null
+            ? default
+            : ResolveMemberStringLengths(context, type, memberLength);
+
         var cache = context.TypeToMessageMap;
-        var cacheKey = new DatatypeCacheKey(type, resolvedStringLength, stringPadding, opaqueInfo);
+        var cacheKey = new DatatypeCacheKey(type, resolvedStringLength, stringPadding, opaqueInfo, memberStringLengths);
 
         if (cache.TryGetValue(cacheKey, out var cachedMessage))
             return cachedMessage;
@@ -167,7 +191,7 @@ internal partial record class DatatypeMessage : Message
 
             /* remaining reference types */
             Type when DataUtils.IsReferenceOrContainsReferences(type)
-                => GetTypeInfoForReferenceLikeType(context, type),
+                => GetTypeInfoForReferenceLikeType(context, type, resolvedStringLength, stringPadding, memberStringLengths),
 
             /* non blittable (but unmanged!) */
             /* https://stackoverflow.com/questions/65833341/does-c-sharp-enforce-that-an-unmanaged-type-is-blittable#comment116401977_65833341 */
@@ -219,12 +243,12 @@ internal partial record class DatatypeMessage : Message
             /* remaining non-generic value types */
             Type when type.IsValueType && !type.IsGenericType
                 => context.WriteOptions.IncludeStructProperties
-                    ? GetTypeInfoForReferenceLikeType(context, type)
+                    ? GetTypeInfoForReferenceLikeType(context, type, resolvedStringLength, stringPadding, memberStringLengths)
                     : GetTypeInfoForValueType(context, type),
 
             /* remaining generic value types */
             Type when type.IsValueType
-                => GetTypeInfoForReferenceLikeType(context, type),
+                => GetTypeInfoForReferenceLikeType(context, type, resolvedStringLength, stringPadding, memberStringLengths),
 
             _ => throw new NotSupportedException($"The data type '{type}' is not supported."),
         };
@@ -357,17 +381,12 @@ internal partial record class DatatypeMessage : Message
         return (message, encode);
     }
 
-    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForReferenceLikeType(
+    private static (FieldInfo[] FieldInfos, PropertyInfo[] PropertyInfos) GetCompoundMembers(
         NativeWriteContext context,
         Type type)
     {
-        CompoundBitFieldDescription bitfield;
-
-        var offset = 0U;
         var isValueType = type.IsValueType;
-        var defaultStringLength = context.WriteOptions.DefaultStringLength;
 
-        // fields
         var includeFields = isValueType
             ? context.WriteOptions.IncludeStructFields
             : context.WriteOptions.IncludeClassFields;
@@ -376,11 +395,6 @@ internal partial record class DatatypeMessage : Message
             ? type.GetFields(BindingFlags.Public | BindingFlags.Instance)
             : Array.Empty<FieldInfo>();
 
-        var fieldEncodes = includeFields
-            ? new ElementEncodeDelegate[fieldInfos.Length]
-            : Array.Empty<ElementEncodeDelegate>();
-
-        // properties
         var includeProperties = isValueType
             ? context.WriteOptions.IncludeStructProperties
             : context.WriteOptions.IncludeClassProperties;
@@ -392,9 +406,74 @@ internal partial record class DatatypeMessage : Message
                 .ToArray()
             : Array.Empty<PropertyInfo>();
 
-        var propertyEncodes = includeProperties
-            ? new ElementEncodeDelegate[propertyInfos.Length]
-            : Array.Empty<ElementEncodeDelegate>();
+        return (fieldInfos, propertyInfos);
+    }
+
+    /// <summary>
+    ///     What <paramref name="memberLength" /> answers for each string member of <paramref name="type" />, in
+    ///     the order of <see cref="GetCompoundMembers" />, fields first. Default when it answers for none, so
+    ///     that such an object shares its message with objects that gave no member length at all.
+    /// </summary>
+    private static MemberStringLengths ResolveMemberStringLengths(
+        NativeWriteContext context,
+        Type type,
+        Func<MemberInfo, int?> memberLength)
+    {
+        // Strings, sequences and object references are not compounds and have no members to size.
+        if (typeof(IEnumerable).IsAssignableFrom(type) || type == typeof(H5ObjectReference))
+            return default;
+
+        var (fieldInfos, propertyInfos) = GetCompoundMembers(context, type);
+        var memberCount = fieldInfos.Length + propertyInfos.Length;
+        var lengths = default(int?[]);
+
+        for (int i = 0; i < memberCount; i++)
+        {
+            MemberInfo member = i < fieldInfos.Length
+                ? fieldInfos[i]
+                : propertyInfos[i - fieldInfos.Length];
+
+            var memberType = member is FieldInfo fieldInfo
+                ? fieldInfo.FieldType
+                : ((PropertyInfo)member).PropertyType;
+
+            if (memberType != typeof(string))
+                continue;
+
+            var length = memberLength(member);
+
+            if (length is null)
+                continue;
+
+            if (length < 0)
+                throw new InvalidOperationException(
+                    $"The string length {length} given for the member '{member.Name}' of '{type}' is negative.");
+
+            lengths ??= new int?[memberCount];
+            lengths[i] = length;
+        }
+
+        return lengths is null
+            ? default
+            : new MemberStringLengths(lengths);
+    }
+
+    private static (DatatypeMessage, ElementEncodeDelegate) GetTypeInfoForReferenceLikeType(
+        NativeWriteContext context,
+        Type type,
+        int defaultStringLength,
+        PaddingType stringPadding,
+        MemberStringLengths memberStringLengths)
+    {
+        CompoundBitFieldDescription bitfield;
+
+        var offset = 0U;
+        var (fieldInfos, propertyInfos) = GetCompoundMembers(context, type);
+        var includeFields = fieldInfos.Length > 0;
+        var includeProperties = propertyInfos.Length > 0;
+
+        var fieldEncodes = new ElementEncodeDelegate[fieldInfos.Length];
+        var propertyEncodes = new ElementEncodeDelegate[propertyInfos.Length];
 
         // bitfield
         bitfield = new CompoundBitFieldDescription(
@@ -419,10 +498,11 @@ internal partial record class DatatypeMessage : Message
                 var underlyingType = fieldInfo.FieldType;
 
                 var stringLength = underlyingType == typeof(string)
-                    ? fieldStringLengthMapper is null ? defaultStringLength : fieldStringLengthMapper(fieldInfo) ?? defaultStringLength
+                    ? memberStringLengths[i] ?? fieldStringLengthMapper?.Invoke(fieldInfo) ?? defaultStringLength
                     : defaultStringLength;
 
-                var (fieldMessage, fieldEncode) = GetTypeInfoForScalar(context, underlyingType, stringLength: stringLength);
+                var (fieldMessage, fieldEncode) = GetTypeInfoForScalar(
+                    context, underlyingType, stringLength: stringLength, stringPadding: stringPadding);
 
                 fieldEncodes[i] = fieldEncode;
 
@@ -447,10 +527,11 @@ internal partial record class DatatypeMessage : Message
                 var underlyingType = propertyInfo.PropertyType;
 
                 var stringLength = underlyingType == typeof(string)
-                    ? propertyStringLengthMapper is null ? defaultStringLength : propertyStringLengthMapper(propertyInfo) ?? defaultStringLength
+                    ? memberStringLengths[fieldInfos.Length + i] ?? propertyStringLengthMapper?.Invoke(propertyInfo) ?? defaultStringLength
                     : defaultStringLength;
 
-                var (propertyMessage, propertyEncode) = GetTypeInfoForScalar(context, underlyingType, stringLength: stringLength);
+                var (propertyMessage, propertyEncode) = GetTypeInfoForScalar(
+                    context, underlyingType, stringLength: stringLength, stringPadding: stringPadding);
 
                 propertyEncodes[i] = propertyEncode;
 
@@ -743,6 +824,10 @@ internal partial record class DatatypeMessage : Message
             Class = DatatypeMessageClass.String
         };
 
+        var paddingByte = padding == PaddingType.SpacePad
+            ? (byte)' '
+            : (byte)0;
+
         void encode(object source, IH5WriteStream target)
         {
             var value = (string?)source;
@@ -777,23 +862,23 @@ internal partial record class DatatypeMessage : Message
 
             target.WriteDataset(stringBytes);
 
-            var padding = length - stringBytes.Length;
+            var paddingLength = length - stringBytes.Length;
 
-            if (padding > 0)
+            if (paddingLength > 0)
             {
-                if (padding < 256)
+                if (paddingLength < 256)
                 {
-                    Span<byte> paddingBuffer = stackalloc byte[padding];
-                    paddingBuffer.Clear();
+                    Span<byte> paddingBuffer = stackalloc byte[paddingLength];
+                    paddingBuffer.Fill(paddingByte);
                     target.WriteDataset(paddingBuffer);
                 }
 
                 else
                 {
-                    using var paddingBufferOwner = MemoryPool<byte>.Shared.Rent(padding);
+                    using var paddingBufferOwner = MemoryPool<byte>.Shared.Rent(paddingLength);
                     
-                    var paddingBuffer = paddingBufferOwner.Memory.Span[..padding];
-                    paddingBuffer.Clear();
+                    var paddingBuffer = paddingBufferOwner.Memory.Span[..paddingLength];
+                    paddingBuffer.Fill(paddingByte);
 
                     target.WriteDataset(paddingBuffer);
                 }
@@ -1149,9 +1234,11 @@ internal partial record class DatatypeMessage : Message
         NativeWriteContext context,
         H5OpaqueInfo? opaqueInfo,
         int? stringLength = default,
-        PaddingType stringPadding = PaddingType.NullTerminate)
+        PaddingType stringPadding = PaddingType.NullTerminate,
+        Func<MemberInfo, int?>? memberLength = default)
     {
-        var (message, elementEncode) = GetTypeInfoForScalar(context, typeof(T), stringLength, opaqueInfo, stringPadding);
+        var (message, elementEncode) = GetTypeInfoForScalar(
+            context, typeof(T), stringLength, opaqueInfo, stringPadding, memberLength);
 
         void encode(Memory<T> source, IH5WriteStream target)
         {
