@@ -24,17 +24,26 @@ public class LinkTests
 
         var filePath = Path.GetTempFileName();
 
-        // Act
-        file.Write(filePath);
+        try
+        {
+            // Act
+            file.Write(filePath);
 
-        // Assert
-        var actual = TestUtils.DumpH5File(filePath);
+            // Assert
+            var actual = TestUtils.DumpH5File(filePath);
 
-        var expected = File
-            .ReadAllText("DumpFiles/links_soft.dump")
-            .Replace("<file-path>", filePath);
+            var expected = File
+                .ReadAllText("DumpFiles/links_soft.dump")
+                .Replace("<file-path>", filePath);
 
-        Assert.Equal(expected, actual);
+            Assert.Equal(expected, actual);
+        }
+
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
     }
 
     [Fact]
@@ -50,17 +59,26 @@ public class LinkTests
 
         var filePath = Path.GetTempFileName();
 
-        // Act
-        file.Write(filePath);
+        try
+        {
+            // Act
+            file.Write(filePath);
 
-        // Assert
-        var actual = TestUtils.DumpH5File(filePath);
+            // Assert
+            var actual = TestUtils.DumpH5File(filePath);
 
-        var expected = File
-            .ReadAllText("DumpFiles/links_mass.dump")
-            .Replace("<file-path>", filePath);
+            var expected = File
+                .ReadAllText("DumpFiles/links_mass.dump")
+                .Replace("<file-path>", filePath);
 
-        Assert.Equal(expected, actual);
+            Assert.Equal(expected, actual);
+        }
+
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
     }
 
     [Fact]
@@ -84,17 +102,26 @@ public class LinkTests
 
         var filePath = Path.GetTempFileName();
 
-        // Act
-        file.Write(filePath);
+        try
+        {
+            // Act
+            file.Write(filePath);
 
-        // Assert
-        var actual = TestUtils.DumpH5File(filePath);
+            // Assert
+            var actual = TestUtils.DumpH5File(filePath);
 
-        var expected = File
-            .ReadAllText("DumpFiles/links_shared_dataset.dump")
-            .Replace("<file-path>", filePath);
+            var expected = File
+                .ReadAllText("DumpFiles/links_shared_dataset.dump")
+                .Replace("<file-path>", filePath);
 
-        Assert.Equal(expected, actual);
+            Assert.Equal(expected, actual);
+        }
+
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
     }
 
     [Fact]
@@ -118,17 +145,26 @@ public class LinkTests
 
         var filePath = Path.GetTempFileName();
 
-        // Act
-        file.Write(filePath);
+        try
+        {
+            // Act
+            file.Write(filePath);
 
-        // Assert
-        using var root = H5File.OpenRead(filePath);
+            // Assert
+            using var root = H5File.OpenRead(filePath);
 
-        var actualA = root.Dataset("dataset_a").Read<int[]>();
-        var actualB = root.Group("group").Dataset("dataset_b").Read<int[]>();
+            var actualA = root.Dataset("dataset_a").Read<int[]>();
+            var actualB = root.Group("group").Dataset("dataset_b").Read<int[]>();
 
-        Assert.Equal(expected, actualA);
-        Assert.Equal(expected, actualB);
+            Assert.Equal(expected, actualA);
+            Assert.Equal(expected, actualB);
+        }
+
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
     }
 
     [Fact]
@@ -152,17 +188,26 @@ public class LinkTests
 
         var filePath = Path.GetTempFileName();
 
-        // Act
-        file.Write(filePath);
+        try
+        {
+            // Act
+            file.Write(filePath);
 
-        // Assert
-        var actual = TestUtils.DumpH5File(filePath);
+            // Assert
+            var actual = TestUtils.DumpH5File(filePath);
 
-        var expected = File
-            .ReadAllText("DumpFiles/links_shared_dataset.dump")
-            .Replace("<file-path>", filePath);
+            var expected = File
+                .ReadAllText("DumpFiles/links_shared_dataset.dump")
+                .Replace("<file-path>", filePath);
 
-        Assert.Equal(expected, actual);
+            Assert.Equal(expected, actual);
+        }
+
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
     }
 
     [Fact]
@@ -185,17 +230,26 @@ public class LinkTests
 
         var filePath = Path.GetTempFileName();
 
-        // Act
-        file.Write(filePath);
+        try
+        {
+            // Act
+            file.Write(filePath);
 
-        // Assert
-        using var root = H5File.OpenRead(filePath);
+            // Assert
+            using var root = H5File.OpenRead(filePath);
 
-        var actualA = root.Dataset("dataset_a").Read<int[]>();
-        var actualB = root.Group("group").Dataset("dataset_b").Read<int[]>();
+            var actualA = root.Dataset("dataset_a").Read<int[]>();
+            var actualB = root.Group("group").Dataset("dataset_b").Read<int[]>();
 
-        Assert.Equal(expected, actualA);
-        Assert.Equal(expected, actualB);
+            Assert.Equal(expected, actualA);
+            Assert.Equal(expected, actualB);
+        }
+
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
     }
 
     [Fact]
@@ -240,17 +294,26 @@ public class LinkTests
 
         var filePath = Path.GetTempFileName();
 
-        // Act
-        file.Write(filePath);
+        try
+        {
+            // Act
+            file.Write(filePath);
 
-        // Assert
-        var actual = TestUtils.DumpH5File(filePath);
+            // Assert
+            var actual = TestUtils.DumpH5File(filePath);
 
-        var expected = File
-            .ReadAllText("DumpFiles/links_complex.dump")
-            .Replace("<file-path>", filePath);
+            var expected = File
+                .ReadAllText("DumpFiles/links_complex.dump")
+                .Replace("<file-path>", filePath);
 
-        Assert.Equal(expected, actual);
+            Assert.Equal(expected, actual);
+        }
+
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
     }
 
     /// <summary>

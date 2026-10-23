@@ -526,17 +526,26 @@ public partial class DatasetTests
 
         var filePath = Path.GetTempFileName();
 
-        // Act
-        void action() => file.Write(filePath);
+        try
+        {
+            // Act
+            void action() => file.Write(filePath);
 
-        // Assert
-        var exception = Assert.Throws<Exception>(action);
+            // Assert
+            var exception = Assert.Throws<Exception>(action);
 
-        // Read straight off the exception: encoding rethrows unwrapped, so the reflection layers no
-        // longer have to be walked through to reach the message.
-        Assert.Equal(
-            "The current object is already being encoded which suggests a circular reference.",
-            exception.Message);
+            // Read straight off the exception: encoding rethrows unwrapped, so there are no reflection
+            // layers to walk through to reach the message.
+            Assert.Equal(
+                "The current object is already being encoded which suggests a circular reference.",
+                exception.Message);
+        }
+
+        finally
+        {
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+        }
     }
 
     [Fact]

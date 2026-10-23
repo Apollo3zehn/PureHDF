@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -92,9 +93,45 @@ public partial class TestUtils
         }
     }
 
+    // The files PrepareTestFile hands out, deleted when the test run ends. Its callers read the file
+    // after it returns, often through objects that outlive the test method, so none of them deletes it;
+    // left alone, every run leaves its fixtures in the temp directory.
+    private static readonly ConcurrentBag<string> _preparedFiles = DeleteOnExit();
+
+    private static ConcurrentBag<string> DeleteOnExit()
+    {
+        var files = new ConcurrentBag<string>();
+
+        AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+        {
+            foreach (var filePath in files)
+            {
+                // Best effort: a file still held open cannot be deleted on Windows.
+                try
+                {
+                    File.Delete(filePath);
+                }
+
+                catch (IOException)
+                {
+                    //
+                }
+
+                catch (UnauthorizedAccessException)
+                {
+                    //
+                }
+            }
+        };
+
+        return files;
+    }
+
     public static unsafe string PrepareTestFile(H5F.libver_t version, Action<long> action)
     {
         var filePath = Path.GetTempFileName();
+        _preparedFiles.Add(filePath);
+
         long res;
 
         // file

@@ -220,27 +220,37 @@ public class LinkTests
     {
         // Arrange
         var externalFilePath = Path.GetTempFileName();
-        var externalFileId = H5F.create(externalFilePath, H5F.ACC_TRUNC);
-        var externalGroupId1 = H5G.create(externalFileId, "external");
-        var externalGroupId2 = H5G.create(externalGroupId1, "group");
 
-        var spaceId = H5S.create_simple(1, [1], [1]);
-        var datasetId = H5D.create(externalGroupId2, "Hello from external file =)", H5T.NATIVE_UINT, spaceId);
+        try
+        {
+            var externalFileId = H5F.create(externalFilePath, H5F.ACC_TRUNC);
+            var externalGroupId1 = H5G.create(externalFileId, "external");
+            var externalGroupId2 = H5G.create(externalGroupId1, "group");
 
-        long res;
+            var spaceId = H5S.create_simple(1, [1], [1]);
+            var datasetId = H5D.create(externalGroupId2, "Hello from external file =)", H5T.NATIVE_UINT, spaceId);
 
-        res = H5S.close(spaceId);
-        res = H5D.close(datasetId);
-        res = H5G.close(externalGroupId2);
-        res = H5G.close(externalGroupId1);
-        res = H5F.close(externalFileId);
+            long res;
 
-        var filePath = TestUtils.PrepareTestFile(H5F.libver_t.LATEST, fileId => TestUtils.AddExternalFileLink(fileId, externalFilePath));
+            res = H5S.close(spaceId);
+            res = H5D.close(datasetId);
+            res = H5G.close(externalGroupId2);
+            res = H5G.close(externalGroupId1);
+            res = H5F.close(externalFileId);
 
-        // Act
-        using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+            var filePath = TestUtils.PrepareTestFile(H5F.libver_t.LATEST, fileId => TestUtils.AddExternalFileLink(fileId, externalFilePath));
 
-        var dataset = root.Dataset("/links/external_link/Hello from external file =)");
+            // Act
+            using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+
+            var dataset = root.Dataset("/links/external_link/Hello from external file =)");
+        }
+
+        finally
+        {
+            if (File.Exists(externalFilePath))
+                File.Delete(externalFilePath);
+        }
     }
 
     [Fact]
