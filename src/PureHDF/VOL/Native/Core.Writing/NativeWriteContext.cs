@@ -29,7 +29,7 @@ internal record NativeWriteContext(
     GlobalHeapManager GlobalHeapManager,
     H5WriteOptions WriteOptions,
     Dictionary<H5Dataset, (H5D_Base H5D, object Encode)> DatasetToInfoMap,
-    Dictionary<DatasetInfo, (long ObjectHeaderStart, int ObjectHeaderLength)> DatasetInfoToObjectHeaderMap,
+    Dictionary<DatasetInfo, (long ObjectHeaderAddress, byte[] ObjectHeader)> DatasetInfoToObjectHeaderMap,
     Dictionary<DatatypeCacheKey, (DatatypeMessage, ElementEncodeDelegate)> TypeToMessageMap,
     Dictionary<H5Object, ulong> ObjectToAddressMap,
     Dictionary<H5Object, int> ObjectReferenceCountMap,

@@ -16,7 +16,8 @@ partial class H5NativeWriter
 
     internal H5NativeWriter(H5File file, Stream stream, H5WriteOptions options, bool leaveOpen)
     {
-        // TODO readable is only required for checksums, maybe this requirement can be lifted by renting Memory<byte> and calculate the checksum over that memory
+        // TODO writing never reads from the stream (checksums are computed from the encoded bytes), so the
+        // readable requirement could be lifted.
         if (!stream.CanRead || !stream.CanWrite || !stream.CanSeek)
             throw new Exception("The stream must be readble, writable and seekable.");
 
@@ -268,9 +269,9 @@ partial class H5NativeWriter
         };
 
         // encode object header
-        // ObjectHeader2.Encode() is async, because it reads back the just-written bytes to compute a
-        // checksum. This method and its public entry point (H5File.Write(), which has no async
-        // counterpart) are synchronous, so the call is bridged here.
+        // ObjectHeader2.Encode() returns a ValueTask but completes synchronously. This method and its
+        // public entry point (H5File.Write(), which has no async counterpart) are synchronous, so the
+        // call is bridged here.
         var address = objectHeader.Encode(Context).GetAwaiter().GetResult();
 
         return address;
@@ -498,13 +499,19 @@ partial class H5NativeWriter
             chunk.FlushChunkCache();
 
         // encode object header
+        //
+        // Only a chunked dataset rewrites its own object header later (H5D_Chunk4.Dispose, once its
+        // index is known), so only it keeps a copy of the header to patch.
+        if (h5d is H5D_Chunk4)
+        {
+            var (chunkedAddress, encoded) = objectHeader.EncodeAndKeep(Context);
+            Context.DatasetInfoToObjectHeaderMap[datasetInfo] = ((long)chunkedAddress, encoded);
+
+            return chunkedAddress;
+        }
+
         // Bridged for the same reason as in EncodeGroup above.
-        var address = objectHeader.Encode(Context).GetAwaiter().GetResult();
-        var end = (ulong)Context.Driver.Position - Context.Driver.BaseAddress;
-
-        Context.DatasetInfoToObjectHeaderMap[datasetInfo] = ((long)address, (int)(end - address));
-
-        return address;
+        return objectHeader.Encode(Context).GetAwaiter().GetResult();
     }
 
     private static void InternalWriteDataset<T, TElement>(

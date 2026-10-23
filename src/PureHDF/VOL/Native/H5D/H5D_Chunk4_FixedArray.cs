@@ -155,15 +155,14 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 // header
                 WriteContext.Driver.SeekRelativeToBaseAddress((long)Chunked4.Address);
 
-                // SYNC SURFACE: Encode is async and this is the synchronous write path, so it must
-                // block. Unawaited it would race the data-block write below.
-                header.Encode(WriteContext.Driver).GetAwaiter().GetResult();
+                header.Encode(WriteContext.Driver);
 
                 // data block
                 WriteContext.Driver.SeekRelativeToBaseAddress(dataBlockAddress);
 
                 dataBlock.Encode(
                     driver: WriteContext.Driver,
+                    encodeSize: (int)dataBlockEncodeSize,
                     encode: (driver, element) =>
                 {
                     // Address
