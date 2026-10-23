@@ -1,4 +1,4 @@
-﻿using System.Buffers;
+﻿using PureHDF.VFD;
 
 namespace PureHDF.VOL.Native;
 
@@ -14,42 +14,30 @@ internal partial record class FixedArrayHeader
         sizeof(ulong) +
         sizeof(uint);
 
-    internal async ValueTask Encode(H5DriverBase driver)
+    internal void Encode(H5DriverBase driver)
     {
-        var position = driver.Position;
+        ChecksummedStructure.Write(driver, ENCODE_SIZE, driver =>
+        {
+            // signature
+            driver.Write(Signature);
 
-        // signature
-        driver.Write(Signature);
+            // version
+            driver.Write(Version);
 
-        // version
-        driver.Write(Version);
+            // Client ID
+            driver.Write(ClientID);
 
-        // Client ID
-        driver.Write(ClientID);
+            // Entry Size
+            driver.Write(EntrySize);
 
-        // Entry Size
-        driver.Write(EntrySize);
+            // Page Bits
+            driver.Write(PageBits);
 
-        // Page Bits
-        driver.Write(PageBits);
+            // Max Num Entries
+            driver.Write(EntriesCount);
 
-        // Max Num Entries
-        driver.Write(EntriesCount);
-
-        // Data Block Address
-        driver.Write(DataBlockAddress);
-
-        // Checksum
-        driver.Seek(position, SeekOrigin.Begin);
-        using var owner = MemoryPool<byte>.Shared.Rent(ENCODE_SIZE - sizeof(int));
-        var checksumData = owner.Memory[..(ENCODE_SIZE - sizeof(int))];
-        await driver.Read(checksumData).ConfigureAwait(false);
-        var checksum = ChecksumUtils.JenkinsLookup3(checksumData.Span);
-
-        // Absolute seek: see Superblock23.Encode - the async read leaves a BufferedFileStream's
-        // read buffer in a state where the sync Write below can fail inside FlushRead.
-        driver.Seek(position + (ENCODE_SIZE - sizeof(int)), SeekOrigin.Begin);
-
-        driver.Write(checksum);
+            // Data Block Address
+            driver.Write(DataBlockAddress);
+        });
     }
 }

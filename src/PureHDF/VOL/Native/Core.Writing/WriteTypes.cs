@@ -7,9 +7,15 @@ internal delegate void ElementEncodeDelegate(object source, IH5WriteStream targe
 
 internal record GlobalHeapCollectionState(
     GlobalHeapCollection Collection,
-    Memory<byte> Memory)
+    Memory<byte> Memory,
+    long BaseAddress)
 {
     public int Consumed { get; set; }
+
+    // Per collection rather than per manager: object indices restart at 1 in each collection, and the
+    // manager keeps one collection open per allocation kind, so a single counter would interleave
+    // two collections' indices and mislabel their objects.
+    public ushort Index { get; set; }
 };
 
 [StructLayout(LayoutKind.Explicit, Size = 12)]
