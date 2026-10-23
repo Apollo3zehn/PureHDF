@@ -9,17 +9,52 @@ namespace PureHDF.Tests;
 
 public partial class TestUtils
 {
-    public static string? DumpH5File(string filePath)
+    /// <summary>
+    /// What h5dump, or another of the HDF5 tools, reported: its exit code, and both streams unmodified.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Failed" /> is the part worth asking for. h5dump prints its error stack to stderr and
+    /// still writes a partial tree to stdout, and <see cref="DumpH5File" /> strips that stack so the
+    /// fixture comparisons do not depend on the locally installed version - which also strips every
+    /// trace of failure, so a test asserting the dump does not contain "error" cannot fail. Ask this
+    /// instead when the question is whether the C library accepted the file at all.
+    /// </remarks>
+    public sealed record Hdf5ToolResult(int ExitCode, string Stdout, string Stderr)
+    {
+        public bool Failed => ExitCode != 0 || Stderr.Contains("HDF5-DIAG:", StringComparison.Ordinal);
+
+        /// <summary>
+        /// The first few lines of the error stack, for a failure message worth reading.
+        /// </summary>
+        public string Diagnostics => string.Join(
+            Environment.NewLine,
+            Stderr
+                .Split('\n')
+                .Where(line => line.Contains("line ", StringComparison.Ordinal) || line.Contains("error", StringComparison.OrdinalIgnoreCase))
+                .Take(4)
+                .Select(line => line.Trim()));
+    }
+
+    /// <summary>
+    /// Runs h5dump and reports everything it said. Null when h5dump is not installed.
+    /// </summary>
+    public static Hdf5ToolResult? RunH5Dump(string filePath)
+        => RunHdf5Tool("h5dump", "--enable-error-stack " + filePath);
+
+    /// <summary>
+    /// Runs one of the HDF5 command line tools and reports everything it said. Null when it is not installed.
+    /// </summary>
+    public static Hdf5ToolResult? RunHdf5Tool(string fileName, string arguments)
     {
         // Read stdout and stderr concurrently on background tasks to
-        // avoid deadlock if h5dump writes more than ~64 KB to stderr before
+        // avoid deadlock if the tool writes more than ~64 KB to stderr before
         // exiting.
-        using var h5dumpProcess = new Process
+        using var process = new Process
         {
             StartInfo = new ProcessStartInfo
             {
-                FileName = "h5dump",
-                Arguments = "--enable-error-stack " + filePath,
+                FileName = fileName,
+                Arguments = arguments,
                 UseShellExecute = false,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -27,45 +62,66 @@ public partial class TestUtils
             }
         };
 
-        h5dumpProcess.Start();
+        try
+        {
+            process.Start();
+        }
 
-        var stdoutTask = Task.Run(() => h5dumpProcess.StandardOutput.ReadToEnd());
-        var stderrTask = Task.Run(() => h5dumpProcess.StandardError.ReadToEnd());
+        // Not installed. Reported as null rather than thrown, so that a Skip.If on it actually skips:
+        // these tests are about what the C library makes of a file, and there is nothing to learn
+        // without the C library.
+        catch (System.ComponentModel.Win32Exception)
+        {
+            return null;
+        }
 
-        // Cap wall time so a hung h5dump surfaces as a clear test failure rather than the
+        var stdoutTask = Task.Run(() => process.StandardOutput.ReadToEnd());
+        var stderrTask = Task.Run(() => process.StandardError.ReadToEnd());
+
+        // Cap wall time so a hung tool surfaces as a clear test failure rather than the
         // whole test run hanging indefinitely.
         const int timeoutMs = 30_000;
 
-        if (!h5dumpProcess.WaitForExit(timeoutMs))
+        if (!process.WaitForExit(timeoutMs))
         {
-            try { h5dumpProcess.Kill(entireProcessTree: true); }
+            try { process.Kill(entireProcessTree: true); }
             catch { }
 
             throw new TimeoutException(
-                $"h5dump did not exit within {timeoutMs} ms for '{filePath}'.");
+                $"{fileName} did not exit within {timeoutMs} ms for '{arguments}'.");
         }
 
-        var stdoutStr = stdoutTask.GetAwaiter().GetResult().TrimEnd('\r', '\n');
-        var stderrStr = stderrTask.GetAwaiter().GetResult().TrimEnd('\r', '\n');
+        return new Hdf5ToolResult(
+            ExitCode: process.ExitCode,
+            Stdout: stdoutTask.GetAwaiter().GetResult().TrimEnd('\r', '\n'),
+            Stderr: stderrTask.GetAwaiter().GetResult().TrimEnd('\r', '\n'));
+    }
+
+    public static string? DumpH5File(string filePath)
+    {
+        var result = RunH5Dump(filePath)
+            ?? throw new InvalidOperationException("h5dump is not installed.");
+
+        var stdoutStr = result.Stdout;
+        var stderrStr = result.Stderr;
+
         if (stdoutStr.Length == 0)
         {
             throw new InvalidOperationException(
-                $"h5dump produced no stdout for '{filePath}' (exit code {h5dumpProcess.ExitCode}). " +
+                $"h5dump produced no stdout for '{filePath}' (exit code {result.ExitCode}). " +
                 $"stderr:{Environment.NewLine}{stderrStr}");
         }
 
         var dump = stderrStr.Length > 0
             ? stdoutStr + Environment.NewLine + stderrStr
             : stdoutStr;
-			
+
         // Strip h5dump's trailing HDF5-DIAG error stack so the comparison
-        // doesn't depend on the locally-installed h5dump version. 
-        if (dump is not null)
-        {
-            var diagIdx = dump.IndexOf("HDF5-DIAG:", StringComparison.Ordinal);
-            if (diagIdx >= 0)
-                dump = dump[..diagIdx].TrimEnd('\r', '\n');
-        }
+        // doesn't depend on the locally-installed h5dump version.
+        var diagIdx = dump.IndexOf("HDF5-DIAG:", StringComparison.Ordinal);
+
+        if (diagIdx >= 0)
+            dump = dump[..diagIdx].TrimEnd('\r', '\n');
 
         return dump;
     }

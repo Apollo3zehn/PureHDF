@@ -7,7 +7,7 @@ namespace PureHDF;
 /// </summary>
 /// <param name="DefaultStringLength">A value that indicates how strings are handled during serialization. A nonzero positve value means that strings are treated as fixed-length strings, otherwise they are variable-length strings. The default value is 0.</param>
 /// <param name="MinimumGlobalHeapCollectionSize">A value that indicates the minimum size of a global heap collection in bytes. The default value is 4096 bytes which is the absolute minimum allowed size.</param>
-/// <param name="GlobalHeapFlushThreshold">A value that indicates the threshold after which global heap collections will be flushed. The default value is 4096 * 1024 = 4 MB.</param>
+/// <param name="GlobalHeapFlushThreshold">Unused. Global heap collections are written as soon as they can take no more objects, at the end of <see cref="H5File.BeginWrite(string, H5WriteOptions?)" /> and of each <see cref="H5NativeWriter.Write{T}" />. Kept so that code setting it still compiles.</param>
 /// <param name="UserBlockSize">Set the file user block size, in bytes. The default user block size is 0; it may be set to any power of 2 equal to 512 or greater (512, 1024, 2048, etc.).</param>
 /// <param name="PreferCompactDatasetLayout">A value that indicates whether the writer tries to use the compact layout for datasets if the total data size is &lt; 64 kB and it should not be chunked.</param>
 /// <param name="IncludeStructFields">A value that indicates whether struct fields are handled during serialization. The default value is <see langword="true"/>.</param>
@@ -67,4 +67,59 @@ public record H5WriteOptions(
     List<H5Filter>? Filters = default,
     H5AttributeStringLength AttributeStringLength = H5AttributeStringLength.Measured,
     H5StringOverflow StringOverflow = H5StringOverflow.Truncate
-);
+)
+{
+    // Declared in the body rather than as further positional parameters, deliberately: adding a
+    // parameter to a record's primary constructor changes its signature, which is a binary-breaking
+    // change for anything compiled against the previous version, while adding a property is not.
+
+    /// <summary>
+    /// Where the writer places file structure relative to dataset payload. The default,
+    /// <see cref="H5MetadataPlacement.Interleaved" />, allocates in encode order and adds nothing to a
+    /// write.
+    /// </summary>
+    /// <remarks>
+    /// Set <see cref="H5MetadataPlacement.FrontLoaded" /> to keep structure together at the front of the
+    /// file, which is what a reader fetching ranges over a high-latency link wants. See
+    /// <see cref="H5MetadataPlacement" /> for what each one buys and costs.
+    /// </remarks>
+    public H5MetadataPlacement MetadataPlacement { get; init; } = H5MetadataPlacement.Interleaved;
+
+    /// <summary>
+    /// The largest metadata block the writer will open, in bytes. The default is 8 MB. It applies when
+    /// <see cref="MetadataPlacement" /> is <see cref="H5MetadataPlacement.Aggregated" />, and to the
+    /// remainder when a <see cref="H5MetadataPlacement.FrontLoaded" /> reservation runs out.
+    /// </summary>
+    /// <remarks>
+    /// A ceiling rather than a fixed size: the first block is small and each one doubles up to this
+    /// value, so what a file pays is proportional to the metadata it has rather than a floor it pays
+    /// whatever its size. Raising this clusters more structure per block once a file is large enough to
+    /// reach it. An allocation larger than this cannot be held by a block at all, and is placed inline.
+    /// <para>
+    /// Must be greater than zero for any placement other than
+    /// <see cref="H5MetadataPlacement.Interleaved" />, which uses no blocks and ignores it.
+    /// </para>
+    /// </remarks>
+    public long MetadataBlockSize { get; init; } = 8 * 1024 * 1024;
+
+    /// <summary>
+    /// The size in bytes reserved at the front of the file for structure, used when
+    /// <see cref="MetadataPlacement" /> is <see cref="H5MetadataPlacement.FrontLoaded" />. Zero, the
+    /// default, means the region is exactly as large as the structure turns out to be.
+    /// </summary>
+    /// <remarks>
+    /// Without a reservation, the writer encodes the structure once, holds it in memory until it is
+    /// complete, and then writes it in one run, front to back. Holding it costs memory the size of the
+    /// structure until <see cref="H5File.BeginWrite(string, H5WriteOptions?)" /> returns.
+    /// <para>
+    /// An explicit value writes the structure as it is encoded instead, without holding it, at the cost of
+    /// guessing its size: one too large abandons whatever it over-reserved. Data written later through
+    /// <see cref="H5File.BeginWrite(string, H5WriteOptions?)" /> needs no allowance either - a chunk
+    /// index is sized from the chunk count, which comes from the dimensions rather than from the data,
+    /// and a variable-length value's heap space is payload rather than structure, so writing more of it
+    /// does not move the total. A reservation that nonetheless falls short spills into blocks, which
+    /// loses locality for the remainder rather than failing.
+    /// </para>
+    /// </remarks>
+    public long MetadataReservation { get; init; }
+}
