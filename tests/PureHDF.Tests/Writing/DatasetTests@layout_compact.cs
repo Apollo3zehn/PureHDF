@@ -17,8 +17,8 @@ public partial class DatasetTests
 
         var filePath = Path.GetTempFileName();
 
-        // Act
-        file.Write(filePath);
+        // Act - 400 bytes, above the default maximum
+        file.Write(filePath, new H5WriteOptions { MaximumCompactDatasetSize = 400 });
 
         // Assert
         try

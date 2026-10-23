@@ -27,8 +27,15 @@ internal record EncodeInfo<T>(
     EncodeDelegate<T> Encoder,
     int SourceTypeSizeFactor,
     int TargetTypeSize,
-    bool AllowBulkCopy
+    bool AllowBulkCopy,
+    TargetElementsWrittenDelegate? TargetElementsWritten = default
 );
+
+/// <summary>
+/// Told, after each piece of an encode, how many elements went into which target chunk - so that a chunk
+/// can be finished once all of its elements have arrived.
+/// </summary>
+internal delegate void TargetElementsWrittenDelegate(ulong chunkIndex, int elementCount, IH5WriteStream stream);
 
 internal readonly record struct RelativeStep(
     ulong ChunkIndex,
@@ -244,6 +251,8 @@ internal static class SelectionHelper
                 encodeInfo.Encoder(
                     currentSource[..sourceLength],
                     targetStream);
+
+                encodeInfo.TargetElementsWritten?.Invoke(lastTargetChunkIndex, length, targetStream);
 
                 currentOffset += length;
                 currentLength -= length;

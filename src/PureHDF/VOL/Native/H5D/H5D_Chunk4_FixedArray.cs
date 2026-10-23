@@ -81,7 +81,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
         if (Dataset.FilterPipeline is not null)
         {
             chunkInfo = new ChunkInfo(
-                Address: (ulong)WriteContext.FreeSpaceManager.Allocate(chunkSize),
+                Address: (ulong)WriteContext.FreeSpaceManager.Allocate(chunkSize, AllocationKind.RawData),
                 Size: chunkSize,
                 FilterMask: filterMask
             );
@@ -138,8 +138,10 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                     Version = 0
                 };
 
+                // Allocated with the header when the layout was created (see DataLayoutMessage4.Create),
+                // so that all of the index is structure the reservation already covers.
                 var dataBlockEncodeSize = dataBlock.GetEncodeSize(pageCount, pageBitmapSize, entrySize);
-                var dataBlockAddress = WriteContext.FreeSpaceManager.Allocate((long)dataBlockEncodeSize);
+                var dataBlockAddress = (long)Chunked4.Address + FixedArrayHeader.ENCODE_SIZE;
 
                 var header = new FixedArrayHeader(
                     Superblock: default!,
@@ -155,15 +157,14 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
                 // header
                 WriteContext.Driver.SeekRelativeToBaseAddress((long)Chunked4.Address);
 
-                // SYNC SURFACE: Encode is async and this is the synchronous write path, so it must
-                // block. Unawaited it would race the data-block write below.
-                header.Encode(WriteContext.Driver).GetAwaiter().GetResult();
+                header.Encode(WriteContext.Driver);
 
                 // data block
                 WriteContext.Driver.SeekRelativeToBaseAddress(dataBlockAddress);
 
                 dataBlock.Encode(
                     driver: WriteContext.Driver,
+                    encodeSize: (int)dataBlockEncodeSize,
                     encode: (driver, element) =>
                 {
                     // Address
@@ -184,7 +185,7 @@ internal class H5D_Chunk4_FixedArray : H5D_Chunk4
         }
     }
 
-    private static (ulong, ulong, ulong) GetInfo(byte pageBits, ulong entriesCount)
+    internal static (ulong, ulong, ulong) GetInfo(byte pageBits, ulong entriesCount)
     {
         // H5FAdblock.c (H5FA__dblock_alloc)
         var elementsPerPage = 1UL << pageBits;

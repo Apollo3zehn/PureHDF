@@ -38,6 +38,9 @@ public partial class H5File : H5Group
 
         writer.Write();
 
+        // See BeginWrite(Stream, H5WriteOptions).
+        writer.Context.GlobalHeapManager.Encode();
+
         return writer;
     }
 
@@ -50,6 +53,10 @@ public partial class H5File : H5Group
     {
         var writer = new H5NativeWriter(this, stream, options ?? new H5WriteOptions(), leaveOpen: true);
         writer.Write();
+
+        // The structure is complete, and with it every attribute value: written now rather than at Dispose,
+        // so that nothing has to be written back into the structure later.
+        writer.Context.GlobalHeapManager.Encode();
 
         return writer;
     }
