@@ -18,7 +18,7 @@ public partial class H5File : H5Group
     /// <summary>
     /// Writes the contents to the specified stream.
     /// </summary>
-    /// <param name="stream">The stream to write the contents into. It must be readable, writeable and seekable.</param>
+    /// <param name="stream">The stream to write the contents into. It must be writeable and seekable; it need not be readable.</param>
     /// <param name="options">Options to control encoding behavior.</param>
     public void Write(Stream stream, H5WriteOptions? options = default)
     {
@@ -38,18 +38,25 @@ public partial class H5File : H5Group
 
         writer.Write();
 
+        // See BeginWrite(Stream, H5WriteOptions).
+        writer.Context.GlobalHeapManager.Encode();
+
         return writer;
     }
 
     /// <summary>
     /// Writes the contents to the specified stream and returns a writer which allows to write more data to the stream until the writer gets disposed.
     /// </summary>
-    /// <param name="stream">The stream to write the contents into. It must be readable, writeable and seekable.</param>
+    /// <param name="stream">The stream to write the contents into. It must be writeable and seekable; it need not be readable.</param>
     /// <param name="options">Options to control encoding behavior.</param>
     public H5NativeWriter BeginWrite(Stream stream, H5WriteOptions? options = default)
     {
         var writer = new H5NativeWriter(this, stream, options ?? new H5WriteOptions(), leaveOpen: true);
         writer.Write();
+
+        // The structure is complete, and with it every attribute value: written now rather than at Dispose,
+        // so that nothing has to be written back into the structure later.
+        writer.Context.GlobalHeapManager.Encode();
 
         return writer;
     }

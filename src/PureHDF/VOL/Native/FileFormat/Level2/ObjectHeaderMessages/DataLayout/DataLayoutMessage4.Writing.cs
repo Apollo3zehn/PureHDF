@@ -2,16 +2,24 @@
 
 internal partial record class DataLayoutMessage4
 {
+    // allocatesPayload: whether to allocate a contiguous or implicitly indexed dataset's payload now. When
+    // not, its address is left undefined and unallocatedPayloadSize says how much to allocate later. The
+    // other layouts allocate their chunks as they are written anyway.
     public static DataLayoutMessage4 Create(
         NativeWriteContext context,
         uint typeSize,
         bool isFiltered,
         bool isDeferred,
         ulong[]? dataDimensions,
-        uint[]? chunkDimensions)
+        uint[]? chunkDimensions,
+        bool allocatesPayload,
+        out long unallocatedPayloadSize,
+        long variableLengthSize = 0)
     {
         var preferCompact = context.WriteOptions.PreferCompactDatasetLayout;
         var dataLayout = default(DataLayoutMessage4);
+
+        unallocatedPayloadSize = 0;
 
         if (dataDimensions is not null && chunkDimensions is not null)
         {
@@ -23,7 +31,7 @@ internal partial record class DataLayoutMessage4
                     .Ceiling(dataDimensions[dimension] / (double)chunkDimensions[dimension]);
             }
 
-            (IndexingInformation IndexingInformation, long EncodeSize, ChunkedStoragePropertyFlags Flags) indexInfo;
+            (IndexingInformation IndexingInformation, long EncodeSize, AllocationKind Kind, ChunkedStoragePropertyFlags Flags) indexInfo;
 
             if (chunkCount == 1)
             {
@@ -37,19 +45,33 @@ internal partial record class DataLayoutMessage4
                 indexInfo = (
                     indexingInformation,
                     0,
+                    AllocationKind.Metadata,
                     flags);
             }
 
             else
             {
+                /* H5D__layout_set_latest_indexing (H5Dlayout.c) => H5D_FARRAY_MAX_DBLK_PAGE_NELMTS_BITS */
+                var pageBits = (byte)Math.Ceiling(Math.Log2(chunkCount));
+
                 indexInfo = isFiltered
                     ?
                         (
                             new FixedArrayIndexingInformation(
-                                /* H5D__layout_set_latest_indexing (H5Dlayout.c) => H5D_FARRAY_MAX_DBLK_PAGE_NELMTS_BITS */
-                                PageBits: (byte)Math.Ceiling(Math.Log2(chunkCount))
+                                PageBits: pageBits
                             ),
-                            FixedArrayHeader.ENCODE_SIZE,
+
+                            /* The header and its data block, together: the block's size follows from the
+                             * chunk count, so it need not wait until the chunks are written. Allocated at
+                             * Dispose, it would be structure that turns up after the structure has been
+                             * placed. See H5D_Chunk4_FixedArray.Dispose.
+                             */
+                            FixedArrayHeader.ENCODE_SIZE + (long)GetFixedArrayDataBlockEncodeSize(
+                                pageBits,
+                                chunkCount,
+                                chunkByteSize: chunkDimensions.Aggregate(1UL, (product, dimension) => product * dimension) * typeSize),
+
+                            AllocationKind.Metadata,
                             ChunkedStoragePropertyFlags.None
                         )
                     :
@@ -60,14 +82,25 @@ internal partial record class DataLayoutMessage4
                                 chunkDimensions.Aggregate(1UL, (product, dimension) => product * dimension) * 
                                 typeSize
                             ),
+
+                            /* An implicit index has no index structure at all: the chunks sit
+                             * contiguously from this address, so what is allocated here is the whole
+                             * payload rather than metadata. See H5D_Chunk4_Implicit, which derives a
+                             * chunk's address by offsetting into it arithmetically.
+                             */
+                            AllocationKind.RawData,
                             ChunkedStoragePropertyFlags.None
                         );
             }
 
             /* some indexes can only be allocated later */
-            var address = indexInfo.EncodeSize == 0
-                ? Superblock.UndefinedAddress
-                : (ulong)context.FreeSpaceManager.Allocate(indexInfo.EncodeSize);
+            var address = Superblock.UndefinedAddress;
+
+            if (!allocatesPayload && indexInfo.IndexingInformation is ImplicitIndexingInformation)
+                unallocatedPayloadSize = indexInfo.EncodeSize;
+
+            else if (indexInfo.EncodeSize != 0)
+                address = (ulong)context.FreeSpaceManager.Allocate(indexInfo.EncodeSize, indexInfo.Kind);
 
             var properties = new ChunkedStoragePropertyDescription4(
                 Rank: (byte)(chunkDimensions.Length + 1),
@@ -101,21 +134,20 @@ internal partial record class DataLayoutMessage4
 
             var dataEncodeSize = (long)(dataBlockSize * typeSize);
 
-            // TODO: The ushort.MaxValue limit is not stated in the specification but
-            // makes sense because of the size field of the Compact Storage Property
-            // Description.
+            // The whole layout message - version, layout class, a two-byte data size, then the data -
+            // has to fit the two-byte size an object header message declares.
             //
             // See also H5Dcompact.c (H5D__compact_construct): "Verify data size is 
             // smaller than maximum header message size (64KB) minus other layout 
             // message fields."
+            //
+            // Within that, the caller's maximum, against which the variable-length values the data
+            // names count too: they are placed with the header.
+            var fitsCompact = FitsCompact(context, dataEncodeSize, variableLengthSize);
 
             /* try to create compact dataset */
-            if (preferCompact && dataEncodeSize <= ushort.MaxValue && !isDeferred)
+            if (preferCompact && fitsCompact && !isDeferred)
             {
-                // TODO avoid creation of system memory stream too often
-                var buffer = new byte[dataEncodeSize];
-                var localWriter = new SystemMemoryStream(buffer);
-
                 var properties = new CompactStoragePropertyDescription(
                     Data: dataEncodeSize == 0
                         ? Array.Empty<byte>()
@@ -132,17 +164,18 @@ internal partial record class DataLayoutMessage4
                 {
                     Version = 4
                 };
-
-                var dataLayoutEncodeSize = dataLayout.GetEncodeSize();
-
-                if (dataEncodeSize + dataLayoutEncodeSize > ushort.MaxValue)
-                    dataLayout = default;
             }
 
             /* create contiguous dataset */
             if (dataLayout == default)
             {
-                var address = context.FreeSpaceManager.Allocate(dataEncodeSize);
+                var address = Superblock.LongUndefinedAddress;
+
+                if (allocatesPayload)
+                    address = context.FreeSpaceManager.Allocate(dataEncodeSize, AllocationKind.RawData);
+
+                else
+                    unallocatedPayloadSize = dataEncodeSize;
 
                 var properties = new ContiguousStoragePropertyDescription(
                     Size: (ulong)dataEncodeSize
@@ -162,6 +195,23 @@ internal partial record class DataLayoutMessage4
         }
 
         return dataLayout;
+    }
+
+    /// <summary>
+    /// Whether data of <paramref name="dataEncodeSize" /> bytes, naming <paramref name="variableLengthSize" />
+    /// bytes of variable-length values, can be written compact.
+    /// </summary>
+    public static bool FitsCompact(NativeWriteContext context, long dataEncodeSize, long variableLengthSize)
+        => dataEncodeSize <= H5WriteOptions.MAXIMUM_COMPACT_DATASET_SIZE &&
+            dataEncodeSize + variableLengthSize <= context.WriteOptions.MaximumCompactDatasetSize;
+
+    private static ulong GetFixedArrayDataBlockEncodeSize(byte pageBits, ulong chunkCount, ulong chunkByteSize)
+    {
+        /* H5FA__cache_hdr_serialize (H5FAcache.c) */
+        var entrySize = FilteredDataBlockElement.GetEncodeSize(MathUtils.ComputeChunkSizeLength(chunkByteSize));
+        var (_, pageCount, pageBitmapSize) = H5D_Chunk4_FixedArray.GetInfo(pageBits, chunkCount);
+
+        return FixedArrayDataBlock<FilteredDataBlockElement>.GetEncodeSize(chunkCount, pageCount, pageBitmapSize, entrySize);
     }
 
     public override ushort GetEncodeSize()

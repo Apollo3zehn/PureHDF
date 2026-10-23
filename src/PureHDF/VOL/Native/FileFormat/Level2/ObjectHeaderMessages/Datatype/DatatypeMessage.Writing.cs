@@ -54,11 +54,24 @@ internal partial record class DatatypeMessage : Message
                 Nullable.GetUnderlyingType(typeof(T)) is not null
 
                 ? GetTypeInfoForTopLevelMemory<T>(context, opaqueInfo, stringLength, stringPadding)
+                : TopLevelUnmanagedMemoryDispatch<T>.Create(context, opaqueInfo);
+    }
 
-                : ((DatatypeMessage, EncodeDelegate<T>))_methodInfoGetTypeInfoForTopLevelUnmanagedMemory
-                    // TODO cache
-                    .MakeGenericMethod(typeof(T))
-                    .Invoke(default, [context, opaqueInfo])!;
+    /// <summary>
+    /// <see cref="GetTypeInfoForTopLevelUnmanagedMemory{T}" /> closed over <typeparamref name="T" />, built on
+    /// first use. Its struct constraint is why it has to be reached by reflection at all; building that
+    /// per call would allocate a closed generic method and an argument array for every dataset.
+    /// </summary>
+    /// <remarks>
+    /// Only touched for a <typeparamref name="T" /> that already passed the checks above, so the
+    /// constraint is never violated by initializing it.
+    /// </remarks>
+    private static class TopLevelUnmanagedMemoryDispatch<T>
+    {
+        public static readonly Func<NativeWriteContext, H5OpaqueInfo?, (DatatypeMessage, EncodeDelegate<T>)> Create =
+            _methodInfoGetTypeInfoForTopLevelUnmanagedMemory
+                .MakeGenericMethod(typeof(T))
+                .CreateDelegate<Func<NativeWriteContext, H5OpaqueInfo?, (DatatypeMessage, EncodeDelegate<T>)>>();
     }
 
     public override void Encode(H5DriverBase driver)
@@ -825,27 +838,7 @@ internal partial record class DatatypeMessage : Message
         {
             var objectReference = (H5ObjectReference)source;
 
-            if (!context.ObjectToAddressMap
-                .TryGetValue(objectReference.ReferencedObject, out var address))
-            {
-                context.ObjectToAddressMap[objectReference.ReferencedObject] = default;
-
-                if (objectReference.ReferencedObject is H5Group group)
-                    address = context.Writer.EncodeGroup(group);
-
-                else if (objectReference.ReferencedObject is H5Dataset dataset)
-                    address = context.Writer.EncodeDataset(dataset);
-
-                else
-                    throw new Exception($"Named data types cannot yet be used in combination with H5ObjectReference.");
-
-                context.ObjectToAddressMap[objectReference.ReferencedObject] = address;
-            }
-
-            else if (address == default)
-            {
-                throw new Exception("The current object is already being encoded which suggests a circular reference.");
-            }
+            var address = context.Writer.GetOrEncodeObject(objectReference.ReferencedObject);
 
             Span<ulong> buffer = stackalloc ulong[] { address };
 

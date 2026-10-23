@@ -1,20 +1,75 @@
-﻿using System.Buffers;
+﻿using PureHDF.VFD;
 
 namespace PureHDF.VOL.Native;
 
 internal partial record class ObjectHeader2
 {
-    public async ValueTask<ulong> Encode(NativeWriteContext context)
+    // Encoded into a buffer and checksummed from it, then written to the file in one piece. Writing
+    // straight to the file and reading the header back for its checksum would cost an async read per
+    // object header, and flush a buffered stream's write buffer each time.
+    //
+    // Completes synchronously; its callers in H5NativeWriter block on the ValueTask it returns.
+    public ValueTask<ulong> Encode(NativeWriteContext context)
+        => new(Encode(context, out _));
+
+    /// <param name="context">The write context.</param>
+    /// <param name="encodeSize">The size of the encoded header.</param>
+    public ulong Encode(NativeWriteContext context, out int encodeSize)
     {
-        var headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();
-        var encodeSize = GetEncodeSize(headerMessagesEncodeSize);
+        var address = Allocate(context, out encodeSize, out var headerMessagesEncodeSize);
 
-        var freeSpaceManager = context.FreeSpaceManager;
-        var address = freeSpaceManager.Allocate((long)encodeSize);
+        context.Driver.SeekRelativeToBaseAddress(address);
+        ChecksummedStructure.Write(
+            context.Driver,
+            encodeSize,
+            (Header: this, headerMessagesEncodeSize),
+            static (driver, state) => state.Header.EncodeCore(driver, state.headerMessagesEncodeSize));
 
-        var driver = context.Driver;
-        driver.SeekRelativeToBaseAddress(address);
+        return (ulong)address;
+    }
 
+    /// <summary>
+    /// Encodes the header like <see cref="Encode(NativeWriteContext, out int)" />, and also returns the encoded bytes.
+    /// </summary>
+    /// <remarks>
+    /// For a header that may have to be patched after it is encoded - a chunked dataset's, once its index
+    /// is known. Patching a copy needs no read of the file, which a forward-only stream cannot serve.
+    /// </remarks>
+    /// <param name="context">The write context.</param>
+    /// <param name="write">
+    /// Whether to write the header now. A header that will be patched is better allocated now and written
+    /// once it is final, since rewriting it would change bytes a destination may already have shipped.
+    /// </param>
+    public (ulong Address, byte[] Encoded) EncodeAndKeep(NativeWriteContext context, bool write)
+    {
+        var address = Allocate(context, out var encodeSize, out var headerMessagesEncodeSize);
+        var encoded = new byte[encodeSize];
+
+        ChecksummedStructure.WriteToBuffer(
+            encoded,
+            origin: (long)context.Driver.BaseAddress + address,
+            (Header: this, headerMessagesEncodeSize),
+            static (driver, state) => state.Header.EncodeCore(driver, state.headerMessagesEncodeSize));
+
+        if (write)
+        {
+            context.Driver.SeekRelativeToBaseAddress(address);
+            context.Driver.Write(encoded);
+        }
+
+        return ((ulong)address, encoded);
+    }
+
+    private long Allocate(NativeWriteContext context, out int encodeSize, out ulong headerMessagesEncodeSize)
+    {
+        headerMessagesEncodeSize = GetHeaderMessagesEncodeSize();
+        encodeSize = (int)GetEncodeSize(headerMessagesEncodeSize);
+
+        return context.FreeSpaceManager.Allocate(encodeSize, AllocationKind.Metadata);
+    }
+
+    private void EncodeCore(H5DriverBase driver, ulong headerMessagesEncodeSize)
+    {
         // signature
         driver.Write(Signature);
 
@@ -50,20 +105,6 @@ internal partial record class ObjectHeader2
 
         // header messages
         WriteHeaderMessages(driver, withCreationOrder);
-
-        // checksum
-        var encodeSizeWithoutChecksum = (int)(encodeSize - sizeof(uint));
-        using var buffer = MemoryPool<byte>.Shared.Rent(encodeSizeWithoutChecksum);
-        var checksumData = buffer.Memory[..encodeSizeWithoutChecksum];
-
-        driver.SeekRelativeToBaseAddress(address);
-        await driver.Read(checksumData).ConfigureAwait(false);
-
-        var checksum = ChecksumUtils.JenkinsLookup3(checksumData.Span);
-
-        driver.Write(checksum);
-
-        return (ulong)address;
     }
 
     public void WriteHeaderMessages(H5DriverBase driver, bool withCreationOrder)
