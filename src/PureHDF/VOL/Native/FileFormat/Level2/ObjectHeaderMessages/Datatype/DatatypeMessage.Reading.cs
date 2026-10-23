@@ -1055,25 +1055,28 @@ internal partial record class DatatypeMessage(
             if (BitField is not StringBitFieldDescription bitField)
                 throw new Exception("String bit field description must not be null.");
 
-            Func<string, string> trim = bitField.PaddingType switch
-            {
-                PaddingType.NullTerminate => value => value.Split('\0', 2)[0],
-                PaddingType.NullPad => value => value.TrimEnd('\0'),
-                PaddingType.SpacePad => value => value.TrimEnd(' '),
-                _ => throw new Exception("Unsupported padding type.")
-            };
-
             using var memoryOwner = new ScratchBuffer<byte>((int)Size);
             var memory = memoryOwner.Memory[0..(int)Size];
 
             await source.ReadDatasetAsync(memory).ConfigureAwait(false);
 
+            // Trimmed as bytes, before decoding, so that only the value is turned into a string and never
+            // the padding: decoding the whole field first would build a string as wide as the field for
+            // every element. The same result either way - in UTF-8 a 0x00 or 0x20 byte is only ever that
+            // character, never part of a longer sequence, so cutting at one never splits a character.
+            var bytes = memory.Span;
+
+            var value = bitField.PaddingType switch
+            {
+                PaddingType.NullTerminate => bytes.IndexOf((byte)0) is var end and >= 0 ? bytes[..end] : bytes,
+                PaddingType.NullPad => bytes.TrimEnd((byte)0),
+                PaddingType.SpacePad => bytes.TrimEnd((byte)' '),
+                _ => throw new Exception("Unsupported padding type.")
+            };
+
             // Decoded as UTF-8, which is correct for H5T_CSET_ASCII too, and matches
             // GetDecodeInfoForVariableLengthString. See ReadUtils.
-            var value = ReadUtils.ReadFixedLengthString(memory.Span);
-            value = trim(value);
-
-            return value;
+            return ReadUtils.ReadFixedLengthString(value);
         }
 
         return decode;
@@ -1123,37 +1126,19 @@ internal partial record class DatatypeMessage(
         // in the global heap. The per-cell element decoder reads that header via
         // source.ReadDatasetAsync(headerBytes) before resolving the heap object — and on
         // an N-cell decode pass that becomes N small ReadDataset calls into the
-        // underlying IH5ReadStream. Pre-reading all N headers in one bulk call and
-        // feeding the per-cell decoder from an in-memory wrapper collapses the
-        // per-call dispatch + position-tracking overhead. The per-cell element
-        // decoder itself is unchanged.
+        // underlying IH5ReadStream. Pre-reading the headers in bulk, a bounded batch at a
+        // time (see DecodeInBatches), and feeding the per-cell decoder from an in-memory
+        // wrapper collapses the per-call dispatch + position-tracking overhead.
 
         if (Class == DatatypeMessageClass.VariableLength)
         {
             var cellHeaderSize = sizeof(uint) + context.Superblock.OffsetsSize + sizeof(uint);
 
-            // FAST PATH (#163): one bulk ReadDataset for all N cell headers, ArrayPool-rented,
-            // then per-cell decode from an in-memory wrapper. Preserved exactly; the only change
-            // is that the bulk read is awaited instead of blocking.
+            // FAST PATH (#163): the cell headers are bulk-read in bounded batches and decoded per cell
+            // from an in-memory wrapper; see DecodeInBatches.
             async ValueTask decodeBatched(NativeReadContext context, IH5ReadStream source, Memory<T> target)
             {
-                if (target.Length == 0)
-                    return;
-
-                var totalBytes = target.Length * cellHeaderSize;
-
-                using var memoryOwner = new ScratchBuffer<byte>(totalBytes);
-                var bulk = memoryOwner.Memory[..totalBytes];
-
-                await source.ReadDatasetAsync(bulk).ConfigureAwait(false);
-
-                var localSource = new SystemMemoryStream(bulk);
-
-                for (int i = 0; i < target.Length; i++)
-                {
-                    var element = await elementDecode(context, localSource).ConfigureAwait(false);
-                    target.Span[i] = (T)element!;
-                }
+                await DecodeInBatches(context, source, target, cellHeaderSize, elementDecode).ConfigureAwait(false);
             }
 
             return decodeBatched;
@@ -1177,9 +1162,9 @@ internal partial record class DatatypeMessage(
             //     struct of matching size takes the zero-copy unmanaged fast path
             //     earlier and never reaches here.
             //
-            // Under those conditions, bulk-reading the entire batch into a pooled
-            // buffer and decoding from an in-memory SystemMemoryStream wrapper collapses
-            // N*M driver dispatches into one driver read + N*M cheap in-memory copies,
+            // Under those conditions, bulk-reading into a pooled buffer a bounded batch at a time
+            // (see DecodeInBatches) and decoding from an in-memory SystemMemoryStream wrapper collapses
+            // N*M driver dispatches into one driver read per batch + N*M cheap in-memory copies,
             // matching the pattern already used by compact/chunked and by the VL path.
             // On the benchmark (2000 elements x 6 members) this is a 7-8x speedup.
             //
@@ -1204,23 +1189,58 @@ internal partial record class DatatypeMessage(
                     return;
                 }
 
-                var totalBytes = target.Length * elementSize;
-
-                using var memoryOwner = new ScratchBuffer<byte>(totalBytes);
-                var bulk = memoryOwner.Memory[..totalBytes];
-
-                await source.ReadDatasetAsync(bulk).ConfigureAwait(false);
-
-                var localSource = new SystemMemoryStream(bulk);
-
-                for (int i = 0; i < target.Length; i++)
-                {
-                    var element = await elementDecode(context, localSource).ConfigureAwait(false);
-                    target.Span[i] = (T)element!;
-                }
+                await DecodeInBatches(context, source, target, elementSize, elementDecode).ConfigureAwait(false);
             };
 
             return decode;
+        }
+    }
+
+    /// <summary>
+    /// The most one bulk read in <see cref="DecodeInBatches{T}" /> takes from the source at once.
+    /// </summary>
+    /// <remarks>
+    /// Large enough that the per-read cost the bulk read exists to avoid is negligible, small enough that
+    /// the buffer does not grow with the selection. Reading a whole selection at once would rent a buffer
+    /// as large as the selection, rounded up to a power of two - 1 GB for a 781 MB column - and the pool
+    /// would keep it after the read had finished.
+    /// </remarks>
+    private const int DecodeBatchBytes = 1 << 20;
+
+    /// <summary>
+    /// Bulk-reads <paramref name="target" />'s elements from <paramref name="source" /> a batch at a time and
+    /// decodes each from memory, so that the many small reads per element go to an in-memory stream rather
+    /// than to the driver.
+    /// </summary>
+    private static async ValueTask DecodeInBatches<T>(
+        NativeReadContext context,
+        IH5ReadStream source,
+        Memory<T> target,
+        int bytesPerElement,
+        ElementDecodeDelegate elementDecode)
+    {
+        if (target.Length == 0)
+            return;
+
+        var elementsPerBatch = Math.Max(1, DecodeBatchBytes / bytesPerElement);
+        var batchBytes = Math.Min(target.Length, elementsPerBatch) * bytesPerElement;
+
+        using var memoryOwner = new ScratchBuffer<byte>(batchBytes);
+
+        for (var start = 0; start < target.Length; start += elementsPerBatch)
+        {
+            var count = Math.Min(elementsPerBatch, target.Length - start);
+            var bulk = memoryOwner.Memory[..(count * bytesPerElement)];
+
+            await source.ReadDatasetAsync(bulk).ConfigureAwait(false);
+
+            var localSource = new SystemMemoryStream(bulk);
+
+            for (var i = 0; i < count; i++)
+            {
+                var element = await elementDecode(context, localSource).ConfigureAwait(false);
+                target.Span[start + i] = (T)element!;
+            }
         }
     }
 
