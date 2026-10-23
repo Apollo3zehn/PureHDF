@@ -154,30 +154,40 @@ public class AsyncNavigationTests
     {
         // Arrange
         var externalFilePath = Path.GetTempFileName();
-        var externalFileId = H5F.create(externalFilePath, H5F.ACC_TRUNC);
-        var externalGroupId1 = H5G.create(externalFileId, "external");
-        var externalGroupId2 = H5G.create(externalGroupId1, "group");
 
-        var spaceId = H5S.create_simple(1, [1], [1]);
-        var datasetId = H5D.create(externalGroupId2, "external dataset", H5T.NATIVE_UINT, spaceId);
+        try
+        {
+            var externalFileId = H5F.create(externalFilePath, H5F.ACC_TRUNC);
+            var externalGroupId1 = H5G.create(externalFileId, "external");
+            var externalGroupId2 = H5G.create(externalGroupId1, "group");
 
-        _ = H5S.close(spaceId);
-        _ = H5D.close(datasetId);
-        _ = H5G.close(externalGroupId2);
-        _ = H5G.close(externalGroupId1);
-        _ = H5F.close(externalFileId);
+            var spaceId = H5S.create_simple(1, [1], [1]);
+            var datasetId = H5D.create(externalGroupId2, "external dataset", H5T.NATIVE_UINT, spaceId);
 
-        var filePath = TestUtils.PrepareTestFile(
-            H5F.libver_t.LATEST,
-            fileId => TestUtils.AddExternalFileLink(fileId, externalFilePath));
+            _ = H5S.close(spaceId);
+            _ = H5D.close(datasetId);
+            _ = H5G.close(externalGroupId2);
+            _ = H5G.close(externalGroupId1);
+            _ = H5F.close(externalFileId);
 
-        using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
+            var filePath = TestUtils.PrepareTestFile(
+                H5F.libver_t.LATEST,
+                fileId => TestUtils.AddExternalFileLink(fileId, externalFilePath));
 
-        // Act
-        var actual = await root.GetAsync("/links/external_link/external dataset");
+            using var root = NativeFile.InternalOpenRead(filePath, deleteOnClose: true);
 
-        // Assert
-        Assert.IsType<NativeDataset>(actual);
+            // Act
+            var actual = await root.GetAsync("/links/external_link/external dataset");
+
+            // Assert
+            Assert.IsType<NativeDataset>(actual);
+        }
+
+        finally
+        {
+            if (File.Exists(externalFilePath))
+                File.Delete(externalFilePath);
+        }
     }
 
     [Fact]
