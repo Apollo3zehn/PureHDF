@@ -1,4 +1,4 @@
-﻿using System.Buffers;
+﻿using PureHDF.VFD;
 
 namespace PureHDF.VOL.Native;
 
@@ -14,42 +14,49 @@ internal partial record class FixedArrayHeader
         sizeof(ulong) +
         sizeof(uint);
 
-    internal async ValueTask Encode(H5DriverBase driver)
+    /// <summary>
+    /// The size of a filtered dataset's chunk index: this header, and its data block right behind it.
+    /// </summary>
+    internal static long GetFilteredIndexEncodeSize(byte pageBits, ulong chunkCount, ulong chunkByteSize)
+        => ENCODE_SIZE + (long)GetFilteredDataBlockEncodeSize(pageBits, chunkCount, chunkByteSize);
+
+    /// <summary>
+    /// The size of a filtered dataset's index data block, known from the chunk count before any chunk is
+    /// written.
+    /// </summary>
+    internal static ulong GetFilteredDataBlockEncodeSize(byte pageBits, ulong chunkCount, ulong chunkByteSize)
     {
-        var position = driver.Position;
+        /* H5FA__cache_hdr_serialize (H5FAcache.c) */
+        var entrySize = FilteredDataBlockElement.GetEncodeSize(MathUtils.ComputeChunkSizeLength(chunkByteSize));
+        var (_, pageCount, pageBitmapSize) = GetPageInfo(pageBits, chunkCount);
 
-        // signature
-        driver.Write(Signature);
+        return FixedArrayDataBlock<FilteredDataBlockElement>.GetEncodeSize(chunkCount, pageCount, pageBitmapSize, entrySize);
+    }
 
-        // version
-        driver.Write(Version);
+    internal void Encode(H5DriverBase driver)
+    {
+        ChecksummedStructure.Write(driver, ENCODE_SIZE, driver =>
+        {
+            // signature
+            driver.Write(Signature);
 
-        // Client ID
-        driver.Write(ClientID);
+            // version
+            driver.Write(Version);
 
-        // Entry Size
-        driver.Write(EntrySize);
+            // Client ID
+            driver.Write(ClientID);
 
-        // Page Bits
-        driver.Write(PageBits);
+            // Entry Size
+            driver.Write(EntrySize);
 
-        // Max Num Entries
-        driver.Write(EntriesCount);
+            // Page Bits
+            driver.Write(PageBits);
 
-        // Data Block Address
-        driver.Write(DataBlockAddress);
+            // Max Num Entries
+            driver.Write(EntriesCount);
 
-        // Checksum
-        driver.Seek(position, SeekOrigin.Begin);
-        using var owner = MemoryPool<byte>.Shared.Rent(ENCODE_SIZE - sizeof(int));
-        var checksumData = owner.Memory[..(ENCODE_SIZE - sizeof(int))];
-        await driver.Read(checksumData).ConfigureAwait(false);
-        var checksum = ChecksumUtils.JenkinsLookup3(checksumData.Span);
-
-        // Absolute seek: see Superblock23.Encode - the async read leaves a BufferedFileStream's
-        // read buffer in a state where the sync Write below can fail inside FlushRead.
-        driver.Seek(position + (ENCODE_SIZE - sizeof(int)), SeekOrigin.Begin);
-
-        driver.Write(checksum);
+            // Data Block Address
+            driver.Write(DataBlockAddress);
+        });
     }
 }

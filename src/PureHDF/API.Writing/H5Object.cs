@@ -5,7 +5,50 @@ namespace PureHDF;
 /// </summary>
 public class H5Object
 {
+    private int? _hardLinkCount;
+
     internal Dictionary<string, object>? InternalAttributes { get; set; }
+
+    /// <summary>
+    /// Whether this object may be linked from more than one subtree appended to a
+    /// <see cref="H5StreamingWriter" />, without its number of links known up front.
+    /// </summary>
+    /// <remarks>
+    /// A shared object's header is held in memory until the writer is disposed, when its hard link count
+    /// is known, and then written into a region reserved for shared objects - see
+    /// <see cref="H5WriteOptions.SharedObjectRegionSize" />. Set it before the object is first appended.
+    /// A <see cref="HardLinkCount" />, when known, is cheaper: the header is written at once and nothing
+    /// is held, so it takes precedence. Writes other than streaming count the links in the tree and
+    /// ignore this.
+    /// </remarks>
+    public bool IsShared { get; set; }
+
+    /// <summary>
+    /// How many hard links to this object the file will have, or null to count them from the tree.
+    /// </summary>
+    /// <remarks>
+    /// An object's header carries its hard link count, so the count has to be known when the header is
+    /// written. <see cref="H5File.BeginWrite(Stream, H5WriteOptions?)" /> counts the links in the tree,
+    /// but <see cref="H5File.BeginStreaming(Stream, H5WriteOptions?)" /> writes each appended subtree
+    /// before it sees the next: an object linked from more than one appended subtree has to declare its
+    /// count before it is first appended. Every link is checked against a declared count, and the
+    /// writer throws an <see cref="InvalidOperationException" /> when there are more links than
+    /// declared, or fewer once the tree is complete.
+    /// </remarks>
+    /// <exception cref="ArgumentOutOfRangeException">The value is less than 1.</exception>
+    /// <seealso cref="IsShared" />
+    public int? HardLinkCount
+    {
+        get => _hardLinkCount;
+
+        set
+        {
+            if (value < 1)
+                throw new ArgumentOutOfRangeException(nameof(value), value, "An object has at least one hard link.");
+
+            _hardLinkCount = value;
+        }
+    }
 
     /// <summary>
     /// A map of attributes that belong to this object.

@@ -2,9 +2,8 @@
 
 internal partial class H5StreamDriver : H5DriverBase
 {
-    // A read-ahead window would go stale the moment a write lands inside the range it holds, so the
-    // reads the writer interleaves with its writes (the read-backs mentioned in the constructor)
-    // could be served bytes the file no longer contains.
+    // A read-ahead window would go stale the moment a write lands inside the range it holds, so a
+    // read interleaved with writes could be served bytes the file no longer contains.
     //
     // That cannot happen: the writer uses the Stream constructor, which is cursor mode, so
     // _readAhead is null. The invalidation below is here so that the invariant does not depend on

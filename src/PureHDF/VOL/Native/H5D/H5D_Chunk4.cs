@@ -1,4 +1,4 @@
-﻿using System.Buffers;
+﻿using PureHDF.VFD;
 
 namespace PureHDF.VOL.Native;
 
@@ -52,35 +52,82 @@ internal abstract class H5D_Chunk4 : H5D_Chunk
     {
         base.Dispose(disposing);
 
-        if (Chunked4.IsDirty)
+        if (WriteContext is null)
+            return;
+
+        var header = WriteContext.DatasetInfoToObjectHeaderMap[Dataset];
+
+        AllocateIndex();
+
+        // A header allocated late gets its address now that it is complete, unless something named it before.
+        var headerAddress = WriteContext.Writer.AllocateHeader(header);
+        var isPatched = PatchLayout(header);
+
+        // A header written at encoding is final unless its layout changed since; one held back for its
+        // chunk is written now, whether or not the chunk ever was. A shared object's header is written at
+        // the end, from the copy patched here.
+        if (!header.IsShared && (isPatched || !header.IsWritten))
         {
-            // Encode ChunkedStoragePropertyDescriptions
-            WriteContext.Driver.Seek(Chunked4.EncodeAddress, SeekOrigin.Begin);
-            Chunked4.Encode(WriteContext.Driver);
-
-            // Update object header checksum
-            var (objectHeaderAddress, length) = WriteContext.DatasetInfoToObjectHeaderMap[Dataset];
-            var lengthWithoutChecksum = length - sizeof(uint);
-            using var memorOwner = MemoryPool<byte>.Shared.Rent(lengthWithoutChecksum);
-            var checksumData = memorOwner.Memory.Slice(0, lengthWithoutChecksum);
-
-            WriteContext.Driver.SeekRelativeToBaseAddress(objectHeaderAddress);
-
-            // SYNC SURFACE: this runs from Dispose on the synchronous writer, while driver.Read is
-            // async. The ValueTask must be waited on rather than discarded - discarding it draws no
-            // CS4014 warning, because the enclosing method is not async, and computes the checksum
-            // over uninitialized pooled memory, producing a file h5dump rejects. AsTask() is required:
-            // blocking directly on an IValueTaskSource-backed ValueTask is unsupported.
-            WriteContext.Driver.Read(checksumData).AsTask().GetAwaiter().GetResult();
-
-            var checksum = ChecksumUtils.JenkinsLookup3(checksumData.Span);
-
-            // Absolute seek: the async read leaves a BufferedFileStream's read buffer in a state
-            // where the sync Write below can fail inside its internal FlushRead.
-            WriteContext.Driver.SeekRelativeToBaseAddress((long)objectHeaderAddress + lengthWithoutChecksum);
-
-            WriteContext.Driver.Write(checksum);
+            WriteContext.Driver.SeekRelativeToBaseAddress((long)headerAddress);
+            WriteContext.Driver.Write(header.Header);
         }
+    }
+
+    /// <summary>
+    /// Encodes the layout into the header's kept copy again if it changed since the header was encoded, and
+    /// updates the checksum.
+    /// </summary>
+    /// <remarks>
+    /// Patched in the copy rather than in the file: the header's checksum is computed from the copy instead
+    /// of from bytes read back.
+    /// </remarks>
+    /// <returns>Whether the layout changed.</returns>
+    private bool PatchLayout(KeptHeader header)
+    {
+        if (!Chunked4.IsDirty)
+            return false;
+
+        var origin = (long)WriteContext!.Driver.BaseAddress + (long)header.EncodedAt;
+
+        // Encoding the layout clears its dirty flag.
+        using (var patchDriver = new H5SpanWriteDriver(header.Header, origin))
+        {
+            patchDriver.Seek(Chunked4.EncodeAddress, SeekOrigin.Begin);
+            Chunked4.Encode(patchDriver);
+        }
+
+        ChecksummedStructure.UpdateChecksum(header.Header);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Allocates an index whose size is known up front but which is allocated only once the chunks are
+    /// written, so that it is no gap until then. Marks the layout dirty when it does.
+    /// </summary>
+    protected virtual void AllocateIndex()
+    {
+    }
+
+    /// <remarks>
+    /// An unfiltered chunk is stored at its full size, so its address does not depend on its content: an
+    /// implicit index fixes it when the layout is created, and a single chunk gets it on its first write.
+    /// </remarks>
+    protected override bool TryGetWriteThroughAddress(ulong chunkIndex, out ulong address)
+    {
+        if (Dataset.FilterPipeline is not null)
+        {
+            address = default;
+            return false;
+        }
+
+        var chunkInfo = WriteChunkInfos[chunkIndex];
+
+        if (chunkInfo.Address == Superblock.UndefinedAddress)
+            chunkInfo = GetWriteChunkInfo(chunkIndex, (uint)ChunkByteSize, filterMask: 0);
+
+        address = chunkInfo.Address;
+        return true;
     }
 
     protected abstract ChunkInfo GetActualWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask);

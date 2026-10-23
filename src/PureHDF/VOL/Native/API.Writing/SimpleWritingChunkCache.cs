@@ -7,7 +7,9 @@ public partial class SimpleWritingChunkCache : IWritingChunkCache
 {
     private record WritingChunkInfo(Memory<byte> Chunk);
 
-    private readonly Dictionary<ulong, WritingChunkInfo> _chunkInfoMap = new();
+    // Created when a chunk is first held and dropped when the last one is given up, so that a cache with
+    // nothing in it - every dataset's, once its chunks are written - holds no table either.
+    private Dictionary<ulong, WritingChunkInfo>? _chunkInfoMap;
 
     /// <inheritdoc />
     public Memory<byte> GetChunk(
@@ -15,6 +17,8 @@ public partial class SimpleWritingChunkCache : IWritingChunkCache
         Func<Memory<byte>> chunkAllocator,
         Action<ulong, Memory<byte>> chunkWriter)
     {
+        _chunkInfoMap ??= [];
+
         if (_chunkInfoMap.TryGetValue(chunkIndex, out var chunkInfo))
         {
             //
@@ -31,15 +35,34 @@ public partial class SimpleWritingChunkCache : IWritingChunkCache
     }
 
     /// <inheritdoc />
+    public bool TryRemove(ulong chunkIndex, out Memory<byte> chunk)
+    {
+        if (_chunkInfoMap is not null && _chunkInfoMap.Remove(chunkIndex, out var chunkInfo))
+        {
+            if (_chunkInfoMap.Count == 0)
+                _chunkInfoMap = null;
+
+            chunk = chunkInfo.Chunk;
+            return true;
+        }
+
+        chunk = default;
+        return false;
+    }
+
+    /// <inheritdoc />
     public void Flush(Action<ulong, Memory<byte>>? chunkWriter = null)
     {
+        if (_chunkInfoMap is null)
+            return;
+
         foreach (var entry in _chunkInfoMap)
         {
             if (chunkWriter is not null)
                 chunkWriter(entry.Key, entry.Value.Chunk);
         }
 
-        _chunkInfoMap.Clear();
+        _chunkInfoMap = null;
     }
 
     // https://stackoverflow.com/questions/14663168/an-integer-array-as-a-key-for-dictionary

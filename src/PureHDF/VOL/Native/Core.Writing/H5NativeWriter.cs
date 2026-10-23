@@ -1,24 +1,54 @@
 ﻿using PureHDF.Selections;
+using System.Buffers.Binary;
+using System.Collections.Concurrent;
 using System.Reflection;
-using System.Runtime.ExceptionServices;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace PureHDF;
 
 partial class H5NativeWriter
 {
-    private static readonly MethodInfo _methodInfoEncodeDataset = typeof(H5NativeWriter)
-        .GetMethod(nameof(InternalEncodeDataset), BindingFlags.NonPublic | BindingFlags.Instance)!;
+    private delegate ulong EncodeDatasetDispatch(H5NativeWriter writer, H5Dataset dataset, bool allowsLateHeader);
 
-    private static readonly MethodInfo _methodInfoWriteDataset = typeof(H5NativeWriter)
-        .GetMethod(nameof(InternalWriteDataset), BindingFlags.NonPublic | BindingFlags.Static)!;
+    private delegate void WriteDatasetDispatch<T>(
+        H5D_Base h5d, object encode, T data, Selection? memorySelection, Selection? fileSelection);
+
+    // One closed generic method per dataset type, built once. Building it per call (MakeGenericMethod
+    // plus Invoke) would allocate a method, its type arguments and an argument array for every dataset
+    // encoded and every write - the bulk of what encoding a file of many small datasets allocates.
+    private static readonly ConcurrentDictionary<Type, EncodeDatasetDispatch> _encodeDatasetDispatchCache = new();
 
     private ulong _rootGroupAddress;
 
+    // The links counted so far to each object that declared a count, or is shared. Weak, so it does not
+    // keep a dataset's data alive; the counters themselves are listed to be checked at the end.
+    private readonly ConditionalWeakTable<H5Object, LinkCounter> _linkCounters = new();
+    private readonly List<LinkCounter> _countedLinks = [];
+
+    // The most data a dataset given with the tree may hold and still be left out of the filters set for
+    // every dataset (H5WriteOptions.Filters). Measured: up to 64 bytes, compact beat deflate on file size,
+    // write and read time; at 256 bytes, deflate was 42% smaller.
+    private const int MAXIMUM_UNFILTERED_DATASET_SIZE = 64;
+
+    // Shared rather than created per dataset: it is immutable and the same for all of them, and a
+    // dataset whose DatasetInfo the writer keeps until Dispose would otherwise hold a copy of its own.
+    /* "The default fill value is 0 (zero), ..." (https://docs.hdfgroup.org/hdf5/develop/group___d_c_p_l.html) */
+    internal static readonly FillValueMessage DefaultFillValueMessage = new(
+        AllocationTime: SpaceAllocationTime.Early,
+        FillTime: FillValueWriteTime.Never,
+        Value: default
+    )
+    {
+        Version = 3
+    };
+
     internal H5NativeWriter(H5File file, Stream stream, H5WriteOptions options, bool leaveOpen)
     {
-        // TODO readable is only required for checksums, maybe this requirement can be lifted by renting Memory<byte> and calculate the checksum over that memory
-        if (!stream.CanRead || !stream.CanWrite || !stream.CanSeek)
-            throw new Exception("The stream must be readble, writable and seekable.");
+        // Not required to be readable: checksums are computed from the encoded bytes, so nothing written
+        // is read back, and a destination that cannot serve reads (an upload) can be written to.
+        if (!stream.CanWrite || !stream.CanSeek)
+            throw new Exception("The stream must be writable and seekable.");
 
         // The Stream constructor takes cursor mode by construction, which is what the write path
         // needs: it writes at the wrapped stream's own cursor, and positionless mode would decouple
@@ -26,7 +56,18 @@ partial class H5NativeWriter
         // offsets. IConcurrentStream is a read-side interface; this keeps a stream that happens to
         // implement it writing at the wrapped stream's own cursor, unaffected by the read-side
         // interface.
-        var driver = new H5StreamDriver(stream, leaveOpen: leaveOpen);
+        //
+        // Front loading without a given reservation encodes the structure once and places it when it is
+        // complete; until then it is held in memory. See StructureStaging.
+        var stagesStructure =
+            options.MetadataPlacement == H5MetadataPlacement.FrontLoaded &&
+            options.MetadataReservation == 0;
+
+        var stagingStream = stagesStructure
+            ? new StructureStagingStream(stream, leaveOpen)
+            : null;
+
+        var driver = new H5StreamDriver(stagingStream ?? stream, leaveOpen: leaveOpen);
 
         if (options.UserBlockSize != 0)
         {
@@ -40,8 +81,38 @@ partial class H5NativeWriter
                 throw new Exception("The user block size is invalid.");
         }
 
-        var freeSpaceManager = new FreeSpaceManager();
-        freeSpaceManager.Allocate(Superblock23.ENCODE_SIZE);
+        if (options.MaximumCompactDatasetSize < 0)
+            throw new Exception("The maximum compact dataset size must not be negative.");
+
+        if (options.MetadataReservation < 0)
+            throw new Exception("The metadata reservation must not be negative.");
+
+        // Only meaningful away from Interleaved, which passes zero deliberately below. Rejected rather
+        // than tolerated because a non-positive ceiling silently turns Aggregated into Interleaved: the
+        // block path is gated on a positive size, so the caller asks for clustering and gets none, with
+        // nothing to indicate why.
+        if (options.MetadataPlacement != H5MetadataPlacement.Interleaved && options.MetadataBlockSize <= 0)
+            throw new Exception("The metadata block size must be greater than zero.");
+
+        var freeSpaceManager = new FreeSpaceManager(
+            options.MetadataPlacement,
+            blockSize: options.MetadataPlacement == H5MetadataPlacement.Interleaved
+                ? 0
+                : options.MetadataBlockSize);
+
+        // The superblock must sit at offset zero, which is why it does not go through Allocate - see
+        // AllocateAtFront.
+        freeSpaceManager.AllocateAtFront(Superblock23.ENCODE_SIZE);
+
+        if (stagesStructure)
+        {
+            freeSpaceManager.ReserveProvisionalRegion();
+        }
+
+        else if (options.MetadataPlacement == H5MetadataPlacement.FrontLoaded)
+        {
+            freeSpaceManager.ReserveMetadataRegion(options.MetadataReservation);
+        }
 
         var globalHeapManager = new GlobalHeapManager(options, freeSpaceManager, driver);
 
@@ -52,14 +123,16 @@ partial class H5NativeWriter
             FreeSpaceManager: freeSpaceManager,
             GlobalHeapManager: globalHeapManager,
             WriteOptions: options,
-            DatasetToInfoMap: new(),
+            Objects: new(),
             DatasetInfoToObjectHeaderMap: new(),
             TypeToMessageMap: new(),
-            ObjectToAddressMap: new(),
             ObjectReferenceCountMap: new(),
             RawValueToDatasetMap: new(ReferenceEqualityComparer.Instance),
             ShortlivedStream: new(memory: default)
-        );
+        )
+        {
+            Staging = stagingStream is null ? null : new StructureStaging(stagingStream)
+        };
 
         File = file;
         Context = writeContext;
@@ -67,20 +140,204 @@ partial class H5NativeWriter
 
     internal NativeWriteContext Context { get; }
 
+    private const int COMPLETED_HEADER_BATCH_SIZE = 64 * 1024;
+
+    private readonly List<(long Address, byte[] Header)> _completedHeaders = [];
+    private int _completedHeaderBytes;
+
     internal void Write()
     {
         // Count the incoming links for every shared object so that multiply-linked
         // objects can carry an accurate object reference count message (hard links).
-        CountReferences(File, Context.ObjectReferenceCountMap);
+        var objectCount = CountReferences(File, Context.ObjectReferenceCountMap);
+
+        // Sized up front because it ends up with an entry per object and lives until Dispose. Grown by
+        // doubling instead, it ends up to twice the size it needs, and every step on the way leaves the
+        // previous entry array behind on the large object heap.
+        Context.Objects.EnsureCapacity(objectCount);
 
         // root group
         Context.Driver.SeekRelativeToBaseAddress(Superblock23.ENCODE_SIZE);
         _rootGroupAddress = EncodeGroup(File);
+
+        ValidateDeclaredLinks();
+
+        PlaceStructure();
+        WriteAbandoned();
     }
 
-    private void CountReferences(H5Group root, Dictionary<H5Object, int> counts)
+    /// <summary>
+    /// Writes what can be written between top-level encodes: closed heap collections and the tails of
+    /// replaced blocks.
+    /// </summary>
+    internal void EndTopLevelEncode()
     {
-        var visitedGroups = new HashSet<H5Group>();
+        // Between top-level encodes is the only safe point to write heap collections; see there.
+        Context.GlobalHeapManager.WriteClosedCollections();
+        WriteAbandoned();
+    }
+
+    private LinkCounter GetLinkCounter(H5Object h5Object)
+    {
+        if (!_linkCounters.TryGetValue(h5Object, out var counter))
+        {
+            counter = new LinkCounter(h5Object.HardLinkCount);
+            _linkCounters.Add(h5Object, counter);
+            _countedLinks.Add(counter);
+        }
+
+        return counter;
+    }
+
+    /// <summary>
+    /// Counts a hard link to <paramref name="h5Object" /> against its declared count, and rejects a link to
+    /// an object already written by an earlier append unless it declared one.
+    /// </summary>
+    private void CountLink(H5Object h5Object)
+    {
+        if (h5Object.HardLinkCount is not null || IsHeldShared(h5Object))
+        {
+            var counter = GetLinkCounter(h5Object);
+
+            if (counter.Declared is int declared && counter.Links == declared)
+                throw new InvalidOperationException(
+                    $"The object declares {declared} hard link(s) (H5Object.HardLinkCount) but is linked more often.");
+
+            counter.Links++;
+
+            _streaming?.LinksCountedByAppend.Add(counter);
+        }
+
+        else if (TryGetWritten(h5Object, out var written))
+        {
+            throw written.IsOpen
+                ? LinkToOpenGroup()
+                : new InvalidOperationException(
+                    "The object has already been written by an earlier append, and its header holds its hard " +
+                    "link count. Set H5Object.HardLinkCount before it is first appended to link it more than once.");
+        }
+    }
+
+    /// <summary>
+    /// Rejects objects linked fewer times than they declared.
+    /// </summary>
+    internal void ValidateDeclaredLinks()
+    {
+        foreach (var counter in _countedLinks)
+        {
+            if (counter.Declared is int declared && counter.Links != declared)
+                throw new InvalidOperationException(
+                    $"An object declares {declared} hard link(s) (H5Object.HardLinkCount) but is linked {counter.Links} time(s).");
+        }
+    }
+
+    /// <summary>
+    /// Fills the tails of the blocks replaced so far with zeros. See <see cref="FreeSpaceManager.TakeAbandoned" />.
+    /// </summary>
+    internal void WriteAbandoned()
+    {
+        // Runs after every write, mostly with nothing to do.
+        if (!Context.FreeSpaceManager.HasAbandoned)
+            return;
+
+        var abandoned = Context.FreeSpaceManager.TakeAbandoned();
+
+        if (abandoned.Count == 0)
+            return;
+
+        var driver = Context.Driver;
+        var position = driver.Position;
+        Span<byte> zeros = stackalloc byte[4096];
+
+        foreach (var (address, length) in abandoned)
+        {
+            driver.SeekRelativeToBaseAddress(address);
+
+            for (var remaining = length; remaining > 0; remaining -= zeros.Length)
+                driver.Write(zeros[..(int)Math.Min(remaining, zeros.Length)]);
+        }
+
+        driver.Seek(position, SeekOrigin.Begin);
+    }
+
+    /// <summary>
+    /// Finishes a write that holds its structure until it is complete: moves the payload behind the
+    /// structure, corrects the payload addresses the structure names, writes the structure, and then the
+    /// payload that came with the tree.
+    /// </summary>
+    /// <remarks>
+    /// Does nothing for a write that does not stage its structure, or once it has run.
+    /// </remarks>
+    private void PlaceStructure()
+    {
+        if (Context.Staging is not { } staging)
+            return;
+
+        Context.Staging = null;
+
+        var freeSpaceManager = Context.FreeSpaceManager;
+
+        // Attribute values are structure, and the last of it.
+        Context.GlobalHeapManager.Encode();
+
+        freeSpaceManager.PlaceProvisionalRegion();
+
+        var buffer = default(byte[]);
+
+        try
+        {
+            foreach (var provisional in staging.Addresses)
+            {
+                if (buffer is null || buffer.Length < provisional.HeaderLength)
+                {
+                    if (buffer is not null)
+                        System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
+
+                    buffer = System.Buffers.ArrayPool<byte>.Shared.Rent(provisional.HeaderLength);
+                }
+
+                var header = buffer.AsSpan(0, provisional.HeaderLength);
+                var field = header.Slice(provisional.AddressOffset, sizeof(ulong));
+
+                staging.Stream.ReadStaged(provisional.HeaderPosition, header);
+
+                System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(
+                    field,
+                    freeSpaceManager.Relocate(System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(field)));
+
+                ChecksummedStructure.UpdateChecksum(header);
+                staging.Stream.Patch(provisional.HeaderPosition, header);
+            }
+        }
+
+        finally
+        {
+            if (buffer is not null)
+                System.Buffers.ArrayPool<byte>.Shared.Return(buffer);
+        }
+
+        staging.Stream.Commit();
+
+        // Payload written later finds its address in the layout, so the layout has to name where the
+        // payload ended up rather than where it was placed provisionally.
+        foreach (var entry in Context.Objects.Values)
+            entry.Deferred?.Relocate(freeSpaceManager);
+
+        foreach (var write in staging.PostponedWrites)
+            write();
+    }
+
+    /// <remarks>
+    /// Only objects linked more than once end up in <paramref name="counts" />, since a missing entry
+    /// already means a count of one. A count for every object would be one dictionary entry per
+    /// dataset, held for the writer's whole lifetime - tens of megabytes for a few hundred thousand
+    /// datasets - to record a number that is almost always one. The set of objects seen so far is
+    /// needed only for the walk and is dropped with it.
+    /// </remarks>
+    /// <returns>How many distinct objects are linked below <paramref name="root" />.</returns>
+    private int CountReferences(H5Group root, Dictionary<H5Object, int> counts)
+    {
+        var seen = new HashSet<H5Object>();
 
         void Walk(H5Group group)
         {
@@ -94,15 +351,20 @@ partial class H5NativeWriter
                 // instances and shared raw values are counted by object identity.
                 var h5Object = GetH5Object(entry.Value);
 
-                counts.TryGetValue(h5Object, out var current);
-                counts[h5Object] = current + 1;
+                if (!seen.Add(h5Object))
+                {
+                    counts[h5Object] = counts.GetValueOrDefault(h5Object, 1) + 1;
+                    continue;
+                }
 
-                if (entry.Value is H5Group childGroup && visitedGroups.Add(childGroup))
+                if (h5Object is H5Group childGroup)
                     Walk(childGroup);
             }
         }
 
         Walk(root);
+
+        return seen.Count;
     }
 
     private H5Object GetH5Object(object value)
@@ -125,7 +387,10 @@ partial class H5NativeWriter
     {
         // The object reference count message is only required for multiply-linked
         // objects; a missing message is interpreted as a reference count of 1.
-        if (Context.ObjectReferenceCountMap.TryGetValue(h5Object, out var count) && count > 1)
+        var count = h5Object.HardLinkCount ?? Context.ObjectReferenceCountMap.GetValueOrDefault(h5Object, 1);
+
+        // A shared object's count is known only at the end, when it is filled in.
+        if (count > 1 || IsHeldShared(h5Object))
         {
             var objectReferenceCountMessage = new ObjectReferenceCountMessage(
                 ReferenceCount: (uint)count
@@ -138,8 +403,168 @@ partial class H5NativeWriter
         }
     }
 
+    /// <summary>
+    /// Returns the address of <paramref name="h5Object" />'s object header, encoding the object first if
+    /// this is the first link to it.
+    /// </summary>
+    /// <param name="h5Object">The object.</param>
+    /// <param name="allowsLateHeader">
+    /// Whether a deferred dataset encoded here may leave its header without an address until it is written:
+    /// when what names it is written later itself - an open group, or a group that waits, see
+    /// <see cref="PendingGroup" />. Zero is returned then.
+    /// </param>
+    internal ulong GetOrEncodeObject(H5Object h5Object, bool allowsLateHeader = false)
+    {
+        // Written by an earlier append, and no longer in the map.
+        if (TryGetWritten(h5Object, out var written) && !Context.Objects.ContainsKey(h5Object))
+        {
+            if (written.IsOpen)
+                throw LinkToOpenGroup();
+
+            return written.Group is { } waiting
+                ? ResolvePendingGroup(waiting)
+                : written.Address;
+        }
+
+        ref var entry = ref CollectionsMarshal.GetValueRefOrAddDefault(Context.Objects, h5Object, out var exists);
+
+        if (exists)
+        {
+            if (entry.Address != default)
+                return entry.Address;
+
+            // No address yet. Either its header waits - a deferred dataset's held back, or a group's waiting
+            // for one - and gets its address now that something names it; or the object is still being
+            // encoded, and this link back to it is a cycle. A held-back header exists only once encoding is
+            // done, so the two cannot be confused.
+            if (((IPendingHeader?)entry.Deferred?.Header ?? entry.Group) is { } pending)
+                return entry.Address = pending.Resolve(this);
+
+            throw new Exception("The current object is already being encoded which suggests a circular reference.");
+        }
+
+        _streaming?.Appended.Add(h5Object);
+
+        var address = h5Object switch
+        {
+            H5Group group => EncodeGroup(group),
+            H5Dataset dataset => EncodeDataset(dataset, allowsLateHeader),
+            _ => throw new Exception("Named data types cannot yet be used in combination with H5ObjectReference.")
+        };
+
+        // Looked up again rather than through the ref above: encoding adds entries for everything
+        // below this object, which can grow the map and move its entries.
+        CollectionsMarshal.GetValueRefOrNullRef(Context.Objects, h5Object).Address = address;
+
+        return address;
+    }
+
     internal ulong EncodeGroup(
         H5Group group)
+    {
+        var headerMessages = CreateGroupHeaderMessages(group.InternalAttributes);
+        var slots = default(List<(int MessageIndex, string Name, IPendingHeader? Target)>);
+
+        foreach (var entry in group)
+        {
+            ValidateLinkName(entry.Key);
+
+            LinkType linkType;
+            LinkInfo linkInfo;
+
+            if (entry.Value is H5SoftLink softLink)
+            {
+                linkType = LinkType.Soft;
+                linkInfo = new SoftLinkInfo(softLink.Target);
+            }
+
+            else
+            {
+                var target = GetH5Object(entry.Value);
+
+                CountLink(target);
+
+                // Streaming: a deferred dataset's header can wait until it is written, see PendingGroup.
+                var linkAddress = GetOrEncodeObject(target, allowsLateHeader: IsStreaming);
+
+                // As each child is done rather than once the whole tree is: payload given with the tree
+                // is written while it is encoded, so a tail left until the end sits behind all of it,
+                // and a destination uploading in parts holds a part for every one of them.
+                WriteAbandoned();
+
+                if (linkAddress == 0 && GetPendingHeader(target) is { } pending)
+                {
+                    (slots ??= []).Add((headerMessages.Count, entry.Key, pending));
+                    headerMessages.Add(default!);
+                    continue;
+                }
+
+                linkType = LinkType.Hard;
+                linkInfo = new HardLinkInfo(HeaderAddress: linkAddress);
+            }
+
+            headerMessages.Add(CreateLinkMessage(entry.Key, linkType, linkInfo));
+        }
+
+        AppendReferenceCountToHeaderMessages(group, headerMessages);
+
+        // A child linked again further on got its address then.
+        slots?.RemoveAll(slot =>
+        {
+            if (slot.Target!.Address == 0)
+                return false;
+
+            headerMessages[slot.MessageIndex] = CreateHardLinkMessage(slot.Name, slot.Target.Address);
+            return true;
+        });
+
+        if (slots is { Count: > 0 })
+        {
+            // A group with a known number of links, or shared, is named by more than its open group, so it
+            // is written now rather than waiting.
+            if (group.HardLinkCount is not null || IsHeldShared(group))
+            {
+                foreach (var (messageIndex, name, target) in slots)
+                    headerMessages[messageIndex] = CreateHardLinkMessage(name, target!.Resolve(this));
+            }
+
+            else
+            {
+                var waiting = new PendingGroup(headerMessages, slots);
+
+                for (var slot = 0; slot < slots.Count; slot++)
+                    slots[slot].Target!.Waiter = new LinkWaiter(waiting, slot);
+
+                CollectionsMarshal.GetValueRefOrNullRef(Context.Objects, group).Group = waiting;
+
+                return 0;
+            }
+        }
+
+        return EncodeObjectHeader(headerMessages, group);
+    }
+
+    /// <summary>
+    ///     Encodes the header of a group from links to objects already written, or soft links - an open group
+    ///     being closed.
+    /// </summary>
+    internal ulong EncodeGroup(
+        Dictionary<string, object>? attributes,
+        IEnumerable<(string Name, ulong Address, H5SoftLink? SoftLink)> links)
+    {
+        var headerMessages = CreateGroupHeaderMessages(attributes);
+
+        foreach (var (name, address, softLink) in links)
+        {
+            headerMessages.Add(softLink is null
+                ? CreateHardLinkMessage(name, address)
+                : CreateLinkMessage(name, LinkType.Soft, new SoftLinkInfo(softLink.Target)));
+        }
+
+        return EncodeObjectHeader(headerMessages, owner: null);
+    }
+
+    private List<HeaderMessage> CreateGroupHeaderMessages(Dictionary<string, object>? attributes)
     {
         var headerMessages = new List<HeaderMessage>();
 
@@ -182,77 +607,41 @@ partial class H5NativeWriter
 
         headerMessages.Add(ToHeaderMessage(groupInfoMessage));
 
-        if (group.InternalAttributes is not null)
-            AppendAttributesToHeaderMessages(group.InternalAttributes, headerMessages, Context);
+        if (attributes is not null)
+            AppendAttributesToHeaderMessages(attributes, headerMessages, Context);
 
-        foreach (var entry in group)
+        return headerMessages;
+    }
+
+    private static HeaderMessage CreateHardLinkMessage(string name, ulong address)
+        => CreateLinkMessage(name, LinkType.Hard, new HardLinkInfo(HeaderAddress: address));
+
+    private static HeaderMessage CreateLinkMessage(string name, LinkType linkType, LinkInfo linkInfo)
+    {
+        var flags =
+            LinkInfoFlags.LinkNameLengthSizeUpperBit |
+            LinkInfoFlags.LinkNameEncodingFieldIsPresent;
+
+        if (linkType == LinkType.Soft)
+            flags |= LinkInfoFlags.LinkTypeFieldIsPresent;
+
+        var linkMessage = new LinkMessage(
+            Flags: flags,
+            LinkType: linkType,
+            CreationOrder: default,
+            LinkName: name,
+            LinkInfo: linkInfo
+        )
         {
-            ValidateLinkName(entry.Key);
+            Version = 1
+        };
 
-            ulong linkAddress;
+        return ToHeaderMessage(linkMessage);
+    }
 
-            LinkType linkType;
-            LinkInfo linkInfo;
-
-            if (entry.Value is H5SoftLink softLink)
-            {
-                linkType = LinkType.Soft;
-                linkInfo = new SoftLinkInfo(softLink.Target);
-            }
-
-            else
-            {
-                var h5Object = GetH5Object(entry.Value);
-
-                if (!Context.ObjectToAddressMap.TryGetValue(h5Object, out linkAddress))
-                {
-                    Context.ObjectToAddressMap[h5Object] = default;
-
-                    if (entry.Value is H5Group childGroup)
-                        linkAddress = EncodeGroup(childGroup);
-
-                    else if (entry.Value is H5Dataset dataset1)
-                        linkAddress = EncodeDataset(dataset1);
-
-                    else
-                        linkAddress = EncodeDataset((H5Dataset)h5Object);
-
-                    Context.ObjectToAddressMap[h5Object] = linkAddress;
-                }
-
-                else if (linkAddress == default)
-                {
-                    throw new Exception("The current object is already being encoded which suggests a circular reference.");
-                }
-
-                linkType = LinkType.Hard;
-                linkInfo = new HardLinkInfo(HeaderAddress: linkAddress);
-            }
-
-            var flags =
-                LinkInfoFlags.LinkNameLengthSizeUpperBit |
-                LinkInfoFlags.LinkNameEncodingFieldIsPresent;
-
-            if (linkType == LinkType.Soft)
-                flags |= LinkInfoFlags.LinkTypeFieldIsPresent;
-
-            var linkMessage = new LinkMessage(
-                Flags: flags,
-                LinkType: linkType,
-                CreationOrder: default,
-                LinkName: entry.Key,
-                LinkInfo: linkInfo
-            )
-            {
-                Version = 1
-            };
-
-            headerMessages.Add(ToHeaderMessage(linkMessage));
-        }
-
-        AppendReferenceCountToHeaderMessages(group, headerMessages);
-
-        var objectHeader = new ObjectHeader2(
+    private static ObjectHeader2 CreateObjectHeader(List<HeaderMessage> headerMessages)
+    {
+        return new ObjectHeader2(
             Address: default,
             Flags: ObjectHeaderFlags.SizeOfChunk1 | ObjectHeaderFlags.SizeOfChunk2,
             AccessTime: default,
@@ -266,43 +655,130 @@ partial class H5NativeWriter
         {
             Version = 2
         };
+    }
 
-        // encode object header
-        // ObjectHeader2.Encode() is async, because it reads back the just-written bytes to compute a
-        // checksum. This method and its public entry point (H5File.Write(), which has no async
-        // counterpart) are synchronous, so the call is bridged here.
-        var address = objectHeader.Encode(Context).GetAwaiter().GetResult();
+    private ulong EncodeObjectHeader(List<HeaderMessage> headerMessages, H5Object? owner)
+    {
+        var objectHeader = CreateObjectHeader(headerMessages);
 
-        return address;
+        if (owner is not null && IsHeldShared(owner))
+            return KeepSharedHeader(objectHeader, owner).Address;
+
+        return objectHeader.Encode(Context, out _);
     }
 
     internal ulong EncodeDataset(
-        H5Dataset dataset)
+        H5Dataset dataset,
+        bool allowsLateHeader = false)
     {
-        var (elementType, isScalar) = WriteUtils.GetElementType(dataset.Type);
+        var dispatch = _encodeDatasetDispatchCache.GetOrAdd(dataset.Type, CreateEncodeDatasetDispatch);
 
-        // TODO cache this
-        var method = _methodInfoEncodeDataset.MakeGenericMethod(dataset.Type, elementType);
+        return dispatch(this, dataset, allowsLateHeader);
+    }
 
-        try
+    private static EncodeDatasetDispatch CreateEncodeDatasetDispatch(Type type)
+    {
+        var (elementType, isScalar) = WriteUtils.GetElementType(type);
+
+        var method = typeof(H5NativeWriter)
+            .GetMethod(isScalar ? nameof(EncodeScalarDataset) : nameof(EncodeNonScalarDataset), BindingFlags.NonPublic | BindingFlags.Static)!
+            .MakeGenericMethod(type, elementType);
+
+        return method.CreateDelegate<EncodeDatasetDispatch>();
+    }
+
+    // Two entry points rather than a captured isScalar, so the cached delegate binds straight to a
+    // static method with no closure in between.
+    private static ulong EncodeScalarDataset<T, TElement>(H5NativeWriter writer, H5Dataset dataset, bool allowsLateHeader)
+        => writer.InternalEncodeDataset<T, TElement>(dataset, dataset.Data is null ? default! : (T)dataset.Data, isScalar: true, allowsLateHeader);
+
+    private static ulong EncodeNonScalarDataset<T, TElement>(H5NativeWriter writer, H5Dataset dataset, bool allowsLateHeader)
+        => writer.InternalEncodeDataset<T, TElement>(dataset, dataset.Data is null ? default! : (T)dataset.Data, isScalar: false, allowsLateHeader);
+
+    /// <summary>
+    /// The write dispatch for <typeparamref name="T" />, built on first use. A static generic class
+    /// rather than a dictionary, because <see cref="Write{T}" /> knows <typeparamref name="T" />
+    /// statically and only the element type has to be found by reflection.
+    /// </summary>
+    private static class WriteDatasetDispatchCache<T>
+    {
+        public static readonly WriteDatasetDispatch<T> Dispatch =
+            Create<WriteDatasetDispatch<T>>(nameof(WriteDatasetUntyped));
+
+        public static readonly WriteWholeContiguousDispatch<T> WholeContiguous =
+            Create<WriteWholeContiguousDispatch<T>>(nameof(WriteWholeContiguous));
+
+        private static TDelegate Create<TDelegate>(string methodName) where TDelegate : Delegate
         {
-            return (ulong)method.Invoke(this, [dataset, dataset.Data, isScalar])!;
-        }
+            var (elementType, _) = WriteUtils.GetElementType(typeof(T));
 
-        // Rethrown unwrapped, preserving the original stack: encoding is where a caller's own data is
-        // rejected, and reflection would otherwise replace a specific, actionable message with
-        // "Exception has been thrown by the target of an invocation".
-        catch (TargetInvocationException ex) when (ex.InnerException is not null)
-        {
-            ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
-            throw; // unreachable; the compiler cannot see that the line above always throws
+            return typeof(H5NativeWriter)
+                .GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Static)!
+                .MakeGenericMethod(typeof(T), elementType)
+                .CreateDelegate<TDelegate>();
         }
+    }
+
+    private static void WriteDatasetUntyped<T, TElement>(
+        H5D_Base h5d, object encode, T data, Selection? memorySelection, Selection? fileSelection)
+        => InternalWriteDataset(h5d, (EncodeDelegate<TElement>)encode, data, memorySelection, fileSelection);
+
+    private delegate bool WriteWholeContiguousDispatch<T>(
+        H5NativeWriter writer, DeferredContiguous target, T data);
+
+    /// <summary>
+    /// Writes all of a contiguous dataset's data in one go, when the data covers the dataset exactly.
+    /// </summary>
+    /// <remarks>
+    /// The general path gets to the same single encoder call for this case, but on the way walks both
+    /// selections and builds the layout, selections, encode info and closures that the walk needs -
+    /// about 1.5 kB and most of the per-call cost of writing a small dataset.
+    /// <para>
+    /// Narrow on purpose: anything it does not recognise as the whole dataset written from one buffer
+    /// returns false and is left to the general path, which also produces the errors for data that
+    /// does not fit.
+    /// </para>
+    /// </remarks>
+    /// <returns>True if the data was written; false if the general path has to write it.</returns>
+    private static bool WriteWholeContiguous<T, TElement>(
+        H5NativeWriter writer, DeferredContiguous target, T data)
+    {
+        // Opaque data is counted in bytes rather than elements, and a scalar dataspace has no
+        // dimensions to compare the data against - both are left to the general path.
+        // Variable-length values are left to it too, which measures them first and gives them a heap of
+        // their own.
+        if (target.Type.Class == DatatypeMessageClass.Opaque ||
+            target.Type.IsReferenceOrContainsReferences() ||
+            target.FileDims.Length == 0)
+            return false;
+
+        var (memoryData, _) = WriteUtils.ToMemory<T, TElement>(data);
+
+        if (memoryData.Equals(default))
+            return false;
+
+        var elementCount = 1UL;
+
+        foreach (var dimension in target.FileDims)
+            elementCount *= dimension;
+
+        if ((ulong)memoryData.Length != elementCount)
+            return false;
+
+        var driver = writer.Context.Driver;
+        driver.SeekRelativeToBaseAddress((long)target.Address);
+
+        using var stream = new PayloadWriteStream(driver);
+        ((EncodeDelegate<TElement>)target.Encode)(memoryData, stream);
+
+        return true;
     }
 
     private ulong InternalEncodeDataset<T, TElement>(
         H5Dataset dataset,
         T data,
-        bool isScalar)
+        bool isScalar,
+        bool allowsLateHeader)
     {
         Memory<TElement> memoryData;
         ulong[]? memoryDims;
@@ -353,6 +829,219 @@ partial class H5NativeWriter
         var dataspace = DataspaceMessage.Create(
             fileDims: fileDims);
 
+        var (chunkDimensions, filterPipeline, variableLengthSize, objectSizes) =
+            ChooseStorage(dataset, datatype, dataspace, encode, memoryData, isScalar);
+
+        // Deferred means given no data, not given null: a scalar whose value is null is one element that is
+        // null, and is written now like any other.
+        var isDeferred = dataspace.Type != DataspaceType.Null && memoryData.Equals(default);
+
+        // A deferred dataset's payload is allocated on its first write when asked for, see PendingPayload
+        // and H5WriteOptions.AllocatePayloadOnFirstWrite. Not while the structure is staged, whose payload is
+        // placed provisionally and moved as a whole.
+        var allocatesPayload = !isDeferred || Context.Staging is not null || !Context.WriteOptions.AllocatePayloadOnFirstWrite;
+
+        var dataLayout = DataLayoutMessage4.Create(
+            Context,
+            typeSize: datatype.Size,
+            isFiltered: filterPipeline is not null,
+            /* compact data and filtered single chunk index data must not be written deferred because of object header checksum */
+            isDeferred: isDeferred,
+            dataDimensions: dataspace.Type == DataspaceType.Null ? default : dataspace.Dimensions,
+            chunkDimensions: chunkDimensions,
+            allocatesPayload: allocatesPayload,
+            out var unallocatedPayloadSize,
+            variableLengthSize: variableLengthSize);
+
+        // fill value
+        var fillValueMessage = DefaultFillValueMessage;
+
+        // header messages
+        var headerMessages = new List<HeaderMessage>()
+        {
+            ToHeaderMessage(datatype),
+            ToHeaderMessage(dataspace),
+            ToHeaderMessage(dataLayout),
+            ToHeaderMessage(fillValueMessage)
+        };
+
+        if (filterPipeline is not null)
+            headerMessages.Add(ToHeaderMessage(filterPipeline));
+
+        if (dataset.InternalAttributes is not null)
+            AppendAttributesToHeaderMessages(dataset.InternalAttributes, headerMessages, Context);
+
+        AppendReferenceCountToHeaderMessages(dataset, headerMessages);
+
+        // object header
+        var objectHeader = CreateObjectHeader(headerMessages);
+
+        // encode data
+
+        /* dataset info */
+        var datasetInfo = new DatasetInfo(
+            Space: dataspace,
+            Type: datatype,
+            Layout: dataLayout,
+            FillValue: fillValueMessage,
+            FilterPipeline: filterPipeline,
+            ExternalFileList: default
+        );
+
+        /* buffer provider */
+        //
+        // Not yet for a chunked dataset whose data comes later: its layout holds what writing it needs -
+        // the chunk geometry, the chunks still being filled, the index - about 1 kB, which a writer would
+        // otherwise hold for each such dataset from BeginWrite to its first write. See DeferredChunked.
+        var isChunked = dataLayout.LayoutClass == LayoutClass.Chunked;
+
+        var h5d = isChunked && memoryData.Equals(default)
+            ? null
+            : CreateLayout(datasetInfo, dataset.DatasetCreation);
+
+        if (h5d is not null && !memoryData.Equals(default))
+            WriteGivenData(dataset, h5d, dataLayout, encode, memoryData, memoryDims, objectSizes);
+
+        DeferredDataset deferred = h5d switch
+        {
+            null => new DeferredChunked(datasetInfo, encode),
+
+            H5D_Chunk => new DeferredLayout(h5d, encode),
+
+            H5D_Contiguous when dataspace.Type != DataspaceType.Null => new DeferredContiguous(
+                fileDims: dataspace.Dimensions,
+                type: datatype,
+                address: dataLayout.Properties.Address,
+                size: ((ContiguousStoragePropertyDescription)dataLayout.Properties).Size,
+                encode),
+
+            _ => new DeferredInfo(datasetInfo, encode)
+        };
+
+        CollectionsMarshal.GetValueRefOrAddDefault(Context.Objects, dataset, out _).Deferred = deferred;
+
+        /* Note: Ensures that the chunk cache is flushed and all 
+         * chunk sizes / addresses are known, before encoding the object header.
+         */
+        if (h5d is H5D_Chunk chunk)
+            chunk.FlushChunkCache();
+
+        // A shared dataset's header is written at the end, with its link count; the payload address and
+        // the chunk index are patched into the kept copy until then.
+        if (IsHeldShared(dataset))
+        {
+            var shared = KeepSharedHeader(objectHeader, dataset);
+            AttachHeader(deferred, shared, dataLayout, unallocatedPayloadSize);
+
+            if (isChunked)
+                Context.DatasetInfoToObjectHeaderMap[datasetInfo] = shared;
+
+            if (isChunked)
+                FinishIfComplete(dataset, h5d);
+
+            return shared.Address;
+        }
+
+        // encode object header
+        //
+        // Only a chunked dataset patches its own object header later (H5D_Chunk4.Dispose, once its
+        // index is known), so only it keeps a copy of the header to patch. Of those, a deferred single
+        // chunk and a deferred implicitly indexed dataset are the ones whose header changes: the payload
+        // address, and for a filtered single chunk its size, are in the header and known only once the
+        // data is written. Their header is written then, once, rather than now and again.
+        if (isChunked)
+        {
+            // So is a filtered one's index, allocated once its chunks are written - see AllocateIndex.
+            var writesHeaderLater = unallocatedPayloadSize > 0 || h5d is null && dataLayout.Properties is ChunkedStoragePropertyDescription4
+            {
+                IndexingInformation: SingleChunkIndexingInformation
+            } || h5d is null && filterPipeline is not null && Context.Staging is null;
+
+            var kept = KeepHeader(objectHeader, allocate: !(allowsLateHeader && writesHeaderLater), write: !writesHeaderLater);
+
+            Context.DatasetInfoToObjectHeaderMap[datasetInfo] = kept;
+            AttachHeader(deferred, kept, dataLayout, unallocatedPayloadSize);
+
+            // The kept copy is not corrected along with the staged header: Dispose rewrites it from the
+            // layout's own (relocated) address before it writes it anyway.
+            RecordProvisionalAddress(dataLayout.Properties, kept.Address, kept.Header.Length);
+
+            // Data given with the tree may have completed the dataset, whose index can then be written
+            // now rather than at Dispose - where it would be one gap per dataset behind everything written
+            // since. Not while the structure is staged: the chunk addresses are still provisional.
+            if (Context.Staging is null)
+                FinishIfComplete(dataset, h5d);
+
+            return kept.Address;
+        }
+
+        if (unallocatedPayloadSize > 0)
+        {
+            var kept = KeepHeader(objectHeader, allocate: !allowsLateHeader, write: false);
+            AttachHeader(deferred, kept, dataLayout, unallocatedPayloadSize);
+
+            return kept.Address;
+        }
+
+        var address = objectHeader.Encode(Context, out var headerLength);
+
+        RecordProvisionalAddress(dataLayout.Properties, address, headerLength);
+
+        return address;
+    }
+
+    /// <summary>
+    /// Chooses how a dataset is stored: compact, or chunked and with which filters.
+    /// </summary>
+    /// <returns>
+    /// The chunk dimensions, null unless chunked; the filter pipeline, null unless filtered; and the
+    /// variable-length values measured to decide whether the data fits compact, with their stored size.
+    /// </returns>
+    private (uint[]? ChunkDimensions, FilterPipelineMessage? FilterPipeline, long VariableLengthSize, List<int>? ObjectSizes)
+        ChooseStorage<TElement>(
+            H5Dataset dataset,
+            DatatypeMessage datatype,
+            DataspaceMessage dataspace,
+            EncodeDelegate<TElement> encode,
+            Memory<TElement> memoryData,
+            bool isScalar)
+    {
+        // compact
+        //
+        // Decided before the filters, because a filter set for every dataset leaves out the smallest
+        // datasets, which are written compact instead: compressing a few bytes costs more than it saves,
+        // and needs a chunked layout besides. Data given with the dataset, and neither chunks nor filters
+        // asked for it, is a candidate.
+        var mayBeCompact =
+            Context.WriteOptions.PreferCompactDatasetLayout &&
+            dataspace.Type != DataspaceType.Null &&
+            !memoryData.Equals(default) &&
+            dataset.Chunks is null &&
+            dataset.DatasetCreation.Filters is null or { Count: 0 };
+
+        var dataEncodeSize = (long)dataspace.Dimensions.Aggregate(1UL, (product, dimension) => product * dimension) * datatype.Size;
+
+        // Variable-length values are placed with a compact header, so whether it can be compact
+        // depends on them too. Measured only where that can decide anything.
+        var objectSizes = mayBeCompact &&
+            datatype.IsReferenceOrContainsReferences() &&
+            dataEncodeSize <= Context.WriteOptions.MaximumCompactDatasetSize
+                ? MeasureVariableLengthValues(encode, memoryData)
+                : null;
+
+        var variableLengthSize = 0L;
+
+        if (objectSizes is not null)
+        {
+            foreach (var objectSize in objectSizes)
+                variableLengthSize += GlobalHeapManager.GetStoredSize(objectSize);
+        }
+
+        var fitsCompact = mayBeCompact && DataLayoutMessage4.FitsCompact(Context, dataEncodeSize, variableLengthSize);
+
+        // Below the general bound: by 256 bytes, compressible data is smaller deflated than compact.
+        var skipsDefaultFilters = fitsCompact && dataEncodeSize + variableLengthSize <= MAXIMUM_UNFILTERED_DATASET_SIZE;
+
         // chunk dimensions / filters
         var chunkDimensions = default(uint[]);
         var filters = default(List<H5Filter>);
@@ -361,7 +1050,7 @@ partial class H5NativeWriter
         {
             chunkDimensions = dataset.Chunks;
 
-            var localFilters = dataset.DatasetCreation.Filters ?? Context.WriteOptions.Filters;
+            var localFilters = dataset.DatasetCreation.Filters ?? (skipsDefaultFilters ? null : Context.WriteOptions.Filters);
 
             // at least one filter is configured - ensure chunked layout
             if (localFilters is not null && localFilters.Any())
@@ -400,111 +1089,328 @@ partial class H5NativeWriter
             }
         }
 
-        var dataLayout = DataLayoutMessage4.Create(
-            Context,
-            typeSize: datatype.Size,
-            isFiltered: filterPipeline is not null,
-            /* compact data and filtered single chunk index data must not be written deferred because of object header checksum */
-            isDeferred: dataspace.Type == DataspaceType.Null ? false : data is null,
-            dataDimensions: dataspace.Type == DataspaceType.Null ? default : dataspace.Dimensions,
-            chunkDimensions: chunkDimensions);
+        return (chunkDimensions, filterPipeline, variableLengthSize, objectSizes);
+    }
 
-        // fill value
-        /* "The default fill value is 0 (zero), ..." (https://docs.hdfgroup.org/hdf5/develop/group___d_c_p_l.html) */
-        var fillValueMessage = new FillValueMessage(
-            AllocationTime: SpaceAllocationTime.Early,
-            FillTime: FillValueWriteTime.Never,
-            Value: default
-        )
-        {
-            Version = 3
-        };
+    // Writes the data a dataset was given with, as it is encoded.
+    private void WriteGivenData<TElement>(
+        H5Dataset dataset,
+        H5D_Base h5d,
+        DataLayoutMessage4 dataLayout,
+        EncodeDelegate<TElement> encode,
+        Memory<TElement> memoryData,
+        ulong[]? memoryDims,
+        List<int>? objectSizes)
+    {
+        var fileSelection = dataset.FileSelection;
+        var memorySelection = dataset.MemorySelection;
 
-        // header messages
-        var headerMessages = new List<HeaderMessage>()
-        {
-            ToHeaderMessage(datatype),
-            ToHeaderMessage(dataspace),
-            ToHeaderMessage(dataLayout),
-            ToHeaderMessage(fillValueMessage)
-        };
+        var dims = memoryDims ?? throw new Exception("This should never happen.");
 
-        if (filterPipeline is not null)
-            headerMessages.Add(ToHeaderMessage(filterPipeline));
+        // ChooseStorage measured the values in memory order. A write of all of them, unselected, adds them
+        // to the heap in that same order, so the measurement can plan its heap rather than be repeated.
+        var plannedObjectSizes =
+            (fileSelection is null or AllSelection) && (memorySelection is null or AllSelection)
+                ? objectSizes
+                : null;
 
-        if (dataset.InternalAttributes is not null)
-            AppendAttributesToHeaderMessages(dataset.InternalAttributes, headerMessages, Context);
+        // A compact dataset's data is part of its header, so it is structure, and so are the
+        // variable-length values it points at. Placed as payload, they would also be named by a
+        // staged header with an address that is still provisional.
+        if (dataLayout.Properties is CompactStoragePropertyDescription)
+            WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, dims, AllocationKind.Metadata);
 
-        AppendReferenceCountToHeaderMessages(dataset, headerMessages);
+        // Payload has nowhere final to go while the structure is staged, so it is written once the
+        // structure is placed.
+        else if (Context.Staging is { } staging)
+            PostponeData(staging, dataset, h5d, encode, memoryData, fileSelection, memorySelection, dims, plannedObjectSizes);
 
-        // object header
-        var objectHeader = new ObjectHeader2(
-            Address: default,
-            Flags: ObjectHeaderFlags.SizeOfChunk1 | ObjectHeaderFlags.SizeOfChunk2,
-            AccessTime: default,
-            ModificationTime: default,
-            ChangeTime: default,
-            BirthTime: default,
-            MaximumCompactAttributesCount: default,
-            MinimumDenseAttributesCount: default,
-            HeaderMessages: headerMessages
-        )
-        {
-            Version = 2
-        };
+        else
+            WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, dims, AllocationKind.RawData, plannedObjectSizes);
+    }
 
-        // encode data
+    // Hands a dataset its kept header, and the payload still to allocate when it is first written.
+    private void AttachHeader(DeferredDataset deferred, KeptHeader header, DataLayoutMessage4 dataLayout, long unallocatedPayloadSize)
+    {
+        deferred.Header = header;
 
-        /* dataset info */
-        var datasetInfo = new DatasetInfo(
-            Space: dataspace,
-            Type: datatype,
-            Layout: dataLayout,
-            FillValue: fillValueMessage,
-            FilterPipeline: filterPipeline,
-            ExternalFileList: default
-        );
+        if (unallocatedPayloadSize > 0)
+            deferred.Pending = CreatePendingPayload(dataLayout.Properties, header, unallocatedPayloadSize);
+    }
 
-        /* buffer provider */
-        H5D_Base h5d = dataLayout.LayoutClass switch
+    internal H5D_Base CreateLayout(DatasetInfo datasetInfo, H5DatasetCreation datasetCreation)
+    {
+        H5D_Base h5d = datasetInfo.Layout.LayoutClass switch
         {
             LayoutClass.Compact => new H5D_Compact(default!, Context, datasetInfo, default),
             LayoutClass.Contiguous => new H5D_Contiguous(default!, Context, datasetInfo, default),
-            LayoutClass.Chunked => H5D_Chunk.Create(default!, Context, datasetInfo, default, dataset.DatasetCreation),
+            LayoutClass.Chunked => H5D_Chunk.Create(default!, Context, datasetInfo, default, datasetCreation),
 
             /* default */
-            _ => throw new Exception($"The data layout class '{dataLayout.LayoutClass}' is not supported.")
+            _ => throw new Exception($"The data layout class '{datasetInfo.Layout.LayoutClass}' is not supported.")
         };
 
         h5d.Initialize();
 
-        if (!memoryData.Equals(default))
+        return h5d;
+    }
+
+    /// <summary>
+    /// Writes the headers completed by <see cref="AllocatePendingPayload" /> since the last time, in
+    /// address order.
+    /// </summary>
+    /// <remarks>
+    /// Batched rather than written as each is completed: a header lies with the metadata and its payload
+    /// at the end of the file, so writing them one by one would jump back and forth between the two for
+    /// every dataset, and a file stream writes out its buffer at each jump. Headers of datasets written one
+    /// after another lie next to each other, so a batch is mostly one run. A destination uploading in parts
+    /// holds the parts these headers are in a little longer - by at most a batch of headers.
+    /// </remarks>
+    internal void WriteCompletedHeaders()
+    {
+        if (_completedHeaders.Count == 0)
+            return;
+
+        _completedHeaders.Sort((x, y) => x.Address.CompareTo(y.Address));
+
+        var driver = Context.Driver;
+        var position = driver.Position;
+
+        foreach (var (address, header) in _completedHeaders)
         {
-            WriteData(
-                h5d,
-                encode,
-                memoryData,
-                dataset.FileSelection,
-                dataset.MemorySelection,
-                memoryDims ?? throw new Exception("This should never happen."));
+            if (driver.Position != (long)driver.BaseAddress + address)
+                driver.SeekRelativeToBaseAddress(address);
+
+            driver.Write(header);
         }
 
-        Context.DatasetToInfoMap[dataset] = (h5d, encode);
+        driver.Seek(position, SeekOrigin.Begin);
 
-        /* Note: Ensures that the chunk cache is flushed and all 
-         * chunk sizes / addresses are known, before encoding the object header.
-         */
-        if (h5d is H5D_Chunk chunk)
-            chunk.FlushChunkCache();
+        _completedHeaders.Clear();
+        _completedHeaderBytes = 0;
+    }
 
-        // encode object header
-        // Bridged for the same reason as in EncodeGroup above.
-        var address = objectHeader.Encode(Context).GetAwaiter().GetResult();
-        var end = (ulong)Context.Driver.Position - Context.Driver.BaseAddress;
+    /// <summary>
+    /// Encodes a header to be held until it is complete. One not allocated now gets its address once it is
+    /// complete or something names it, see <see cref="AllocateHeader" />.
+    /// </summary>
+    private KeptHeader KeepHeader(ObjectHeader2 objectHeader, bool allocate, bool write)
+    {
+        if (!allocate)
+            return new KeptHeader(objectHeader.EncodeAt(Context, address: 0), encodedAt: 0);
 
-        Context.DatasetInfoToObjectHeaderMap[datasetInfo] = ((long)address, (int)(end - address));
+        var (address, encoded) = objectHeader.EncodeAndKeep(Context, write);
 
-        return address;
+        return new KeptHeader(encoded, encodedAt: address) { Address = address, IsWritten = write };
+    }
+
+    private PendingPayload CreatePendingPayload(StoragePropertyDescription properties, KeptHeader header, long size)
+    {
+        var headerPosition = (long)Context.Driver.BaseAddress + (long)header.EncodedAt;
+
+        return new PendingPayload(
+            AddressOffset: (int)(properties.AddressPosition - headerPosition),
+            Size: size,
+            MayStayUnallocated: properties is ChunkedStoragePropertyDescription4 { IndexingInformation: SingleChunkIndexingInformation });
+    }
+
+    /// <summary>
+    /// Allocates a held header that has no address yet, and returns its address.
+    /// </summary>
+    /// <remarks>
+    /// Allocated in the metadata block being filled when the dataset is complete, or when something has to
+    /// name it. Until then the header takes no space in the file, so it leaves no gap behind what is written
+    /// in the meantime.
+    /// </remarks>
+    internal ulong AllocateHeader(KeptHeader header)
+    {
+        if (header.Address != 0)
+            return header.Address;
+
+        header.Address = (ulong)Context.FreeSpaceManager.Allocate(header.Header.Length, AllocationKind.Metadata);
+
+        if (header.Waiter is { } waiter)
+        {
+            header.Waiter = null;
+            ResolveSlot(waiter, header.Address);
+        }
+
+        return header.Address;
+    }
+
+    /// <summary>
+    /// Allocates a deferred dataset's payload at the end of the file, now that it is first written, and
+    /// writes the header that names it. Does nothing for a dataset whose payload is allocated already.
+    /// </summary>
+    internal void AllocatePendingPayload(DeferredDataset deferred)
+        => CompletePendingHeader(deferred, allocatesPayload: true);
+
+    /// <summary>
+    /// Completes a deferred dataset never written, at Dispose: allocates the payload its header names, unless
+    /// it may go without - see <see cref="PendingPayload.MayStayUnallocated" /> - and writes the header.
+    /// </summary>
+    internal void FinishNeverWritten(DeferredDataset deferred)
+        => CompletePendingHeader(deferred, allocatesPayload: deferred.Pending is not { MayStayUnallocated: true });
+
+    private void CompletePendingHeader(DeferredDataset deferred, bool allocatesPayload)
+    {
+        if (deferred.Pending is not { } pending)
+            return;
+
+        deferred.Pending = null;
+
+        var header = deferred.Header!;
+        AllocateHeader(header);
+
+        if (allocatesPayload)
+        {
+            var address = (ulong)Context.FreeSpaceManager.Allocate(pending.Size, AllocationKind.RawData);
+            deferred.SetPayloadAddress(address);
+
+            BinaryPrimitives.WriteUInt64LittleEndian(header.Header.AsSpan(pending.AddressOffset), address);
+            ChecksummedStructure.UpdateChecksum(header.Header);
+        }
+
+        // A shared object's header is written at the end, from this same copy. Marked written either way,
+        // so that H5D_Chunk4.Dispose, which writes a held-back header, skips it.
+        if (!header.IsShared)
+        {
+            _completedHeaders.Add(((long)header.Address, header.Header));
+            _completedHeaderBytes += header.Header.Length;
+
+            if (_completedHeaderBytes >= COMPLETED_HEADER_BATCH_SIZE)
+                WriteCompletedHeaders();
+        }
+
+        header.IsWritten = true;
+    }
+
+    /// <summary>
+    /// Finishes a filtered chunked dataset whose last chunk has been written: writes its index, completes
+    /// its header, and drops everything kept to write it.
+    /// </summary>
+    /// <remarks>
+    /// Otherwise all of that waits for Dispose, for every dataset at once - about 1.3 kB per dataset, so
+    /// 390 MB over 300,000 datasets written one after another, each long finished. Done between writes
+    /// rather than when the chunk is written, since a dataset given with the tree completes its chunks
+    /// before its header exists.
+    /// </remarks>
+    internal void FinishIfComplete(H5Object dataset, H5D_Base? h5d)
+    {
+        if (h5d is not H5D_Chunk { IsComplete: true } chunk)
+            return;
+
+        chunk.Dispose();
+
+        Context.DatasetInfoToObjectHeaderMap.Remove(chunk.Dataset);
+
+        ref var entry = ref CollectionsMarshal.GetValueRefOrNullRef(Context.Objects, dataset);
+
+        // A header allocated late got its address in Dispose, and the finished dataset keeps nothing else.
+        if (entry.Address == 0 && entry.Deferred?.Header is { } header)
+            entry.Address = header.Address;
+
+        entry.Deferred = FinishedDataset.Instance;
+    }
+
+    /// <summary>
+    /// How much global heap space the variable-length values in <paramref name="data" /> would take,
+    /// found by encoding them against a target that keeps nothing while the heap only counts.
+    /// </summary>
+    private List<int> MeasureVariableLengthValues<TElement>(EncodeDelegate<TElement> encode, Memory<TElement> data)
+    {
+        var heap = Context.GlobalHeapManager;
+        var enclosing = heap.AllocationKind;
+        List<int> objectSizes;
+
+        // Recording counts a dataset's own values, which are what is being sized here.
+        heap.AllocationKind = AllocationKind.RawData;
+        heap.BeginRecording();
+
+        try
+        {
+            encode(data, DiscardWriteStream.Instance);
+        }
+
+        finally
+        {
+            objectSizes = heap.EndRecording();
+            heap.AllocationKind = enclosing;
+        }
+
+        return objectSizes;
+    }
+
+    /// <summary>
+    /// Notes where a staged header names provisional payload, so that it is corrected before it is
+    /// written. See <see cref="PlaceStructure" />.
+    /// </summary>
+    private void RecordProvisionalAddress(StoragePropertyDescription properties, ulong headerAddress, int headerLength)
+    {
+        if (Context.Staging is not { } staging || !Context.FreeSpaceManager.IsProvisional(properties.Address))
+            return;
+
+        var headerPosition = (long)Context.Driver.BaseAddress + (long)headerAddress;
+
+        staging.Addresses.Add(new ProvisionalAddress(
+            HeaderPosition: headerPosition,
+            HeaderLength: headerLength,
+            AddressOffset: (int)(properties.AddressPosition - headerPosition)));
+    }
+
+    // Separate from InternalEncodeDataset so that the closure is only allocated for a dataset that has
+    // data to postpone: a lambda capturing that method's locals would allocate for every dataset.
+    private void PostponeData<TElement>(
+        StructureStaging staging,
+        H5Object dataset,
+        H5D_Base h5d,
+        EncodeDelegate<TElement> encode,
+        Memory<TElement> memoryData,
+        Selection? fileSelection,
+        Selection? memorySelection,
+        ulong[] memoryDims,
+        List<int>? objectSizes)
+    {
+        staging.PostponedWrites.Add(() =>
+        {
+            DeferredDataset.RelocateLayout(h5d.Dataset, Context.FreeSpaceManager);
+
+            WriteDatasetData(h5d, encode, memoryData, fileSelection, memorySelection, memoryDims, AllocationKind.RawData, objectSizes);
+
+            if (h5d is H5D_Chunk chunk)
+                chunk.FlushChunkCache();
+
+            // The header exists by now, staged and written, so the dataset can be finished like one
+            // written through the writer.
+            FinishIfComplete(dataset, h5d);
+        });
+    }
+
+    private void WriteDatasetData<TElement>(
+        H5D_Base h5d,
+        EncodeDelegate<TElement> encode,
+        Memory<TElement> memoryData,
+        Selection? fileSelection,
+        Selection? memorySelection,
+        ulong[] memoryDims,
+        AllocationKind heapAllocationKind,
+        List<int>? objectSizes = null)
+    {
+        // Variable-length elements encoded from here belong to the dataset: payload, unless the dataset
+        // is compact and its data is part of its header. Restored rather than left set, because an
+        // object reference among these elements encodes the object it points at, attributes and all.
+        var enclosing = Context.GlobalHeapManager.AllocationKind;
+        Context.GlobalHeapManager.AllocationKind = heapAllocationKind;
+
+        try
+        {
+            WriteData(h5d, encode, memoryData, fileSelection, memorySelection, memoryDims, objectSizes);
+        }
+
+        finally
+        {
+            Context.GlobalHeapManager.AllocationKind = enclosing;
+        }
     }
 
     private static void InternalWriteDataset<T, TElement>(
@@ -528,13 +1434,17 @@ partial class H5NativeWriter
         }
     }
 
+    // objectSizes: the sizes of the variable-length values the write adds to the heap, in the order it
+    // adds them, when they were already measured. Otherwise they are measured here, by a first encode
+    // that keeps nothing.
     private static void WriteData<TElement>(
         H5D_Base h5d,
         EncodeDelegate<TElement> encode,
         Memory<TElement> memoryData,
         Selection? fileSelection,
         Selection? memorySelection,
-        ulong[] memoryDims)
+        ulong[] memoryDims,
+        List<int>? objectSizes = null)
     {
         var datasetInfo = h5d.Dataset;
         var dataspace = datasetInfo.Space;
@@ -602,14 +1512,91 @@ partial class H5NativeWriter
             Encoder: encode,
             SourceTypeSizeFactor: (int)opaqueSourceTypeSizeFactor,
             TargetTypeSize: (int)datatype.Size,
-            AllowBulkCopy: true
+            AllowBulkCopy: true,
+            TargetElementsWritten: h5d is H5D_Chunk chunk ? chunk.OnElementsWritten : null
         );
 
         /* encode data */
+        var context = h5d.WriteContext;
+
+        // Variable-length values are encoded twice: once to measure them, then into a heap sized exactly for
+        // them (see GlobalHeapManager.TryBeginPlanned). The measuring encode writes nothing - its target
+        // discards. Only for payload: structure shares its collections, see GlobalHeapManager.AddObject.
+        // And not when the caller measured them already.
+        if (context.GlobalHeapManager.AllocationKind == AllocationKind.RawData &&
+            datatype.IsReferenceOrContainsReferences())
+        {
+            var heap = context.GlobalHeapManager;
+
+            if (objectSizes is null)
+            {
+                heap.BeginRecording();
+
+                try
+                {
+                    SelectionHelper.Encode(
+                        memoryDims.Length,
+                        datasetChunkDims.Length,
+                        encodeInfo with
+                        {
+                            GetTargetStream = _ => DiscardWriteStream.Instance
+                        });
+                }
+
+                finally
+                {
+                    objectSizes = heap.EndRecording();
+                }
+            }
+
+            if (heap.TryBeginPlanned(objectSizes))
+            {
+                try
+                {
+                    SelectionHelper.Encode(
+                        memoryDims.Length,
+                        datasetChunkDims.Length,
+                        encodeInfo);
+                }
+
+                catch
+                {
+                    heap.AbandonPlanned();
+                    throw;
+                }
+
+                heap.EndPlanned();
+
+                return;
+            }
+        }
+
         SelectionHelper.Encode(
             memoryDims.Length,
             datasetChunkDims.Length,
             encodeInfo);
+    }
+
+    /// <summary>
+    /// A target that accepts writes and keeps none of them, for an encode that is run only to measure it.
+    /// </summary>
+    private sealed class DiscardWriteStream : IH5WriteStream
+    {
+        public static DiscardWriteStream Instance { get; } = new();
+
+        public long Position => 0;
+
+        public void Seek(long offset, SeekOrigin origin)
+        {
+        }
+
+        public void WriteDataset(Span<byte> buffer)
+        {
+        }
+
+        public void Dispose()
+        {
+        }
     }
 
     private static void AppendAttributesToHeaderMessages(
@@ -711,4 +1698,13 @@ partial class H5NativeWriter
             WithCreationOrder = default
         };
     }
+
+    /// <summary>The links counted to one object, and how many it declares, if it does.</summary>
+    private sealed class LinkCounter(int? declared)
+    {
+        public int? Declared { get; } = declared;
+
+        public int Links { get; set; }
+    }
+
 }

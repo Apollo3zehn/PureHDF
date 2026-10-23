@@ -27,8 +27,15 @@ internal record EncodeInfo<T>(
     EncodeDelegate<T> Encoder,
     int SourceTypeSizeFactor,
     int TargetTypeSize,
-    bool AllowBulkCopy
+    bool AllowBulkCopy,
+    TargetElementsWrittenDelegate? TargetElementsWritten = default
 );
+
+/// <summary>
+/// Told, after each piece of an encode, how many elements went into which target chunk - so that a chunk
+/// can be finished once all of its elements have arrived.
+/// </summary>
+internal delegate void TargetElementsWrittenDelegate(ulong chunkIndex, int elementCount, IH5WriteStream stream);
 
 internal readonly record struct RelativeStep(
     ulong ChunkIndex,
@@ -205,6 +212,7 @@ internal static class SelectionHelper
             if (targetStream is null /* if stream not assigned yet */ ||
                 targetStep.ChunkIndex != lastTargetChunkIndex /* or the chunk has changed */)
             {
+                targetStream?.Flush();
                 targetStream = encodeInfo.GetTargetStream(targetStep.ChunkIndex);
                 lastTargetChunkIndex = targetStep.ChunkIndex;
             }
@@ -245,11 +253,15 @@ internal static class SelectionHelper
                     currentSource[..sourceLength],
                     targetStream);
 
+                encodeInfo.TargetElementsWritten?.Invoke(lastTargetChunkIndex, length, targetStream);
+
                 currentOffset += length;
                 currentLength -= length;
                 currentSource = currentSource[sourceLength..];
             }
         }
+
+        targetStream?.Flush();
     }
 
     // The walk carries Memory<TResult> rather than Span<TResult>: the per-step decode is awaited,

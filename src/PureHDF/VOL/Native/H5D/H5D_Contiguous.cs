@@ -60,7 +60,7 @@ internal class H5D_Contiguous : H5D_Base
             if (_writeStream is null)
             {
                 WriteContext.Driver.SeekRelativeToBaseAddress((long)GetAddress());
-                _writeStream = new OffsetStream(WriteContext.Driver);
+                _writeStream = new PayloadWriteStream(WriteContext.Driver);
             }
         }
 
