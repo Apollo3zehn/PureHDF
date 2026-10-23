@@ -29,7 +29,7 @@ internal class H5Dataset_Chunk_Single_Chunk4 : H5D_Chunk4
     protected override ChunkInfo GetActualWriteChunkInfo(ulong chunkIndex, uint chunkSize, uint filterMask)
     {
         /* see also H5D__single_idx_insert (H5DSingle.c) */
-        Chunked4.Address = (ulong)WriteContext.FreeSpaceManager.Allocate(chunkSize);
+        Chunked4.Address = (ulong)WriteContext.FreeSpaceManager.Allocate(chunkSize, AllocationKind.RawData);
 
         var single = (SingleChunkIndexingInformation)Chunked4.IndexingInformation;
         single.FilteredChunkSize = chunkSize;

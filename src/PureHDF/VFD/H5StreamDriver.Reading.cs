@@ -115,11 +115,21 @@ internal partial class H5StreamDriver : H5DriverBase
 
                 // In positionless mode the source is deliberately NOT touched: its cursor is
                 // shared with every other driver over it, and moving it would defeat the isolation.
+                //
+                // Skipped when already there, because a buffered FileStream flushes its write buffer on
+                // every Seek, even one that does not move. The writer seeks before every structure it
+                // encodes and allocates them back to back, so most of those seeks land where the stream
+                // already is - and each would otherwise cost a write call.
                 if (_concurrentStream is null)
-                    _stream!.Seek(offset, SeekOrigin.Begin);
+                {
+                    if (_stream!.Position != offset)
+                        _stream.Seek(offset, SeekOrigin.Begin);
+                }
 
                 else
+                {
                     _position = offset;
+                }
 
                 break;
 
